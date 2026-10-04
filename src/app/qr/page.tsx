@@ -29,7 +29,7 @@ export default function QRPage() {
           {/* Bienvenida */}
           <div className="space-y-3 sm:space-y-4 text-center">
             <div className="flex justify-center -mb-4 sm:-mb-5">
-              <div className="w-36 h-36 sm:w-48 sm:h-48">
+              <div className="w-48 h-48 sm:w-80 sm:h-80 lg:w-[32rem] lg:h-[32rem]">
                 <img
                   src="/brand/logo.svg"
                   alt="Amarí Dul"

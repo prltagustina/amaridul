@@ -15,9 +15,9 @@
       }
 
       .cls-4 {
-        font-family: Jost-Light, Jost;
+        font-family: Cormorant_Garamond, Cormorant Garamond, serif;
         font-size: 42px;
-        font-weight: 300;
+        font-weight: 500;
       }
     </style>
   </defs>
