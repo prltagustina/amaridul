@@ -25,9 +25,9 @@ export default function QRPage() {
       </header>
 
       <main className="flex-1 px-4 pt-8 sm:pt-12 lg:pt-24 pb-8 sm:pb-12">
-        <div className="max-w-md sm:max-w-lg lg:max-w-2xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
+        <div className="max-w-md sm:max-w-lg lg:max-w-2xl mx-auto space-y-8 sm:space-y-10 lg:space-y-12">
           {/* Bienvenida */}
-          <div className="space-y-0 sm:space-y-0 text-center bg-[#F2EBDD] px-6 sm:px-8 pt-4 sm:pt-6 pb-8 sm:pb-12 lg:pb-16 -mx-4 sm:-mx-8 lg:-mx-auto rounded-lg">
+          <div className="space-y-3 sm:space-y-4 text-center">
             <div className="flex justify-center -mb-4 sm:-mb-5">
               <div className="w-36 h-36 sm:w-48 sm:h-48">
                 <img
@@ -37,14 +37,14 @@ export default function QRPage() {
                 />
               </div>
             </div>
-            <h1 className="font-bold leading-tight text-[#3f6043] whitespace-nowrap" style={{fontSize: "clamp(1.75rem, 5vw, 2.5rem)"}}>Bienvenido a Amarí Dul</h1>
-            <p className="text-lg sm:text-lg text-[#3f6043] leading-relaxed">
+            <h1 className="font-semibold leading-tight text-[#3f6043] whitespace-nowrap" style={{fontSize: "clamp(1.75rem, 5vw, 2.5rem)"}}>Bienvenido a Amarí Dul</h1>
+            <p className="text-lg sm:text-lg text-text-muted leading-relaxed">
               Asociación civil dedicada a [propósito pendiente de aprobación]
             </p>
           </div>
 
           {/* Información del producto/asociación */}
-          <section className="space-y-3 sm:space-y-4 border-t border-border pt-2 sm:pt-3">
+          <section className="space-y-3 sm:space-y-4 border-t border-border pt-6 sm:pt-8">
             <h2 className="font-light text-[#3f6043]" style={{fontSize: "clamp(1.25rem, 4vw, 1.875rem)"}}>Sobre este producto</h2>
             <div className="space-y-3 text-lg text-text-muted leading-relaxed">
               <p>
