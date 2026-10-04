@@ -14,7 +14,7 @@ export default function Hero() {
         </div>
 
         {/* Wordmark y Tagline */}
-        <div className="space-y-6 sm:space-y-8">
+        <div className="space-y-3 sm:space-y-4">
           <img
             src="/brand/wordmark.svg"
             alt="Amarí Dul"
