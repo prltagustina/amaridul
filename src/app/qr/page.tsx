@@ -21,7 +21,6 @@ export default function QRPage() {
       <header className="px-4 pt-6 sm:pt-8">
         <Link href="/" className="inline-flex items-center gap-2 py-2 px-3 text-lg sm:text-xl text-text-muted hover:text-[#3f6043] border-b border-b-transparent hover:border-b-[#3f6043] transition-all">
           <span className="text-xl">←</span> <span>Volver al inicio</span>
-          <span className="text-[#3f6043] text-xl">←</span> <span>Volver al inicio</span>
         </Link>
       </header>
 
