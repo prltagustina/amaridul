@@ -28,8 +28,8 @@ export default function QRPage() {
         <div className="max-w-md sm:max-w-lg lg:max-w-2xl mx-auto space-y-8 sm:space-y-10 lg:space-y-12">
           {/* Bienvenida */}
           <div className="space-y-3 sm:space-y-4 text-center">
-            <div className="flex justify-center -mb-4 sm:-mb-5">
-              <div className="w-36 h-36 sm:w-48 sm:h-48">
+            <div className="flex justify-center -mb-4 sm:-mb-5 lg:-mb-6">
+              <div className="w-48 h-48 sm:w-80 sm:h-80 lg:w-[28rem] lg:h-[28rem]">
                 <img
                   src="/brand/logo.svg"
                   alt="Amarí Dul"
