@@ -4,7 +4,7 @@ export default function Hero() {
       <div className="max-w-4xl mx-auto text-center space-y-8 sm:space-y-10 lg:space-y-12">
         {/* Logo - Mariposa dominante */}
         <div className="flex justify-center -mb-16 sm:-mb-20 lg:-mb-28">
-          <div className="w-48 h-48 sm:w-80 sm:h-80 lg:w-[28rem] lg:h-[28rem]">
+          <div className="w-48 h-48 sm:w-80 sm:h-80 lg:w-[32rem] lg:h-[32rem]">
             <img
               src="/brand/logo.svg"
               alt="Amarí Dul"
@@ -18,18 +18,18 @@ export default function Hero() {
           <img
             src="/brand/wordmark.svg"
             alt="Amarí Dul"
-            className="w-full max-w-lg mx-auto h-auto"
+            className="w-full max-w-lg lg:max-w-2xl mx-auto h-auto"
           />
           <img
             src="/brand/tagline.svg"
             alt="Asociación Civil"
-            className="w-full max-w-lg mx-auto h-auto"
+            className="w-full max-w-lg lg:max-w-2xl mx-auto h-auto"
           />
         </div>
 
         {/* Frase institucional - Placeholder */}
-        <div className="mt-8 sm:mt-12 max-w-2xl mx-auto">
-          <p className="text-lg sm:text-xl lg:text-2xl leading-relaxed text-text-muted font-light">
+        <div className="mt-8 sm:mt-12 max-w-2xl lg:max-w-5xl mx-auto px-4">
+          <p className="leading-relaxed text-text-muted font-light lg:whitespace-nowrap" style={{fontSize: "clamp(1.125rem, 4vw, 1.75rem)"}}>
             [Frase institucional breve que define el propósito de Amarí Dul]
           </p>
         </div>

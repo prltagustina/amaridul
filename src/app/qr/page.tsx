@@ -25,7 +25,7 @@ export default function QRPage() {
       </header>
 
       <main className="flex-1 px-4 pt-8 sm:pt-12 lg:pt-24 pb-8 sm:pb-12">
-        <div className="max-w-md sm:max-w-lg mx-auto space-y-8 sm:space-y-10">
+        <div className="max-w-md sm:max-w-lg lg:max-w-2xl mx-auto space-y-8 sm:space-y-10 lg:space-y-12">
           {/* Bienvenida */}
           <div className="space-y-3 sm:space-y-4 text-center">
             <div className="flex justify-center -mb-4 sm:-mb-5">
@@ -37,7 +37,7 @@ export default function QRPage() {
                 />
               </div>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-semibold leading-tight text-[#3f6043]">Bienvenido a Amarí Dul</h1>
+            <h1 className="font-semibold leading-tight text-[#3f6043] whitespace-nowrap" style={{fontSize: "clamp(1.75rem, 5vw, 2.5rem)"}}>Bienvenido a Amarí Dul</h1>
             <p className="text-lg sm:text-lg text-text-muted leading-relaxed">
               Asociación civil dedicada a [propósito pendiente de aprobación]
             </p>
@@ -45,7 +45,7 @@ export default function QRPage() {
 
           {/* Información del producto/asociación */}
           <section className="space-y-3 sm:space-y-4 border-t border-border pt-6 sm:pt-8">
-            <h2 className="text-xl sm:text-2xl font-light text-[#3f6043]">Sobre este producto</h2>
+            <h2 className="font-light text-[#3f6043]" style={{fontSize: "clamp(1.25rem, 4vw, 1.875rem)"}}>Sobre este producto</h2>
             <div className="space-y-3 text-lg text-text-muted leading-relaxed">
               <p>
                 [Información sobre el producto / asociación que corresponde a
@@ -84,7 +84,7 @@ export default function QRPage() {
 
           {/* Contacto */}
           <section id="contacto" className="border-t border-border pt-6 sm:pt-8">
-            <h3 className="text-lg sm:text-xl font-light mb-3 sm:mb-4 text-[#3f6043]">Contáctanos</h3>
+            <h3 className="font-light mb-3 sm:mb-4 text-[#3f6043]" style={{fontSize: "clamp(1.125rem, 3.5vw, 1.5rem)"}}>Contáctanos</h3>
             <div className="space-y-2 text-base sm:text-lg">
               <p>
                 <span className="text-text-muted">Instagram:</span>{" "}
