@@ -2,6 +2,8 @@
 <svg id="Capa_2" data-name="Capa 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 844.4 130">
   <defs>
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Jost:wght@300&display=swap');
+
       .cls-1 {
         letter-spacing: .32em;
       }
@@ -15,7 +17,7 @@
       }
 
       .cls-4 {
-        font-family: Jost, Jost-Light, sans-serif;
+        font-family: Jost, sans-serif;
         font-size: 42px;
         font-weight: 300;
       }
