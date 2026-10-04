@@ -19,7 +19,8 @@ export default function QRPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <header className="px-4 pt-6 sm:pt-8">
-        <Link href="/" className="inline-flex items-center gap-2 py-2 px-3 text-lg sm:text-xl text-[#3f6043] hover:text-[#3f6043] border-b border-b-transparent hover:border-b-[#3f6043] transition-all">
+        <Link href="/" className="inline-flex items-center gap-2 py-2 px-3 text-lg sm:text-xl text-text-muted hover:text-[#3f6043] border-b border-b-transparent hover:border-b-[#3f6043] transition-all">
+          <span className="text-xl">←</span> <span>Volver al inicio</span>
           <span className="text-[#3f6043] text-xl">←</span> <span>Volver al inicio</span>
         </Link>
       </header>
@@ -37,7 +38,7 @@ export default function QRPage() {
                 />
               </div>
             </div>
-            <h1 className="leading-tight text-[#3f6043] whitespace-nowrap" style={{fontSize: "clamp(1.875rem, 5vw, 2.25rem)", letterSpacing: "-0.02em", fontWeight: "500"}}>Bienvenido a Amarí Dul</h1>
+            <h1 className="font-semibold leading-tight text-[#3f6043] whitespace-nowrap" style={{fontSize: "clamp(1.75rem, 5vw, 2.5rem)", fontWeight: "500"}}>Bienvenido a Amarí Dul</h1>
             <p className="text-lg sm:text-lg text-text-muted leading-relaxed font-light" style={{fontFamily: "var(--font-jost, sans-serif)"}}>
               Asociación civil dedicada a [propósito pendiente de aprobación]
             </p>

@@ -14,13 +14,13 @@ export default function Hero() {
         </div>
 
         {/* Wordmark y Tagline */}
-        <div className="space-y-3 sm:space-y-4">
+        <div className="space-y-6 sm:space-y-8">
           <img
             src="/brand/wordmark.svg"
             alt="Amarí Dul"
             className="w-full max-w-lg lg:max-w-2xl mx-auto h-auto"
           />
-          <div className="flex items-center justify-center gap-3 sm:gap-6 lg:gap-10">
+          <div className="flex items-center justify-center gap-4 sm:gap-6">
             <div className="flex-1 h-px bg-[#3f6043]"></div>
             <p className="text-[#3f6043] font-light whitespace-nowrap" style={{fontSize: "clamp(1.25rem, 3.5vw, 1.875rem)", letterSpacing: "0.5em"}}>
               ASOCIACIÓN CIVIL
