@@ -37,7 +37,7 @@ export default function QRPage() {
                 />
               </div>
             </div>
-            <h1 className="font-black leading-tight text-[#3f6043] whitespace-nowrap" style={{fontSize: "clamp(2.125rem, 6vw, 2.5rem)"}}>Bienvenido a Amarí Dul</h1>
+            <h1 className="font-black leading-tight text-[#3f6043] whitespace-nowrap" style={{fontSize: "clamp(1.875rem, 5vw, 2.25rem)", letterSpacing: "-0.02em"}}>Bienvenido a Amarí Dul</h1>
             <p className="text-lg sm:text-lg text-text-muted leading-relaxed font-light" style={{fontFamily: "var(--font-jost, sans-serif)"}}>
               Asociación civil dedicada a [propósito pendiente de aprobación]
             </p>
