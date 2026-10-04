@@ -19,15 +19,15 @@ export default function QRPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <header className="px-4 pt-6 sm:pt-8">
-        <Link href="/" className="inline-flex items-center gap-2 py-2 px-3 text-lg sm:text-xl text-text-muted hover:text-[#3f6043] border-b border-b-transparent hover:border-b-[#3f6043] transition-all">
-          <span className="text-xl">←</span> <span>Volver al inicio</span>
+        <Link href="/" className="inline-flex items-center gap-2 py-2 px-3 text-lg sm:text-xl text-[#3f6043] hover:text-[#3f6043] border-b border-b-transparent hover:border-b-[#3f6043] transition-all">
+          <span className="text-[#3f6043] text-xl">←</span> <span>Volver al inicio</span>
         </Link>
       </header>
 
       <main className="flex-1 px-4 pt-8 sm:pt-12 lg:pt-24 pb-8 sm:pb-12">
         <div className="max-w-md sm:max-w-lg lg:max-w-2xl mx-auto space-y-8 sm:space-y-10 lg:space-y-12">
           {/* Bienvenida */}
-          <div className="space-y-3 sm:space-y-4 text-center">
+          <div className="space-y-3 sm:space-y-4 text-center bg-[#F2EBDD] px-6 sm:px-8 py-12 sm:py-16 lg:py-20 -mx-4 sm:-mx-8 lg:-mx-auto rounded-lg">
             <div className="flex justify-center -mb-4 sm:-mb-5">
               <div className="w-48 h-48 sm:w-80 sm:h-80 lg:w-[32rem] lg:h-[32rem]">
                 <img
@@ -37,8 +37,8 @@ export default function QRPage() {
                 />
               </div>
             </div>
-            <h1 className="font-semibold leading-tight text-[#3f6043] whitespace-nowrap" style={{fontSize: "clamp(1.75rem, 5vw, 2.5rem)"}}>Bienvenido a Amarí Dul</h1>
-            <p className="text-lg sm:text-lg text-text-muted leading-relaxed">
+            <h1 className="font-bold leading-tight text-[#3f6043] whitespace-nowrap" style={{fontSize: "clamp(1.75rem, 5vw, 2.5rem)"}}>Bienvenido a Amarí Dul</h1>
+            <p className="text-lg sm:text-lg text-[#3f6043] leading-relaxed">
               Asociación civil dedicada a [propósito pendiente de aprobación]
             </p>
           </div>
