@@ -44,7 +44,7 @@ export default function QRPage() {
           </div>
 
           {/* Información del producto/asociación */}
-          <section className="space-y-3 sm:space-y-4 border-t border-border pt-6 sm:pt-8">
+          <section className="space-y-3 sm:space-y-4 border-t border-border pt-2 sm:pt-3">
             <h2 className="font-light text-[#3f6043]" style={{fontSize: "clamp(1.25rem, 4vw, 1.875rem)"}}>Sobre este producto</h2>
             <div className="space-y-3 text-lg text-text-muted leading-relaxed">
               <p>
