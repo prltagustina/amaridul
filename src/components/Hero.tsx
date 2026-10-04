@@ -20,11 +20,9 @@ export default function Hero() {
             alt="Amarí Dul"
             className="w-full max-w-lg lg:max-w-2xl mx-auto h-auto"
           />
-          <img
-            src="/brand/tagline.svg"
-            alt="Asociación Civil"
-            className="w-full max-w-lg lg:max-w-2xl mx-auto h-auto"
-          />
+          <p className="text-[#3f6043] font-light tracking-widest" style={{fontSize: "clamp(0.875rem, 2vw, 1.25rem)"}}>
+            ASOCIACIÓN CIVIL
+          </p>
         </div>
 
         {/* Frase institucional - Placeholder */}
