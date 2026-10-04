@@ -22,7 +22,7 @@ export default function Hero() {
           />
           <div className="flex items-center justify-center gap-4 sm:gap-6">
             <div className="flex-1 h-px bg-[#3f6043]"></div>
-            <p className="text-[#3f6043] font-light whitespace-nowrap" style={{fontSize: "clamp(0.875rem, 2vw, 1.25rem)", letterSpacing: "0.32em"}}>
+            <p className="text-[#3f6043] font-light whitespace-nowrap" style={{fontSize: "clamp(1.25rem, 3vw, 1.875rem)", letterSpacing: "0.32em"}}>
               ASOCIACIÓN CIVIL
             </p>
             <div className="flex-1 h-px bg-[#3f6043]"></div>
