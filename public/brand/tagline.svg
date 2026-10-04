@@ -15,7 +15,7 @@
       }
 
       .cls-4 {
-        font-family: Verdana, sans-serif;
+        font-family: Arial, sans-serif;
         font-size: 42px;
         font-weight: 400;
       }
