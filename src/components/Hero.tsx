@@ -20,9 +20,13 @@ export default function Hero() {
             alt="Amarí Dul"
             className="w-full max-w-lg lg:max-w-2xl mx-auto h-auto"
           />
-          <p className="text-[#3f6043] font-light tracking-widest" style={{fontSize: "clamp(0.875rem, 2vw, 1.25rem)"}}>
-            ASOCIACIÓN CIVIL
-          </p>
+          <div className="flex items-center justify-center gap-4 sm:gap-6">
+            <div className="flex-1 h-px bg-[#3f6043]"></div>
+            <p className="text-[#3f6043] font-light whitespace-nowrap" style={{fontSize: "clamp(0.875rem, 2vw, 1.25rem)", letterSpacing: "0.32em"}}>
+              ASOCIACIÓN CIVIL
+            </p>
+            <div className="flex-1 h-px bg-[#3f6043]"></div>
+          </div>
         </div>
 
         {/* Frase institucional - Placeholder */}
