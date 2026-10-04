@@ -1,26 +1,144 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F2EBDD;
+  --foreground: #1a1a18;
+  --text-muted: #706f6d;
+  --brand: #3f6043;
+  --brand-hover: #4f7053;
+  --border: #d5cfbf;
+  --white: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-text-muted: var(--text-muted);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-border: var(--border);
+  --color-white: var(--white);
+  --font-display: var(--font-cormorant);
+  --font-sans: var(--font-jost);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #F2EBDD;
+    --foreground: #1a1a18;
+    --text-muted: #706f6d;
+    --brand: #2d5c2f;
+    --brand-hover: #4d7a51;
+    --border: #d5cfbf;
+    --white: #ffffff;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-feature-settings: "liga" 1, "calt" 1;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+button,
+a[role="button"] {
+  cursor: pointer;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+@keyframes butterfly-float {
+  0%, 100% {
+    transform: translateY(0) scaleX(1);
+  }
+  5% {
+    transform: translateY(-2px) scaleX(0.92);
+  }
+  10% {
+    transform: translateY(-4px) scaleX(1);
+  }
+  15% {
+    transform: translateY(-6px) scaleX(0.92);
+  }
+  20% {
+    transform: translateY(-8px) scaleX(1);
+  }
+  25% {
+    transform: translateY(-10px) scaleX(0.92);
+  }
+  30% {
+    transform: translateY(-12px) scaleX(1);
+  }
+  35% {
+    transform: translateY(-14px) scaleX(0.92);
+  }
+  40% {
+    transform: translateY(-16px) scaleX(1);
+  }
+  45% {
+    transform: translateY(-18px) scaleX(0.92);
+  }
+  50% {
+    transform: translateY(-20px) scaleX(1);
+  }
+  55% {
+    transform: translateY(-18px) scaleX(0.92);
+  }
+  60% {
+    transform: translateY(-16px) scaleX(1);
+  }
+  65% {
+    transform: translateY(-14px) scaleX(0.92);
+  }
+  70% {
+    transform: translateY(-12px) scaleX(1);
+  }
+  75% {
+    transform: translateY(-10px) scaleX(0.92);
+  }
+  80% {
+    transform: translateY(-8px) scaleX(1);
+  }
+  85% {
+    transform: translateY(-6px) scaleX(0.92);
+  }
+  90% {
+    transform: translateY(-4px) scaleX(1);
+  }
+  95% {
+    transform: translateY(-2px) scaleX(0.92);
+  }
+}
+
+.butterfly-flutter {
+  animation: butterfly-float 5s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .butterfly-flutter {
+    animation: none;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
 }
