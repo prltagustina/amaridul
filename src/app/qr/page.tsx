@@ -27,8 +27,8 @@ export default function QRPage() {
       <main className="flex-1 px-4 pt-8 sm:pt-12 lg:pt-24 pb-8 sm:pb-12">
         <div className="max-w-md sm:max-w-lg lg:max-w-2xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
           {/* Bienvenida */}
-          <div className="space-y-1 sm:space-y-1 text-center bg-[#F2EBDD] px-6 sm:px-8 py-16 sm:py-24 lg:py-32 -mx-4 sm:-mx-8 lg:-mx-auto rounded-lg">
-            <div className="flex justify-center -mb-4 sm:-mb-5 lg:-mb-12">
+          <div className="space-y-0 sm:space-y-0 text-center bg-[#F2EBDD] px-6 sm:px-8 py-8 sm:py-12 lg:py-16 -mx-4 sm:-mx-8 lg:-mx-auto rounded-lg">
+            <div className="flex justify-center -mb-2 sm:-mb-3 lg:-mb-6">
               <div className="w-48 h-48 sm:w-80 sm:h-80 lg:w-[32rem] lg:h-[32rem]">
                 <img
                   src="/brand/logo.svg"
