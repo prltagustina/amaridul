@@ -1,20 +1,36 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { BRAND } from "@/lib/constants";
+import { BRAND, SITE_URL } from "@/lib/constants";
+
+const title = BRAND.name;
+const description = "Información del producto y contacto.";
+const ogImage = {
+  url: `${SITE_URL}/og/qr.png`,
+  width: 1200,
+  height: 630,
+  alt: `${BRAND.name} — Información del producto y contacto`,
+};
 
 export const metadata: Metadata = {
-  title: `${BRAND.name} | QR`,
-  description: BRAND.description,
+  title: `${BRAND.name} | Información del producto`,
+  description,
   alternates: {
-    canonical: "/qr",
+    canonical: `${SITE_URL}/qr`,
   },
   openGraph: {
-    title: BRAND.name,
-    description: BRAND.description,
-    url: "/qr",
+    title,
+    description,
+    url: `${SITE_URL}/qr`,
     siteName: BRAND.name,
     locale: "es_AR",
     type: "website",
+    images: [ogImage],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+    images: [ogImage],
   },
 };
 

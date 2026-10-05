@@ -10,20 +10,37 @@ const jost = Jost({
   display: "swap",
 });
 
+const title = `${BRAND.name} | ${BRAND.tagline}`;
+const description =
+  "Conocé Amarí Dul, su propuesta y la información vinculada a sus productos.";
+const ogImage = {
+  url: `${SITE_URL}/og/home.png`,
+  width: 1200,
+  height: 630,
+  alt: `${BRAND.name} — ${BRAND.tagline}`,
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: BRAND.name,
-  description: BRAND.description,
+  title,
+  description,
   alternates: {
-    canonical: "/",
+    canonical: `${SITE_URL}/`,
   },
   openGraph: {
-    title: BRAND.name,
-    description: BRAND.description,
-    url: "/",
+    title,
+    description,
+    url: `${SITE_URL}/`,
     siteName: BRAND.name,
     locale: "es_AR",
     type: "website",
+    images: [ogImage],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+    images: [ogImage],
   },
 };
 
