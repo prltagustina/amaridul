@@ -3,7 +3,7 @@ export default function Hero() {
     <section className="w-full px-4 sm:px-8" style={{minHeight: "100dvh", display: "flex", flexDirection: "column", justifyContent: "center", paddingTop: "clamp(2rem, 5dvh, 4rem)", paddingBottom: "clamp(1rem, 3dvh, 2rem)"}}>
       <div className="max-w-4xl mx-auto text-center w-full" style={{display: "flex", flexDirection: "column", gap: "clamp(0.75rem, 2.5dvh, 3rem)"}}>
         {/* Logo - Mariposa dominante */}
-        <div className="flex justify-center" style={{marginBottom: "clamp(-0.5rem, -1.2dvh, -1rem)"}}>
+        <div className="flex justify-center" style={{marginBottom: "clamp(-2rem, -3.5dvh, -2.5rem)"}}>
           <div style={{width: "clamp(11rem, 25dvh, 30rem)", height: "clamp(11rem, 25dvh, 30rem)", aspectRatio: "1"}}>
             <img
               src="/brand/logo.svg"
