@@ -4,7 +4,7 @@ export default function Hero() {
       <div className="max-w-4xl mx-auto text-center w-full" style={{display: "flex", flexDirection: "column", gap: "clamp(0.75rem, 2.5dvh, 3rem)"}}>
         {/* Logo - Mariposa dominante */}
         <div className="flex justify-center" style={{marginBottom: "clamp(-3rem, -9dvh, -8.5rem)"}}>
-          <div style={{width: "clamp(11rem, 25dvh, 48rem)", height: "clamp(11rem, 25dvh, 48rem)", aspectRatio: "1"}}>
+          <div style={{width: "clamp(11rem, 30dvh, 96rem)", height: "clamp(11rem, 30dvh, 96rem)", aspectRatio: "1"}}>
             <img
               src="/brand/logo.svg"
               alt="Amarí Dul"
