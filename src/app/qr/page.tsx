@@ -1,16 +1,19 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import { BRAND } from "@/lib/constants";
 
 export const metadata: Metadata = {
-  title: "Amarí Dul | QR",
-  description: "Asociación civil",
+  title: `${BRAND.name} | QR`,
+  description: BRAND.description,
   alternates: {
-    canonical: "https://amaridul.com/qr",
+    canonical: "/qr",
   },
   openGraph: {
-    title: "Amarí Dul",
-    description: "Asociación civil",
-    url: "https://amaridul.com/qr",
+    title: BRAND.name,
+    description: BRAND.description,
+    url: "/qr",
+    siteName: BRAND.name,
+    locale: "es_AR",
     type: "website",
   },
 };
@@ -32,7 +35,7 @@ export default function QRPage() {
               <div className="w-32 h-32 sm:w-56 sm:h-56 lg:w-72 lg:h-72">
                 <img
                   src="/brand/logo.svg"
-                  alt="Amarí Dul"
+                  alt=""
                   className="w-full h-full"
                 />
               </div>
@@ -68,12 +71,12 @@ export default function QRPage() {
 
           {/* CTA principal */}
           <div className="space-y-3 border-t border-border pt-6 sm:pt-8">
-            <a
-              href="https://amaridul.com"
+            <Link
+              href="/"
               className="block py-3 sm:py-4 px-4 bg-[#3f6043] !text-white text-center font-light text-lg sm:text-xl tracking-wide hover:bg-[#4f7053] transition-colors"
             >
               Conocer más
-            </a>
+            </Link>
             <a
               href="#contacto"
               className="block py-3 sm:py-4 px-4 border-2 border-[#3f6043] text-[#3f6043] text-center font-light text-lg sm:text-xl tracking-wide hover:bg-[#3f6043] hover:!text-white transition-colors"

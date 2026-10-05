@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Jost } from "next/font/google";
+import { Jost } from "next/font/google";
+import { BRAND, SITE_URL } from "@/lib/constants";
 import "./globals.css";
-
-const cormorantGaramond = Cormorant_Garamond({
-  variable: "--font-cormorant",
-  weight: ["500"],
-  subsets: ["latin"],
-  display: "swap",
-});
 
 const jost = Jost({
   variable: "--font-jost",
@@ -17,17 +11,17 @@ const jost = Jost({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://amaridul.com"),
-  title: "Amarí Dul",
-  description: "Asociación civil",
+  metadataBase: new URL(SITE_URL),
+  title: BRAND.name,
+  description: BRAND.description,
   alternates: {
-    canonical: "https://amaridul.com",
+    canonical: "/",
   },
   openGraph: {
-    title: "Amarí Dul",
-    description: "Asociación civil",
-    url: "https://amaridul.com",
-    siteName: "Amarí Dul",
+    title: BRAND.name,
+    description: BRAND.description,
+    url: "/",
+    siteName: BRAND.name,
     locale: "es_AR",
     type: "website",
   },
@@ -41,7 +35,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${cormorantGaramond.variable} ${jost.variable} h-full antialiased`}
+      className={`${jost.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
