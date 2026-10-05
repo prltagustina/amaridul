@@ -37,7 +37,7 @@ export default function QRPage() {
                 />
               </div>
             </div>
-            <h1 className="font-semibold leading-tight text-[#3f6043] whitespace-nowrap" style={{fontSize: "clamp(1.75rem, 5vw, 2.5rem)", fontWeight: "500"}}>Bienvenido a Amarí Dul</h1>
+            <h1 className="font-semibold leading-tight text-[#3f6043] whitespace-nowrap" style={{fontSize: "clamp(1.75rem, 5vw, 2.5rem)", fontWeight: "700"}}>Bienvenido a Amarí Dul</h1>
             <p className="text-lg sm:text-lg text-text-muted leading-relaxed font-light" style={{fontFamily: "var(--font-jost, sans-serif)"}}>
               Asociación civil dedicada a [propósito pendiente de aprobación]
             </p>
@@ -45,7 +45,7 @@ export default function QRPage() {
 
           {/* Información del producto/asociación */}
           <section className="space-y-3 sm:space-y-4 border-t border-border pt-6 sm:pt-8">
-            <h2 className="font-light text-[#3f6043]" style={{fontSize: "clamp(1.25rem, 4vw, 1.875rem)"}}>Sobre este producto</h2>
+            <h2 className="font-semibold text-[#3f6043]" style={{fontSize: "clamp(1.25rem, 4vw, 1.875rem)"}}>Sobre este producto</h2>
             <div className="space-y-3 text-lg text-text-muted leading-relaxed">
               <p>
                 [Información sobre el producto / asociación que corresponde a
