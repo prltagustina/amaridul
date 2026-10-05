@@ -3,8 +3,8 @@ export default function Hero() {
     <section className="w-full px-4 sm:px-8" style={{minHeight: "100dvh", display: "flex", flexDirection: "column", justifyContent: "center", paddingTop: "clamp(2rem, 5dvh, 4rem)", paddingBottom: "clamp(1rem, 3dvh, 2rem)"}}>
       <div className="max-w-4xl mx-auto text-center w-full" style={{display: "flex", flexDirection: "column", gap: "clamp(0.75rem, 2.5dvh, 3rem)"}}>
         {/* Logo - Mariposa dominante */}
-        <div className="flex justify-center" style={{marginBottom: "clamp(-2.5rem, -5dvh, -5rem)"}}>
-          <div style={{width: "clamp(11rem, 25dvh, 42rem)", height: "clamp(11rem, 25dvh, 42rem)", aspectRatio: "1"}}>
+        <div className="flex justify-center" style={{marginBottom: "clamp(-2.5rem, -6dvh, -6.5rem)"}}>
+          <div style={{width: "clamp(11rem, 25dvh, 48rem)", height: "clamp(11rem, 25dvh, 48rem)", aspectRatio: "1"}}>
             <img
               src="/brand/logo.svg"
               alt="Amarí Dul"
