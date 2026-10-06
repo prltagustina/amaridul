@@ -11,7 +11,7 @@ const LINKS = [
   { href: "#contacto", label: "Contacto" },
 ];
 
-const linkClass = "!text-text-muted hover:!text-[#3f6043] transition-colors motion-reduce:transition-none aria-[current=page]:!text-[#3f6043]";
+const linkClass = "!text-background/85 hover:!text-background transition-colors motion-reduce:transition-none aria-[current=page]:!text-background focus-visible:!outline-background";
 
 export default function Nav() {
   const pathname = usePathname();
@@ -27,12 +27,12 @@ export default function Nav() {
   const current = (href: string) => (href === pathname ? "page" : undefined);
 
   return (
-    <header className="sticky top-0 z-50 bg-background border-b border-border">
+    <header className="sticky top-0 z-50 bg-[#3f6043]">
       <nav aria-label="Principal">
         <div className="page-gutter">
           <div className="nav-column flex items-center justify-between" style={{height: "var(--nav-h)"}}>
-            <Link href="/" aria-label="Amarí Dul, inicio" className="flex items-center" onClick={() => setOpen(false)}>
-              <img src="/brand/wordmark-bold.svg" alt="" className="!h-[1.375rem] sm:!h-6 !w-auto" />
+            <Link href="/" aria-label="Amarí Dul, inicio" className="flex items-center focus-visible:!outline-background" onClick={() => setOpen(false)}>
+              <img src="/brand/wordmark-bold-cream.svg" alt="" className="!h-[1.375rem] sm:!h-6 !w-auto" />
             </Link>
 
             <ul className="hidden md:flex items-center gap-8 -mr-[0.15em] lg:mr-[calc(0.875rem-0.15em)] text-sm uppercase tracking-[0.15em]">
@@ -50,7 +50,7 @@ export default function Nav() {
               aria-expanded={open}
               aria-controls="menu-movil"
               onClick={() => setOpen((v) => !v)}
-              className="md:hidden -mr-2 flex h-11 w-11 items-center justify-center text-[#3f6043]"
+              className="md:hidden -mr-2 flex h-11 w-11 items-center justify-center text-background focus-visible:!outline-background"
             >
               <span className="sr-only">{open ? "Cerrar menú" : "Abrir menú"}</span>
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
@@ -60,7 +60,7 @@ export default function Nav() {
           </div>
         </div>
 
-        <div id="menu-movil" hidden={!open} className="md:hidden absolute inset-x-0 top-full page-gutter bg-background border-y border-border">
+        <div id="menu-movil" hidden={!open} className="md:hidden absolute inset-x-0 top-full page-gutter bg-[#3f6043] border-t border-background/20">
           <ul className="nav-column py-2 text-base uppercase tracking-[0.15em]">
             {LINKS.map((l) => (
               <li key={l.href}>
