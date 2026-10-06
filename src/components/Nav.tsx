@@ -2,20 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const LINKS = [
-  { href: "/", label: "Inicio" },
-  { href: "/#sobre", label: "Sobre Amarí Dul" },
+  { href: "/#sobre", label: "Sobre Amarí Dul", section: "sobre" },
   { href: "/qr", label: "Producto" },
-  { href: "#contacto", label: "Contacto" },
+  { href: "#contacto", label: "Contacto", section: "contacto" },
 ];
 
-const linkClass = "!text-background/85 hover:!text-background transition-colors motion-reduce:transition-none aria-[current=page]:!text-background focus-visible:!outline-background";
+const linkClass = "!text-background/85 hover:!text-background transition-colors motion-reduce:transition-none data-[active=true]:!text-background focus-visible:!outline-background";
 
 export default function Nav() {
   const pathname = usePathname();
+  const headerRef = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false);
+  const [section, setSection] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -24,10 +25,35 @@ export default function Nav() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  useEffect(() => {
+    const ids = LINKS.flatMap((l) => (l.section && document.getElementById(l.section) ? [l.section] : []));
+    const update = () => {
+      const navBottom = headerRef.current?.getBoundingClientRect().bottom ?? 0;
+      let active: string | null = null;
+      for (const id of ids) {
+        if (document.getElementById(id)!.getBoundingClientRect().top <= navBottom + 8) active = id;
+      }
+      // Contacto sits at the end of the page and can never reach the top, so the bottom counts as reaching it.
+      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+      if (atBottom && ids.includes("contacto")) active = "contacto";
+      setSection(active);
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    window.addEventListener("hashchange", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+      window.removeEventListener("hashchange", update);
+    };
+  }, [pathname]);
+
+  const isActive = (l: (typeof LINKS)[number]) => (section ? l.section === section : !l.section && l.href === pathname);
   const current = (href: string) => (href === pathname ? "page" : undefined);
 
   return (
-    <header className="sticky top-0 z-50 bg-[#3f6043]">
+    <header ref={headerRef} className="sticky top-0 z-50 bg-[#3f6043]">
       <nav aria-label="Principal">
         <div className="page-gutter">
           <div className="nav-column flex items-center justify-between" style={{height: "var(--nav-h)"}}>
@@ -38,7 +64,7 @@ export default function Nav() {
             <ul className="hidden md:flex items-center gap-8 -mr-[0.15em] lg:mr-[calc(0.875rem-0.15em)] text-sm uppercase tracking-[0.15em]">
               {LINKS.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} aria-current={current(l.href)} className={linkClass}>
+                  <Link href={l.href} aria-current={current(l.href)} data-active={isActive(l)} className={linkClass}>
                     {l.label}
                   </Link>
                 </li>
@@ -64,7 +90,7 @@ export default function Nav() {
           <ul className="nav-column py-2 text-base uppercase tracking-[0.15em]">
             {LINKS.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} aria-current={current(l.href)} onClick={() => setOpen(false)} className="block py-3 !text-background focus-visible:!outline-background aria-[current=page]:!underline underline-offset-[6px] decoration-1">
+                <Link href={l.href} aria-current={current(l.href)} data-active={isActive(l)} onClick={() => setOpen(false)} className="block py-3 !text-background focus-visible:!outline-background data-[active=true]:!underline underline-offset-[6px] decoration-1">
                   {l.label}
                 </Link>
               </li>

@@ -42,7 +42,7 @@ export default function QRPage() {
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Nav />
 
-      <main className="flex-1 page-gutter pt-8 sm:pt-12 lg:pt-24 pb-8 sm:pb-12">
+      <main className="flex-1 page-gutter pt-14 sm:pt-16 lg:pt-24 pb-8 sm:pb-12">
         <div className="content-column space-y-8 sm:space-y-10 lg:space-y-12">
           {/* Bienvenida */}
           <div className="space-y-3 sm:space-y-4 text-center">
