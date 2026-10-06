@@ -33,7 +33,7 @@ export default function Hero() {
 
         {/* Frase institucional - Placeholder */}
         <div className="max-w-2xl lg:max-w-5xl mx-auto px-4">
-          <p className="leading-relaxed text-text-muted font-light lg:whitespace-nowrap" style={{fontSize: "clamp(1rem, 2svh, 1.75rem)"}}>
+          <p className="text-lead text-text-muted font-light lg:whitespace-nowrap">
             [Frase institucional breve que define el propósito de Amarí Dul]
           </p>
         </div>

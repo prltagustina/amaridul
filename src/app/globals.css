@@ -33,6 +33,16 @@
   }
 }
 
+@utility text-body {
+  font-size: 1.125rem;
+  line-height: 1.625;
+}
+
+@utility text-lead {
+  font-size: clamp(1.25rem, 1rem + 1vw, 1.5rem);
+  line-height: 1.5;
+}
+
 @utility content-column {
   width: 100%;
   max-width: var(--container-md);

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import Contact from "@/components/Contact";
@@ -12,13 +13,13 @@ export default function Home() {
         <Hero />
 
         {/* Presentación */}
-        <section className="py-12 sm:py-20 lg:py-24 px-4 border-t border-border">
-          <div className="content-column space-y-5 sm:space-y-6">
-            <p className="text-lg sm:text-xl lg:text-xl leading-relaxed text-text-muted">
+        <section className="pb-12 sm:pb-20 lg:pb-24 px-4">
+          <div className="content-column border-t border-border pt-12 sm:pt-20 lg:pt-24 space-y-5 sm:space-y-6">
+            <p className="text-body text-text-muted">
               [Párrafo 1: Descripción breve de Amarí Dul como asociación civil,
               su propósito y valores. Pendiente de contenido aprobado.]
             </p>
-            <p className="text-lg sm:text-xl lg:text-xl leading-relaxed text-text-muted">
+            <p className="text-body text-text-muted">
               [Párrafo 2: Información sobre productos o servicios. Pendiente de
               contenido aprobado.]
             </p>
@@ -27,13 +28,13 @@ export default function Home() {
 
         {/* CTA */}
         <section className="py-12 sm:py-20 lg:py-24 px-4">
-          <div className="content-column text-center">
-            <a
+          <div className="content-column">
+            <Link
               href="/qr"
-              className="inline-block px-8 sm:px-10 py-3 sm:py-4 bg-[#3f6043] !text-white font-light text-lg sm:text-xl tracking-wide hover:bg-[#4f7053] transition-colors"
+              className="block py-3 sm:py-4 px-4 bg-[#3f6043] !text-white text-center font-light text-lg sm:text-xl tracking-wide hover:bg-[#4f7053] transition-colors"
             >
               Más información
-            </a>
+            </Link>
           </div>
         </section>
 
