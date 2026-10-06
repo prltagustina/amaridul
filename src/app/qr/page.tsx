@@ -80,7 +80,7 @@ export default function QRPage() {
           </section>
 
           {/* Trazabilidad - placeholder para expansión futura */}
-          <section className="border-t border-border pt-6 sm:pt-8 opacity-50">
+          <section className="border-t border-border pt-8 sm:pt-10 lg:pt-12 opacity-50">
             <p className="text-sm sm:text-base text-text-muted italic leading-relaxed">
               [Futuro: Información de trazabilidad, QR de producto específico,
               documentación, etc.]
