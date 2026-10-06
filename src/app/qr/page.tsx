@@ -95,7 +95,7 @@ export default function QRPage() {
             </Link>
             <a
               href="#contacto"
-              className="block py-3 sm:py-4 px-4 border-2 border-[#3f6043] text-[#3f6043] text-center font-light text-lg sm:text-xl tracking-wide hover:bg-[#3f6043] hover:!text-white transition-colors"
+              className="block py-3 sm:py-4 px-4 border-2 border-[#3f6043] !text-[#3f6043] text-center font-light text-lg sm:text-xl tracking-wide hover:bg-[#3f6043] hover:!text-white transition-colors"
             >
               Contacto
             </a>
