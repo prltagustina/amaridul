@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="space-y-5 sm:space-y-6">
           {/* Contacto */}
           <div className="space-y-2 text-sm sm:text-base">
-            <h3 className="font-semibold text-[#3f6043]">Contacto</h3>
+            <h3 className="font-medium text-[#3f6043]">Contacto</h3>
             <div className="space-y-1 text-text-muted">
               <p>Instagram: {CONTACT.instagram}</p>
               <p>WhatsApp: {CONTACT.whatsapp}</p>

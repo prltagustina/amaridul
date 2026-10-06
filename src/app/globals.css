@@ -3,7 +3,7 @@
 :root {
   --background: #F2EBDD;
   --foreground: #1a1a18;
-  --text-muted: #706f6d;
+  --text-muted: #6b6a68;
   --brand: #3f6043;
   --brand-hover: #4f7053;
   --border: #d5cfbf;
@@ -25,7 +25,7 @@
   :root {
     --background: #F2EBDD;
     --foreground: #1a1a18;
-    --text-muted: #706f6d;
+    --text-muted: #6b6a68;
     --brand: #2d5c2f;
     --brand-hover: #4d7a51;
     --border: #d5cfbf;
@@ -36,6 +36,8 @@
 body {
   background: var(--background);
   color: var(--foreground);
+  /* Only Jost 300/500 are loaded; without this, weight-400 text would snap to 500. */
+  font-weight: 300;
   font-feature-settings: "liga" 1, "calt" 1;
 }
 

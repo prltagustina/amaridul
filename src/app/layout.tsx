@@ -5,7 +5,7 @@ import "./globals.css";
 
 const jost = Jost({
   variable: "--font-jost",
-  weight: ["300"],
+  weight: ["300", "500"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -52,6 +52,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
+      data-scroll-behavior="smooth"
       className={`${jost.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
