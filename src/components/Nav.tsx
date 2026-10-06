@@ -60,11 +60,11 @@ export default function Nav() {
           </div>
         </div>
 
-        <div id="menu-movil" hidden={!open} className="md:hidden absolute inset-x-0 top-full page-gutter bg-[#3f6043] border-t border-background/20">
+        <div id="menu-movil" hidden={!open} className="md:hidden absolute inset-x-0 top-full page-gutter bg-[#4f7053]">
           <ul className="nav-column py-2 text-base uppercase tracking-[0.15em]">
             {LINKS.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} aria-current={current(l.href)} onClick={() => setOpen(false)} className={`block py-3 ${linkClass}`}>
+                <Link href={l.href} aria-current={current(l.href)} onClick={() => setOpen(false)} className="block py-3 !text-background focus-visible:!outline-background aria-[current=page]:!underline underline-offset-[6px] decoration-1">
                   {l.label}
                 </Link>
               </li>
