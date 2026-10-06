@@ -27,7 +27,7 @@ const BLOCKS = [
 export default function About() {
   return (
     <section aria-labelledby="sobre-amari-dul" className="border-t border-border pb-12 sm:pb-20 lg:pb-24">
-      <header className="border-b border-border px-4">
+      <header className="border-b border-border page-gutter">
         <div className="content-column pt-10 pb-9 sm:pt-14 sm:pb-13 lg:pt-16 lg:pb-15">
           <h2 id="sobre-amari-dul" className="font-medium text-[#3f6043]" style={{fontSize: "clamp(1.75rem, 1.25rem + 2vw, 2.5rem)", lineHeight: 1.2}}>
             Sobre Amarí Dul
@@ -35,7 +35,7 @@ export default function About() {
         </div>
       </header>
 
-      <div className="px-4">
+      <div className="page-gutter">
         <div className="content-column pt-8 sm:pt-10 space-y-10 sm:space-y-14">
           {BLOCKS.map((block, i) => (
             <article key={block.id} aria-labelledby={`${block.id}-title`} className={i === 0 ? undefined : "border-t border-border/50 pt-8 sm:pt-10"}>

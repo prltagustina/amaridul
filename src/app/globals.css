@@ -43,6 +43,13 @@
   line-height: 1.5;
 }
 
+@utility page-gutter {
+  padding-inline: 1.5rem;
+  @media (width >= 40rem) {
+    padding-inline: 1rem;
+  }
+}
+
 @utility content-column {
   width: 100%;
   max-width: var(--container-md);

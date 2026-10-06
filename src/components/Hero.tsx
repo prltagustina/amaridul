@@ -1,10 +1,10 @@
 export default function Hero() {
   return (
-    <section className="w-full px-4 sm:px-8" style={{minHeight: "100svh", display: "flex", flexDirection: "column", justifyContent: "center", paddingTop: "clamp(2rem, 5svh, 4rem)", paddingBottom: "clamp(1rem, 3svh, 2rem)"}}>
+    <section className="w-full px-6 sm:px-8" style={{minHeight: "100svh", display: "flex", flexDirection: "column", justifyContent: "center", paddingTop: "clamp(2rem, 5svh, 4rem)", paddingBottom: "clamp(1rem, 3svh, 2rem)"}}>
       <div className="max-w-4xl mx-auto text-center w-full" style={{display: "flex", flexDirection: "column", gap: "clamp(0.75rem, 2.5svh, 3rem)"}}>
         {/* Logo - Mariposa dominante */}
         <div className="flex justify-center" style={{marginBottom: "clamp(-3rem, -9svh, -8.5rem)"}}>
-          <div style={{width: "min(clamp(11rem, 30svh, 96rem), calc(100vw - 2rem))", height: "min(clamp(11rem, 30svh, 96rem), calc(100vw - 2rem))", aspectRatio: "1"}}>
+          <div style={{width: "min(clamp(11rem, 30svh, 96rem), calc(100vw - 3rem))", height: "min(clamp(11rem, 30svh, 96rem), calc(100vw - 3rem))", aspectRatio: "1"}}>
             <img
               src="/brand/logo.svg"
               alt=""
@@ -24,7 +24,7 @@ export default function Hero() {
           </h1>
           <div className="flex items-center justify-center gap-4 sm:gap-6">
             <div className="flex-1 h-px bg-[#3f6043]"></div>
-            <p className="text-[#3f6043] font-light whitespace-nowrap" style={{fontSize: "min(clamp(1rem, 2.5svh, 1.875rem), calc((100vw - 2rem) / 16.5))", letterSpacing: "0.5em"}}>
+            <p className="text-[#3f6043] font-light whitespace-nowrap" style={{fontSize: "min(clamp(1rem, 2.5svh, 1.875rem), calc((100vw - 3rem) / 16.5))", letterSpacing: "0.5em"}}>
               ASOCIACIÓN CIVIL
             </p>
             <div className="flex-1 h-px bg-[#3f6043]"></div>

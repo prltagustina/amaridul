@@ -16,7 +16,7 @@ export default function Home() {
         <About />
 
         {/* CTA */}
-        <section className="py-12 sm:py-20 lg:py-24 px-4">
+        <section className="py-12 sm:py-20 lg:py-24 page-gutter">
           <div className="content-column">
             <Link
               href="/qr"
@@ -27,7 +27,7 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="border-t border-border px-4 pb-8 sm:pb-12">
+        <div className="border-t border-border page-gutter pb-8 sm:pb-12">
           <div className="content-column">
             <Contact divider={false} />
           </div>
