@@ -86,11 +86,11 @@ export default function Nav() {
           </div>
         </div>
 
-        <div id="menu-movil" hidden={!open} className="md:hidden absolute inset-x-0 top-full page-gutter bg-[#4f7053]">
+        <div id="menu-movil" hidden={!open} className="md:hidden absolute inset-x-0 top-full page-gutter bg-background border-b border-border">
           <ul className="nav-column py-2 text-base uppercase tracking-[0.15em]">
             {LINKS.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} aria-current={current(l.href)} data-active={isActive(l)} onClick={() => setOpen(false)} className="block py-3 !text-background focus-visible:!outline-background data-[active=true]:!underline underline-offset-[6px] decoration-1">
+                <Link href={l.href} aria-current={current(l.href)} data-active={isActive(l)} onClick={() => setOpen(false)} className="block py-3 !text-text-muted data-[active=true]:!text-[#3f6043] data-[active=true]:!underline underline-offset-[6px] decoration-1">
                   {l.label}
                 </Link>
               </li>
