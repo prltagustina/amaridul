@@ -50,6 +50,19 @@
   }
 }
 
+/* Same as content-column, but on desktop spans the hero wordmark (max-w-4xl). */
+@utility nav-column {
+  width: 100%;
+  max-width: var(--container-md);
+  margin-inline: auto;
+  @media (width >= 40rem) {
+    max-width: var(--container-lg);
+  }
+  @media (width >= 64rem) {
+    max-width: 56rem;
+  }
+}
+
 @utility content-column {
   width: 100%;
   max-width: var(--container-md);
@@ -72,6 +85,17 @@ body {
 
 html {
   scroll-behavior: smooth;
+  --nav-h: 3.5rem;
+}
+
+@media (width >= 40rem) {
+  html {
+    --nav-h: 4rem;
+  }
+}
+
+[id] {
+  scroll-margin-top: var(--nav-h);
 }
 
 a {

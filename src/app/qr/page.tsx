@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { BRAND, SITE_URL } from "@/lib/constants";
 import Contact from "@/components/Contact";
+import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 
 const title = BRAND.name;
@@ -39,11 +40,7 @@ export const metadata: Metadata = {
 export default function QRPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <header className="page-gutter pt-6 sm:pt-8">
-        <Link href="/" className="inline-flex items-center gap-2 py-2 px-3 text-lg sm:text-xl !text-text-muted hover:!text-[#3f6043] border-b border-b-transparent hover:border-b-[#3f6043] transition-all">
-          <span className="text-xl">←</span> <span>Volver al inicio</span>
-        </Link>
-      </header>
+      <Nav />
 
       <main className="flex-1 page-gutter pt-8 sm:pt-12 lg:pt-24 pb-8 sm:pb-12">
         <div className="content-column space-y-8 sm:space-y-10 lg:space-y-12">

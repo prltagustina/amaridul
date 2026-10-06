@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Header from "@/components/Header";
+import Nav from "@/components/Nav";
 import Hero from "@/components/Hero";
 import About from "@/components/About";
 import Contact from "@/components/Contact";
@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <Header />
+      <Nav />
 
       <main className="flex-1">
         <Hero />
@@ -16,7 +16,7 @@ export default function Home() {
         <About />
 
         {/* CTA */}
-        <section className="py-12 sm:py-20 lg:py-24 page-gutter">
+        <section className="pb-12 sm:pb-16 page-gutter">
           <div className="content-column">
             <Link
               href="/qr"

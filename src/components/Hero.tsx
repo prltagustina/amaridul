@@ -1,6 +1,6 @@
 export default function Hero() {
   return (
-    <section className="w-full px-6 sm:px-8" style={{minHeight: "100svh", display: "flex", flexDirection: "column", justifyContent: "center", paddingTop: "clamp(2rem, 5svh, 4rem)", paddingBottom: "clamp(1rem, 3svh, 2rem)"}}>
+    <section className="w-full px-6 sm:px-8" style={{minHeight: "calc(100svh - var(--nav-h))", display: "flex", flexDirection: "column", justifyContent: "center", paddingTop: "clamp(2rem, 5svh, 4rem)", paddingBottom: "clamp(1rem, 3svh, 2rem)"}}>
       <div className="max-w-4xl mx-auto text-center w-full" style={{display: "flex", flexDirection: "column", gap: "clamp(0.75rem, 2.5svh, 3rem)"}}>
         {/* Logo - Mariposa dominante */}
         <div className="flex justify-center" style={{marginBottom: "clamp(-3rem, -9svh, -8.5rem)"}}>

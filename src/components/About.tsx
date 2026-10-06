@@ -26,7 +26,7 @@ const BLOCKS = [
 
 export default function About() {
   return (
-    <section aria-labelledby="sobre-amari-dul" className="border-t border-border pb-12 sm:pb-20 lg:pb-24">
+    <section id="sobre" aria-labelledby="sobre-amari-dul" className="border-t border-border pb-12 sm:pb-16">
       <header className="border-b border-border page-gutter">
         <div className="content-column pt-10 pb-9 sm:pt-14 sm:pb-13 lg:pt-16 lg:pb-15">
           <h2 id="sobre-amari-dul" className="font-medium text-[#3f6043]" style={{fontSize: "clamp(1.75rem, 1.25rem + 2vw, 2.5rem)", lineHeight: 1.2}}>
