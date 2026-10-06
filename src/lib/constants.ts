@@ -7,7 +7,7 @@ export const BRAND = {
 };
 
 export const CONTACT = {
-  instagram: "[Instagram URL - por confirmar]",
-  whatsapp: "[WhatsApp - por confirmar]",
-  email: "[Email - por confirmar]",
+  instagram: "[Por confirmar]",
+  whatsapp: "[Por confirmar]",
+  email: "[Por confirmar]",
 };

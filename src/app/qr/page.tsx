@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { BRAND, SITE_URL } from "@/lib/constants";
+import Contact from "@/components/Contact";
+import Footer from "@/components/Footer";
 
 const title = BRAND.name;
 const description = "Información del producto y contacto.";
@@ -44,7 +46,7 @@ export default function QRPage() {
       </header>
 
       <main className="flex-1 px-4 pt-8 sm:pt-12 lg:pt-24 pb-8 sm:pb-12">
-        <div className="max-w-md sm:max-w-lg lg:max-w-2xl mx-auto space-y-8 sm:space-y-10 lg:space-y-12">
+        <div className="content-column space-y-8 sm:space-y-10 lg:space-y-12">
           {/* Bienvenida */}
           <div className="space-y-3 sm:space-y-4 text-center">
             <div className="flex justify-center -mb-3 sm:-mb-4">
@@ -101,33 +103,11 @@ export default function QRPage() {
             </a>
           </div>
 
-          {/* Contacto */}
-          <section id="contacto" className="border-t border-border pt-6 sm:pt-8">
-            <h3 className="font-light mb-3 sm:mb-4 text-[#3f6043]" style={{fontSize: "clamp(1.125rem, 3.5vw, 1.5rem)"}}>Contáctanos</h3>
-            <div className="space-y-2 text-base sm:text-lg">
-              <p>
-                <span className="text-text-muted">Instagram:</span>{" "}
-                <span className="text-brand-hover">[Por confirmar]</span>
-              </p>
-              <p>
-                <span className="text-text-muted">WhatsApp:</span>{" "}
-                <span className="text-brand-hover">[Por confirmar]</span>
-              </p>
-              <p>
-                <span className="text-text-muted">Email:</span>{" "}
-                <span className="text-brand-hover">[Por confirmar]</span>
-              </p>
-            </div>
-          </section>
+          <Contact />
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="py-6 sm:py-8 px-4 border-t border-border text-center">
-        <p className="text-sm sm:text-base text-text-muted">
-          © {new Date().getFullYear()} Amarí Dul
-        </p>
-      </footer>
+      <Footer />
     </div>
   );
 }
