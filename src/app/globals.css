@@ -196,3 +196,120 @@ img {
     scroll-behavior: auto;
   }
 }
+
+/* ───────────── Design system (fase UI): new views only; the home keeps its current styles ───────────── */
+
+:root {
+  --surface: #fbf7ef;
+  --surface-sunken: #eae2d2;
+  --brand-soft: #dce5d6;
+  --accent: #7b5e8e;
+  --accent-hover: #6a4e7d;
+  --accent-soft: #c9b8d3; /* decorative only, never text */
+  --border-strong: #958f7d; /* form controls: ≥3:1 against surface/white */
+  --success-fg: #2f4a33;
+  --success-bg: #e2eadb;
+  --warning-fg: #7a5512;
+  --warning-bg: #f4e6c8;
+  --error-fg: #8a2f2f;
+  --error-bg: #f3ded8;
+  --info-fg: #6a4e7d;
+  --info-bg: #ece4f0;
+}
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-brand-soft: var(--brand-soft);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-border-strong: var(--border-strong);
+  --color-success-fg: var(--success-fg);
+  --color-success-bg: var(--success-bg);
+  --color-warning-fg: var(--warning-fg);
+  --color-warning-bg: var(--warning-bg);
+  --color-error-fg: var(--error-fg);
+  --color-error-bg: var(--error-bg);
+  --color-info-fg: var(--info-fg);
+  --color-info-bg: var(--info-bg);
+  --font-display: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --radius-card: 16px;
+  --radius-control: 10px;
+}
+
+/* Editorial type: Cormorant Garamond 500, never below 20px. */
+@utility text-display {
+  font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  font-variant-numeric: lining-nums;
+  font-weight: 500;
+  font-size: clamp(2.5rem, 1.75rem + 3.5vw, 3.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+@utility text-h1 {
+  font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  font-variant-numeric: lining-nums;
+  font-weight: 500;
+  font-size: clamp(2rem, 1.5rem + 2.5vw, 2.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.005em;
+}
+@utility text-h2 {
+  font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  font-variant-numeric: lining-nums;
+  font-weight: 500;
+  font-size: clamp(1.625rem, 1.35rem + 1.25vw, 2rem);
+  line-height: 1.15;
+}
+/* Functional type: Jost. */
+@utility text-h3 {
+  font-weight: 500;
+  font-size: clamp(1.125rem, 1.05rem + 0.35vw, 1.25rem);
+  line-height: 1.35;
+}
+@utility text-small {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+@utility text-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+@utility text-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+@utility text-cta {
+  font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  font-variant-numeric: lining-nums;
+  font-weight: 500;
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+/* Admin works on a wider column than the editorial one. */
+@utility admin-column {
+  width: 100%;
+  max-width: 70rem;
+  margin-inline: auto;
+}
+
+/* Development-only markers: hidden unless the layout flags the demo environment. */
+.dev-only {
+  display: none !important;
+}
+[data-demo] .dev-only {
+  display: inline-flex !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-safe-only {
+    animation: none !important;
+    transition: none !important;
+  }
+}
