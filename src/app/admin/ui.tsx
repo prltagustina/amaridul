@@ -1,28 +1,57 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { ArrowLeft, LogOut } from "lucide-react";
+import { isDemoEnabled } from "@/lib/demo";
 import { logout } from "./actions";
-import { linkButtonClass } from "./styles";
-
-export function AdminHeader({ email }: { email: string }) {
-  return (
-    <header className="border-b border-border page-gutter">
-      <div className="content-column flex min-h-14 items-center justify-between gap-4">
-        <nav aria-label="Administración" className="flex items-center gap-6 text-sm uppercase tracking-[0.15em]">
-          <a href="/admin" className="!text-[#3f6043]">Panel</a>
-          <a href="/admin/seguridad" className="!text-text-muted hover:!text-[#3f6043]">Seguridad</a>
-        </nav>
-        <form action={logout} className="flex items-center gap-4">
-          <span className="hidden text-sm text-text-muted sm:inline">{email}</span>
-          <button type="submit" className={linkButtonClass}>Cerrar sesión</button>
-        </form>
-      </div>
-    </header>
-  );
-}
+import { AdminNav } from "./admin-nav";
 
 export function EnvironmentNotice() {
   if (process.env.APP_ENV === "production") return null;
   return (
-    <p className="border-b border-border bg-white page-gutter py-2 text-center text-xs uppercase tracking-[0.15em] text-text-muted">
+    <div role="region" aria-label="Aviso de entorno" className="border-b border-warning-fg/20 bg-warning-bg page-gutter py-1.5 text-center text-[11px] font-medium uppercase tracking-[0.15em] text-warning-fg">
       Entorno de prueba · datos ficticios
-    </p>
+    </div>
+  );
+}
+
+/** Sidebar on desktop, collapsible menu on mobile. Fixture-backed sections only appear in the demo environment. */
+export function AdminShell({ email, children }: { email: string; children: ReactNode }) {
+  const signOut = (
+    <form action={logout}>
+      <button type="submit" className="inline-flex min-h-11 items-center gap-2 text-sm !text-text-muted hover:!text-brand">
+        <LogOut aria-hidden className="size-4" strokeWidth={1.5} /> Cerrar sesión
+      </button>
+    </form>
+  );
+  return (
+    <>
+      <EnvironmentNotice />
+      <div className="flex flex-1 flex-col lg:flex-row">
+        <AdminNav email={email} demo={isDemoEnabled()} signOut={signOut} />
+        <main id="contenido" className="min-w-0 flex-1 page-gutter pt-8 pb-24 lg:px-10 lg:pt-10">
+          <div className="admin-column">{children}</div>
+        </main>
+      </div>
+    </>
+  );
+}
+
+export function AdminPageHeader({ title, eyebrow, description, actions, back }: { title: ReactNode; eyebrow?: ReactNode; description?: ReactNode; actions?: ReactNode; back?: { href: string; label: string } }) {
+  return (
+    <header className="mb-8 space-y-4">
+      {back && (
+        <Link href={back.href} className="inline-flex min-h-10 items-center gap-1.5 text-small !text-text-muted hover:!text-brand">
+          <ArrowLeft aria-hidden className="size-4" strokeWidth={1.5} /> {back.label}
+        </Link>
+      )}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-1.5">
+          {eyebrow && <p className="text-eyebrow text-accent">{eyebrow}</p>}
+          <h1 className="text-h1 text-brand">{title}</h1>
+          {description && <p className="max-w-2xl text-body text-text-muted">{description}</p>}
+        </div>
+        {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+      </div>
+    </header>
   );
 }

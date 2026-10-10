@@ -1,25 +1,34 @@
 "use client";
 
 import { useActionState } from "react";
+import { KeyRound } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/display";
+import { TextField } from "@/components/ui/field";
+import { PasswordField } from "@/components/ui/password-field";
 import {
   confirmEnrollment,
   regenerateBackupCodes,
   startEnrollment,
   type BackupCodesState,
   type EnrollState,
-} from "../actions";
-import { buttonClass, inputClass } from "../styles";
+} from "../../actions";
 
 function BackupCodes({ codes }: { codes: string[] }) {
   return (
-    <div className="border border-border bg-white p-5">
-      <p className="text-sm text-foreground">
-        Códigos de respaldo. <strong className="font-medium">Se muestran una sola vez.</strong> Cada uno sirve para un único
-        ingreso si no tenés el teléfono. Guardalos en un lugar seguro y no los envíes por email.
+    <div className="space-y-4 !rounded-control border border-border bg-white p-5">
+      <p className="flex items-start gap-2 text-small text-foreground">
+        <KeyRound aria-hidden className="mt-0.5 size-4 shrink-0 text-accent" strokeWidth={1.5} />
+        <span>
+          Códigos de respaldo. <strong className="font-medium">Se muestran una sola vez.</strong> Cada uno sirve para un único ingreso si no tenés el
+          teléfono. Guardalos en un lugar seguro y no los envíes por email.
+        </span>
       </p>
-      <ul className="mt-4 grid grid-cols-2 gap-2 font-mono text-sm">
+      <ul className="grid grid-cols-2 gap-2 font-mono text-sm">
         {codes.map((c) => (
-          <li key={c}>{c}</li>
+          <li key={c} className="!rounded-md bg-surface-sunken/60 px-2 py-1 text-center">
+            {c}
+          </li>
         ))}
       </ul>
     </div>
@@ -33,12 +42,15 @@ export function EnrollForm() {
   if (!started.qrDataUrl) {
     return (
       <form action={start} className="max-w-sm space-y-5">
-        <label className="block text-sm">
-          Confirmá tu contraseña
-          <input name="password" type="password" required autoComplete="current-password" className={inputClass} />
-        </label>
-        {started.error && <p role="alert" className="text-sm text-[#8a2f2f]">{started.error}</p>}
-        <button type="submit" disabled={pendingStart} className={buttonClass}>Empezar</button>
+        <PasswordField id="password" label="Confirmá tu contraseña" required autoComplete="current-password" />
+        {started.error && (
+          <Alert tone="error" live>
+            {started.error}
+          </Alert>
+        )}
+        <Button type="submit" shape="admin" loading={pendingStart} loadingLabel="Preparando…">
+          Empezar
+        </Button>
       </form>
     );
   }
@@ -51,18 +63,21 @@ export function EnrollForm() {
         <li>Escribí el código de 6 dígitos que muestra la app.</li>
       </ol>
       {/* eslint-disable-next-line @next/next/no-img-element -- data URL generated server-side */}
-      <img src={started.qrDataUrl} alt="Código QR para la app de autenticación" width={220} height={220} />
-      <p className="text-sm text-text-muted">
+      <img src={started.qrDataUrl} alt="Código QR para la app de autenticación" width={220} height={220} className="!rounded-control border border-border bg-white p-2" />
+      <p className="text-small text-text-muted">
         Si no podés escanearlo, ingresá esta clave a mano: <code className="break-all font-mono text-foreground">{started.manualKey}</code>
       </p>
       {started.backupCodes && <BackupCodes codes={started.backupCodes} />}
       <form action={confirm} className="max-w-sm space-y-5">
-        <label className="block text-sm">
-          Código de 6 dígitos
-          <input name="code" required inputMode="numeric" autoComplete="one-time-code" className={inputClass} />
-        </label>
-        {confirmed.error && <p role="alert" className="text-sm text-[#8a2f2f]">{confirmed.error}</p>}
-        <button type="submit" disabled={pendingConfirm} className={buttonClass}>Activar</button>
+        <TextField id="code" label="Código de 6 dígitos" required inputMode="numeric" autoComplete="one-time-code" className="font-mono tracking-[0.3em]" />
+        {confirmed.error && (
+          <Alert tone="error" live>
+            {confirmed.error}
+          </Alert>
+        )}
+        <Button type="submit" shape="admin" loading={pendingConfirm} loadingLabel="Verificando…">
+          Activar
+        </Button>
       </form>
     </div>
   );
@@ -73,13 +88,16 @@ export function BackupCodesForm() {
   if (state.backupCodes) return <BackupCodes codes={state.backupCodes} />;
   return (
     <form action={action} className="max-w-sm space-y-5">
-      <p className="text-sm text-text-muted">Generar códigos de respaldo nuevos anula los anteriores.</p>
-      <label className="block text-sm">
-        Confirmá tu contraseña
-        <input name="password" type="password" required autoComplete="current-password" className={inputClass} />
-      </label>
-      {state.error && <p role="alert" className="text-sm text-[#8a2f2f]">{state.error}</p>}
-      <button type="submit" disabled={pending} className={buttonClass}>Generar códigos nuevos</button>
+      <p className="text-small text-text-muted">Generar códigos de respaldo nuevos anula los anteriores.</p>
+      <PasswordField id="password" label="Confirmá tu contraseña" required autoComplete="current-password" />
+      {state.error && (
+        <Alert tone="error" live>
+          {state.error}
+        </Alert>
+      )}
+      <Button type="submit" shape="admin" variant="secondary" loading={pending} loadingLabel="Generando…">
+        Generar códigos nuevos
+      </Button>
     </form>
   );
 }

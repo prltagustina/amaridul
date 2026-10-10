@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { cormorant } from "@/app/fonts";
+import { demoAttr } from "@/lib/demo";
 
 export const metadata: Metadata = {
   title: "Administración | Amarí Dul",
@@ -6,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <div className="flex min-h-screen flex-col bg-background text-foreground">{children}</div>;
+  return (
+    <div className={`${cormorant.variable} flex min-h-screen flex-col bg-background text-foreground`} {...demoAttr()}>
+      {children}
+    </div>
+  );
 }
