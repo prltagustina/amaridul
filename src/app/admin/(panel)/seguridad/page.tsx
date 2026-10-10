@@ -1,6 +1,6 @@
 import { ShieldCheck, ShieldAlert } from "lucide-react";
-import { requireAdmin } from "@/server/auth/session";
-import { Card, StatusBadge } from "@/components/ui/display";
+import { isSecondFactorRequired, requireAdmin } from "@/server/auth/session";
+import { Alert, Card, StatusBadge } from "@/components/ui/display";
 import { AdminPageHeader } from "../../ui";
 import { BackupCodesForm, EnrollForm } from "./forms";
 
@@ -29,6 +29,11 @@ export default async function AdminSecurityPage() {
           </>
         ) : (
           <>
+            {!isSecondFactorRequired() && (
+              <Alert tone="info" title="Opcional en este entorno local">
+                En tu computadora podés usar el panel sin verificación en dos pasos. En producción sigue siendo obligatoria.
+              </Alert>
+            )}
             <Card className="flex items-start gap-4 border-warning-fg/30 bg-warning-bg/60">
               <ShieldAlert aria-hidden className="mt-0.5 size-6 shrink-0 text-warning-fg" strokeWidth={1.5} />
               <div className="space-y-1">

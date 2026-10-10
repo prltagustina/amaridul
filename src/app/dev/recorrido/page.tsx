@@ -52,7 +52,7 @@ const GROUPS: Group[] = [
   {
     id: "admin",
     title: "Administración",
-    description: "Requiere ingresar con la cuenta admin ficticia y verificación en dos pasos.",
+    description: "Requiere ingresar con la cuenta admin ficticia.",
     auth: true,
     items: [
       { href: "/admin/login", label: "Ingreso admin", states: [{ label: "segundo factor", href: "/admin/login?demo=segundo-factor" }] },
@@ -118,7 +118,7 @@ export default function RecorridoPage() {
             </div>
             {g.auth && (
               <Alert tone="info">
-                Ingresá en /admin/login con la cuenta admin ficticia. La primera vez te pide activar la verificación en dos pasos con una app de autenticación.
+                Ingresá en /admin/login con admin.local@example.com. En local la verificación en dos pasos es opcional; en producción es obligatoria.
               </Alert>
             )}
             <ul className="grid gap-3 md:grid-cols-2">

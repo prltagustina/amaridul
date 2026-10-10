@@ -15,6 +15,15 @@ export const getCurrentSession = cache(async () => {
 });
 
 /**
+ * Second factor enrollment is mandatory everywhere except the local development machine
+ * (explicit APP_ENV=local and never on Vercel, where VERCEL is always set). Tests run with
+ * APP_ENV=test, so they keep exercising the real requirement.
+ */
+export function isSecondFactorRequired(): boolean {
+  return !(process.env.APP_ENV === "local" && !process.env.VERCEL);
+}
+
+/**
  * Gate for every admin page and action. Non-admins get a 404 so the panel's existence
  * is not confirmed; unenrolled admins can only reach the security page.
  */
@@ -26,6 +35,6 @@ export async function requireAdmin({ allowWithoutSecondFactor = false } = {}) {
   const state = await checkAdminSession(await getDb(), current.session);
   if (state !== "ok") redirect("/admin/login");
 
-  if (!current.user.twoFactorEnabled && !allowWithoutSecondFactor) redirect("/admin/seguridad");
+  if (!current.user.twoFactorEnabled && !allowWithoutSecondFactor && isSecondFactorRequired()) redirect("/admin/seguridad");
   return current;
 }
