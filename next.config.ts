@@ -34,6 +34,10 @@ const privateHeaders = [
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["@electric-sql/pglite"],
+  images: {
+    formats: ["image/avif", "image/webp"],
+    qualities: [75, 85],
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

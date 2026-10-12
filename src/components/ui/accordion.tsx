@@ -6,8 +6,8 @@ import { cn } from "@/lib/cn";
 
 export type AccordionItem = { id: string; title: ReactNode; content: ReactNode };
 
-/** Each item opens independently (not an FAQ-style "one at a time" accordion). */
-export function Accordion({ items, className, headingLevel = 3 }: { items: AccordionItem[]; className?: string; headingLevel?: 2 | 3 | 4 }) {
+/** FAQ accordion: opening one item closes the previous one, unless `multiple` is set. */
+export function Accordion({ items, className, headingLevel = 3, multiple = false }: { items: AccordionItem[]; className?: string; headingLevel?: 2 | 3 | 4; multiple?: boolean }) {
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const base = useId();
   const Heading = `h${headingLevel}` as "h3";
@@ -25,7 +25,7 @@ export function Accordion({ items, className, headingLevel = 3 }: { items: Accor
                 type="button"
                 aria-expanded={isOpen}
                 aria-controls={panelId}
-                onClick={() => setOpen((o) => ({ ...o, [item.id]: !o[item.id] }))}
+                onClick={() => setOpen((o) => (multiple ? { ...o, [item.id]: !o[item.id] } : { [item.id]: !o[item.id] }))}
                 className="flex w-full items-center justify-between gap-4 !rounded-card px-5 py-4 text-left text-cta text-foreground sm:px-6"
               >
                 <span>{item.title}</span>
@@ -40,10 +40,12 @@ export function Accordion({ items, className, headingLevel = 3 }: { items: Accor
               id={panelId}
               role="region"
               aria-labelledby={buttonId}
-              hidden={!isOpen}
-              className="px-5 pb-5 text-body text-text-muted sm:px-6"
+              inert={!isOpen}
+              className={cn("grid transition-[grid-template-rows] duration-300 ease-out motion-safe-only", isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}
             >
-              {item.content}
+              <div className="overflow-hidden">
+                <div className="px-5 pb-5 text-body text-text-muted sm:px-6">{item.content}</div>
+              </div>
             </div>
           </div>
         );

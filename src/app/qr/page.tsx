@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Image from "next/image";
+import heroPhoto from "@/assets/demo/qr-portada-provisoria.jpg";
 import { ArrowRight, ChevronDown, UserRound } from "lucide-react";
 import { BRAND, SITE_URL } from "@/lib/constants";
 import Footer from "@/components/Footer";
@@ -49,13 +50,13 @@ export default function QRPage() {
       {/* Portada: photograph first, circular lockup, institutional phrase. */}
       <section aria-label="Portada" className="relative isolate flex min-h-[100svh] flex-col overflow-hidden">
         {/* Provisional photo taken from the visual reference; replace with the commissioned shoot. */}
-        <Image src="/demo/qr-portada-provisoria-2.jpg" alt="" fill priority sizes="100vw" className="-z-20 object-cover object-center md:scale-110 md:blur-md" />
+        <Image src={heroPhoto} alt="" fill preload placeholder="blur" quality={85} sizes="100vw" className="-z-20 object-cover object-center md:scale-110 md:blur-md" />
         {/* Wide screens: the portrait photo frames both sides, soft focus in the middle. */}
         <div aria-hidden className="absolute inset-y-0 left-0 -z-20 hidden w-[40%] [mask-image:linear-gradient(to_right,black_45%,transparent)] md:block">
-          <Image src="/demo/qr-portada-provisoria-2.jpg" alt="" fill sizes="40vw" className="object-cover object-bottom" />
+          <Image src={heroPhoto} alt="" fill quality={85} sizes="40vw" className="object-cover object-bottom" />
         </div>
         <div aria-hidden className="absolute inset-y-0 right-0 -z-20 hidden w-[40%] [mask-image:linear-gradient(to_left,black_45%,transparent)] md:block">
-          <Image src="/demo/qr-portada-provisoria-2.jpg" alt="" fill sizes="40vw" className="object-cover object-top" />
+          <Image src={heroPhoto} alt="" fill quality={85} sizes="40vw" className="object-cover object-top" />
         </div>
         <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-b from-foreground/30 via-foreground/5 to-foreground/50" />
         <DevTag className="absolute right-3 bottom-3 z-10">Foto provisoria del mockup</DevTag>

@@ -37,7 +37,7 @@ export function LotCard({ lot, onCertificate }: { lot: Lot; onCertificate: () =>
       <div className="grid gap-6 p-5 @xl:grid-cols-[minmax(0,14rem)_1fr] @md:p-6">
         {lot.image ? (
           <div className="relative aspect-[16/10] overflow-hidden !rounded-control bg-surface-sunken @xl:aspect-[4/5]">
-            <Image src={lot.image} alt={`Flor del lote ${lot.code}`} fill sizes="(min-width: 640px) 14rem, 90vw" className="object-cover" />
+            <Image src={lot.image} alt={`Flor del lote ${lot.code}`} fill placeholder="blur" quality={85} sizes="(min-width: 640px) 14rem, 90vw" className="object-cover" />
             <DevTag className="absolute right-2 bottom-2">Foto provisoria</DevTag>
           </div>
         ) : (

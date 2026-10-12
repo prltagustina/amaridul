@@ -1,6 +1,9 @@
 // Visual fixtures only. Fictitious people (@example.com, DNI 99.xxx.xxx) and DEMO lots.
 // Nothing here is real data; lot values must never be presented as real analyses.
 
+import type { StaticImageData } from "next/image";
+import lotPhoto from "@/assets/demo/lote-provisorio.jpg";
+
 export type Cannabinoid = { compound: "CBD" | "CBDA" | "THC" | "THCA" | "CBG" | "CBN"; value: string };
 
 export type Lot = {
@@ -16,7 +19,7 @@ export type Lot = {
   hasCertificate: boolean;
   status: "publicado" | "borrador" | "retirado";
   /** Provisional photo (cropped from the visual reference). */
-  image?: string;
+  image?: StaticImageData;
 };
 
 export const lots: Lot[] = [
@@ -39,7 +42,7 @@ export const lots: Lot[] = [
     ],
     hasCertificate: true,
     status: "publicado",
-    image: "/demo/lote-provisorio.jpg",
+    image: lotPhoto,
   },
   {
     code: "AD-2025-11-02",
