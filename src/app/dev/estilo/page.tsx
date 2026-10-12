@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { Leaf } from "lucide-react";
 import { CircleLogo } from "@/components/brand/circle-logo";
-import { BotanicalBranch, LavenderSprig, PhotoPlaceholder } from "@/components/brand/placeholders";
+import { CannabisLeaf, CannabisSprig, CornerLeaves, LeafMark } from "@/components/brand/botanicals";
+import { PhotoPlaceholder } from "@/components/brand/placeholders";
 import { Button, LinkButton, TextLink } from "@/components/ui/button";
 import { Alert, Card, DevTag, EmptyState, LoadingBlock, SectionHeader, StatusBadge, type Tone } from "@/components/ui/display";
 import { Select, TextField, Textarea } from "@/components/ui/field";
@@ -150,9 +151,16 @@ export default function EstiloPage() {
               <CircleLogo className="w-56" />
             </div>
             <PhotoPlaceholder className="aspect-[4/3] !rounded-card" />
-            <div className="flex items-end justify-center gap-6 text-brand">
-              <BotanicalBranch className="h-48 w-32" />
-              <LavenderSprig className="h-48 w-20" />
+            <div className="flex items-end justify-center gap-4 text-brand">
+              <CannabisSprig className="h-64 w-auto" />
+            </div>
+          </div>
+          <div className="grid items-end gap-6 sm:grid-cols-3">
+            <CannabisLeaf className="mx-auto w-48 text-brand" />
+            <CornerLeaves className="mx-auto w-48 text-brand/80" />
+            <div className="flex items-center justify-center gap-4 text-brand">
+              <LeafMark className="w-10" />
+              <LeafMark className="w-6 text-accent" />
             </div>
           </div>
           <p className="flex flex-wrap items-center gap-2 text-small text-text-muted">

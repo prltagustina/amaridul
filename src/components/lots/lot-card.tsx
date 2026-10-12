@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { FileBadge, FlaskConical } from "lucide-react";
+import { LeafMark } from "@/components/brand/botanicals";
 import { PhotoPlaceholder } from "@/components/brand/placeholders";
 import { Button } from "@/components/ui/button";
 import { DevTag } from "@/components/ui/display";
@@ -26,11 +28,21 @@ export function LotCard({ lot, onCertificate }: { lot: Lot; onCertificate: () =>
             {lot.code}
           </h2>
         </div>
-        <p className="text-cta text-brand">{lot.product}</p>
+        <p className="flex items-center gap-2 text-cta text-brand">
+          {lot.product}
+          <LeafMark className="w-7 text-brand/70" />
+        </p>
       </header>
 
       <div className="grid gap-6 p-5 @xl:grid-cols-[minmax(0,14rem)_1fr] @md:p-6">
-        <PhotoPlaceholder label="Imagen del producto pendiente" className="aspect-[16/10] !rounded-control @xl:aspect-square" />
+        {lot.image ? (
+          <div className="relative aspect-[16/10] overflow-hidden !rounded-control bg-surface-sunken @xl:aspect-[4/5]">
+            <Image src={lot.image} alt={`Flor del lote ${lot.code}`} fill sizes="(min-width: 640px) 14rem, 90vw" className="object-cover" />
+            <DevTag className="absolute right-2 bottom-2">Foto provisoria</DevTag>
+          </div>
+        ) : (
+          <PhotoPlaceholder label="Imagen del producto pendiente" className="aspect-[16/10] !rounded-control @xl:aspect-[4/5]" />
+        )}
         <dl className="grid grid-cols-2 content-start gap-x-6 gap-y-4">
           {data.map(([k, v]) => (
             <div key={k}>

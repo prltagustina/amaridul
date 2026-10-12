@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
-import { DevTag } from "@/components/ui/display";
 
 /** Editorial stand-in for a photograph that has not been supplied yet. Never stock imagery. */
 export function PhotoPlaceholder({ label = "Foto pendiente", className, children, tagPosition = "bottom" }: { label?: string; className?: string; children?: ReactNode; tagPosition?: "top" | "bottom" }) {
@@ -29,54 +28,5 @@ export function PhotoPlaceholder({ label = "Foto pendiente", className, children
       </span>
       {children}
     </div>
-  );
-}
-
-function leafPath(len: number) {
-  const w = len * 0.32;
-  return `M0 0 C ${len * 0.25} ${-w}, ${len * 0.75} ${-w}, ${len} 0 C ${len * 0.75} ${w}, ${len * 0.25} ${w}, 0 0 Z M0 0 L ${len * 0.92} 0`;
-}
-
-/** Provisional line-art branch (placeholder for the commissioned botanical illustrations). */
-export function BotanicalBranch({ className, flip = false }: { className?: string; flip?: boolean }) {
-  const leaves = [0.18, 0.3, 0.42, 0.54, 0.66, 0.78, 0.9];
-  // Quadratic stem from bottom-left to top-right.
-  const p0 = [20, 230],
-    p1 = [90, 120],
-    p2 = [230, 30];
-  const at = (t: number) => [
-    (1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t ** 2 * p2[0],
-    (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t ** 2 * p2[1],
-  ];
-  return (
-    <span className={cn("relative inline-block", className)}>
-      <svg aria-hidden viewBox="0 0 250 250" className={cn("h-full w-full", flip && "-scale-x-100")} fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-        <path d={`M${p0} Q${p1} ${p2}`} />
-        {leaves.map((t, i) => {
-          const [x, y] = at(t);
-          const side = i % 2 === 0 ? -1 : 1;
-          const angle = -40 + side * 55 + t * 10;
-          const len = 58 - t * 26;
-          return <path key={t} d={leafPath(len)} transform={`translate(${x} ${y}) rotate(${angle})`} />;
-        })}
-      </svg>
-      <DevTag className="absolute bottom-0 left-0">Ilustración provisional</DevTag>
-    </span>
-  );
-}
-
-/** Provisional lavender sprig in the accent tones of the second reference. */
-export function LavenderSprig({ className }: { className?: string }) {
-  const buds = Array.from({ length: 9 }, (_, i) => i);
-  return (
-    <span className={cn("relative inline-block", className)}>
-      <svg aria-hidden viewBox="0 0 120 260" className="h-full w-full" fill="none" strokeLinecap="round">
-        <path d="M60 255 C 58 190, 62 130, 60 40" stroke="currentColor" strokeWidth="1" />
-        <path d="M60 200 C 45 185, 35 170, 30 150 M60 170 C 75 155, 85 140, 88 120" stroke="currentColor" strokeWidth="1" />
-        {buds.map((i) => (
-          <ellipse key={i} cx={60 + (i % 2 ? 6 : -6)} cy={40 + i * 9} rx="4.5" ry="7" transform={`rotate(${i % 2 ? 20 : -20} ${60 + (i % 2 ? 6 : -6)} ${40 + i * 9})`} fill="var(--accent-soft)" stroke="var(--accent)" strokeWidth="0.8" />
-        ))}
-      </svg>
-    </span>
   );
 }

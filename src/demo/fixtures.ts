@@ -15,6 +15,8 @@ export type Lot = {
   cannabinoids: Cannabinoid[];
   hasCertificate: boolean;
   status: "publicado" | "borrador" | "retirado";
+  /** Provisional photo (cropped from the visual reference). */
+  image?: string;
 };
 
 export const lots: Lot[] = [
@@ -37,6 +39,7 @@ export const lots: Lot[] = [
     ],
     hasCertificate: true,
     status: "publicado",
+    image: "/demo/lote-provisorio.jpg",
   },
   {
     code: "AD-2025-11-02",
