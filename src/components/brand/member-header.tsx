@@ -40,7 +40,7 @@ export function MemberHeader({ memberName }: { memberName: string }) {
   return (
     <header className="page-gutter border-b border-border/70 bg-background">
       <div className="nav-column flex h-16 items-center justify-between gap-4">
-        <Link href="/qr/mi-espacio" aria-label="Amarí Dul, mi espacio" className="flex items-center">
+        <Link href="/qr/mi-espacio" aria-label="Amarí Dul, mi espacio" className="flex min-h-11 items-center">
           {/* eslint-disable-next-line @next/next/no-img-element -- static brand SVG */}
           <img src="/brand/wordmark-bold.svg" alt="" className="!h-[1.375rem] !w-auto sm:!h-6" />
         </Link>

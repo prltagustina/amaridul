@@ -12,7 +12,7 @@ export function MinimalHeader({ tone = "light", right, homeHref = "/qr" }: { ton
   return (
     <header className={cn("page-gutter", overPhoto ? "absolute inset-x-0 top-0 z-20" : "border-b border-border/70 bg-background")}>
       <div className="nav-column flex h-16 items-center justify-between gap-4">
-        <Link href={homeHref} aria-label="Amarí Dul, inicio" className="flex items-center">
+        <Link href={homeHref} aria-label="Amarí Dul, inicio" className="flex min-h-11 items-center">
           {/* eslint-disable-next-line @next/next/no-img-element -- static brand SVG */}
           <img
             src={overPhoto ? "/brand/wordmark-bold-cream.svg" : "/brand/wordmark-bold.svg"}

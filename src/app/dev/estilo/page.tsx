@@ -6,6 +6,7 @@ import { PhotoPlaceholder } from "@/components/brand/placeholders";
 import { Button, LinkButton, TextLink } from "@/components/ui/button";
 import { Alert, Card, DevTag, EmptyState, LoadingBlock, SectionHeader, StatusBadge, type Tone } from "@/components/ui/display";
 import { Select, TextField, Textarea } from "@/components/ui/field";
+import { CheckList, Chip, FolderTabs, KeyFact, RatioBar, RuleList, SectionTab, StepCards, TechBand, VarietyBadge } from "@/components/ui/technical";
 import { InteractiveSamples } from "./interactive";
 
 const COLORS: { name: string; token: string; value: string; note?: string }[] = [
@@ -135,6 +136,65 @@ export default function EstiloPage() {
               <LoadingBlock lines={4} />
             </Card>
           </div>
+        </Section>
+
+        <Section title="Capa técnica · inspirada en Dambar">
+          <p className="max-w-2xl text-body text-text-muted">
+            Para contenido técnico (lotes, composición, dosis, datos del socio). Índigo para datos, rosa y durazno solo como relleno. La portada y las páginas editoriales siguen con el lenguaje de Amarí Dul.
+          </p>
+          <ul className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+            {[
+              ["indigo", "bg-indigo", "#463577"],
+              ["indigo-2", "bg-indigo-2", "#4049A0"],
+              ["lavender", "bg-lavender", "#ECEAF1"],
+              ["pink", "bg-pink", "#FFA7FD"],
+              ["peach", "bg-peach", "#FAAF88"],
+              ["pink-soft", "bg-pink-soft", "#FFE8FE"],
+            ].map(([n, c, v]) => (
+              <li key={n} className="overflow-hidden !rounded-control border border-border bg-white">
+                <span aria-hidden className={`block h-12 ${c}`} />
+                <span className="block px-2.5 py-1.5 text-xs">
+                  <span className="block font-medium">{n}</span>
+                  <span className="font-mono text-text-muted">{v}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className="grid gap-6 md:grid-cols-2">
+            <div>
+              <FolderTabs />
+              <div className="overflow-hidden !rounded-card border border-lavender-line bg-white">
+                <TechBand className="px-5 pt-5">
+                  <p className="text-xl font-medium tracking-tight">Banda técnica</p>
+                  <div className="mt-4 flex">
+                    <SectionTab>1. Pestaña de sección</SectionTab>
+                  </div>
+                </TechBand>
+                <div className="space-y-4 p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <VarietyBadge>CBD dominante</VarietyBadge>
+                    <RatioBar thc={6.5} cbd={13.5} label="Proporción" className="w-full max-w-[13rem]" />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Chip>THC ~6,5 mg/ml</Chip>
+                    <Chip>CBD ~13,5 mg/ml</Chip>
+                  </div>
+                  <CheckList items={["Ítem verificado", "Otro ítem"]} />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <KeyFact value="1 gota = 1 mg" caption="de cannabinoides totales" rows={[["Concentración", "20 mg/ml"], ["Gotero estándar", "20 gotas/ml"]]} />
+              <RuleList items={[<><strong>Regla práctica:</strong> bloque oscuro para indicaciones clave.</>, "Una idea por fila."]} />
+            </div>
+          </div>
+          <StepCards
+            steps={[
+              { title: "Fase de inicio", meta: "Duración 2 semanas", value: "Paso 1", detail: "Texto de ejemplo." },
+              { title: "Evaluación", meta: "Día 14", value: "Paso 2", detail: "Texto de ejemplo." },
+              { title: "Mantenimiento", meta: "Cuando se requiere", value: "Paso 3", detail: "Texto de ejemplo." },
+            ]}
+          />
         </Section>
 
         <Section title="Superficies">

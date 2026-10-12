@@ -5,6 +5,7 @@ import { CircleCheck, MailCheck, MailWarning } from "lucide-react";
 import { Button, LinkButton, TextLink } from "@/components/ui/button";
 import { Card, DevTag, EmptyState } from "@/components/ui/display";
 import { TextField } from "@/components/ui/field";
+import { FolderTabs } from "@/components/ui/technical";
 import { NewPasswordForm } from "../new-password-form";
 
 type Step = "default" | "enviado" | "nueva" | "expired" | "success";
@@ -86,7 +87,9 @@ export default function RecoverFlow({ initial }: { initial: Step }) {
         <h1 className="text-h1 text-brand">Recuperá tu contraseña</h1>
         <p className="text-body text-text-muted">Escribí tu DNI. Te enviamos un link al email registrado en la asociación.</p>
       </header>
-      <Card>
+      <div>
+      <FolderTabs />
+      <Card className="shadow-[0_18px_40px_-30px_rgba(70,53,119,0.5)]">
         <form noValidate onSubmit={onSubmit} className="space-y-5" aria-busy={loading}>
           <TextField id="dni" label="DNI" inputMode="numeric" autoComplete="username" hint="Sin puntos." value={dni} onChange={(e) => setDni(e.target.value)} error={error} />
           <Button type="submit" full size="lg" loading={loading} loadingLabel="Enviando…">
@@ -94,8 +97,9 @@ export default function RecoverFlow({ initial }: { initial: Step }) {
           </Button>
         </form>
       </Card>
+      </div>
       <p className="text-center text-small text-text-muted">
-        ¿Cambiaste de email? Escribinos y lo actualizamos. <TextLink href="/qr/login">Volver al ingreso</TextLink>
+        ¿Cambiaste de email? Escribinos y lo actualizamos. <TextLink href="/qr/login" className="inline-flex min-h-11 items-center">Volver al ingreso</TextLink>
       </p>
     </div>
   );

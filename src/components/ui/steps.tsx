@@ -33,7 +33,7 @@ export function StepIndicator({ steps, onSelect, hideCurrentLabel }: { steps: St
           {current.label}
         </p>
       )}
-      <ol className="flex flex-wrap gap-1.5">
+      <ol className="flex flex-wrap gap-0.5 min-[360px]:gap-1.5">
         {steps.map((s, i) => {
           const clickable = onSelect && (s.status === "complete" || s.status === "incomplete");
           const content = (

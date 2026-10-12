@@ -215,6 +215,15 @@ img {
   --error-bg: #f3ded8;
   --info-fg: #6a4e7d;
   --info-bg: #ece4f0;
+  /* Technical layer borrowed from the Dambar system (fichas técnicas): data, ratios, rules. */
+  --indigo: #463577; /* text and fills; 10:1 on white */
+  --indigo-2: #4049a0; /* gradient end */
+  --lavender: #eceaf1; /* technical surfaces */
+  --lavender-line: #d4d0df;
+  --pink: #ffa7fd; /* fills only; indigo text on it is 6:1 */
+  --pink-soft: #ffe8fe;
+  --peach: #faaf88; /* fills only; indigo text on it is 5.7:1 */
+  --peach-soft: #fde0d1;
 }
 
 @theme inline {
@@ -233,6 +242,14 @@ img {
   --color-error-bg: var(--error-bg);
   --color-info-fg: var(--info-fg);
   --color-info-bg: var(--info-bg);
+  --color-indigo: var(--indigo);
+  --color-indigo-2: var(--indigo-2);
+  --color-lavender: var(--lavender);
+  --color-lavender-line: var(--lavender-line);
+  --color-pink: var(--pink);
+  --color-pink-soft: var(--pink-soft);
+  --color-peach: var(--peach);
+  --color-peach-soft: var(--peach-soft);
   --font-display: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
   --radius-card: 16px;
   --radius-control: 10px;

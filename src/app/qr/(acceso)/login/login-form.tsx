@@ -7,6 +7,7 @@ import { Button, TextLink } from "@/components/ui/button";
 import { Alert, Card, DevTag } from "@/components/ui/display";
 import { TextField } from "@/components/ui/field";
 import { PasswordField } from "@/components/ui/password-field";
+import { FolderTabs } from "@/components/ui/technical";
 
 type DemoState = "default" | "loading" | "error" | "expired" | "disabled";
 
@@ -69,7 +70,9 @@ export default function MemberLoginForm({ demoState }: { demoState: DemoState })
         </div>
       )}
 
-      <Card>
+      <div>
+      <FolderTabs />
+      <Card className="shadow-[0_18px_40px_-30px_rgba(70,53,119,0.5)]">
         <form noValidate onSubmit={onSubmit} className="space-y-5" aria-busy={loading}>
           <TextField
             id="dni"
@@ -95,13 +98,14 @@ export default function MemberLoginForm({ demoState }: { demoState: DemoState })
             Ingresar <ArrowRight aria-hidden className="size-5" strokeWidth={1.5} />
           </Button>
           <p className="text-center text-small">
-            <TextLink href="/qr/recuperar">Olvidé mi contraseña</TextLink>
+            <TextLink href="/qr/recuperar" className="inline-flex min-h-11 items-center">Olvidé mi contraseña</TextLink>
           </p>
         </form>
       </Card>
+      </div>
 
       <p className="text-center text-small text-text-muted">
-        ¿Todavía no sos socio? <TextLink href="/sumate">Sumate a la comunidad</TextLink>
+        ¿Todavía no sos socio? <TextLink href="/sumate" className="inline-flex min-h-11 items-center">Sumate a la comunidad</TextLink>
       </p>
       <p className="text-center">
         <DevTag>Demo · cualquier DNI entra · 99000099 muestra error</DevTag>

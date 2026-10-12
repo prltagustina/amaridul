@@ -20,6 +20,8 @@ export type Lot = {
   status: "publicado" | "borrador" | "retirado";
   /** Provisional photo (cropped from the visual reference). */
   image?: StaticImageData;
+  /** Approximate composition of the oil, mg/ml. Absent while the analysis is pending. */
+  composition?: { thc: number; cbd: number; total: number; dropsPerMl: number };
 };
 
 export const lots: Lot[] = [
@@ -43,6 +45,7 @@ export const lots: Lot[] = [
     hasCertificate: true,
     status: "publicado",
     image: lotPhoto,
+    composition: { thc: 6.5, cbd: 13.5, total: 20, dropsPerMl: 20 },
   },
   {
     code: "AD-2025-11-02",
@@ -72,6 +75,7 @@ export const lots: Lot[] = [
     cannabinoids: [{ compound: "CBD", value: "10,1 %" }],
     hasCertificate: true,
     status: "retirado",
+    composition: { thc: 1, cbd: 19, total: 20, dropsPerMl: 20 },
   },
 ];
 

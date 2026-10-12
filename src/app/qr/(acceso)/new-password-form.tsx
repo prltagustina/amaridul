@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/display";
 import { PasswordField } from "@/components/ui/password-field";
 import { PasswordRules, passwordChecks } from "@/components/ui/password-rules";
+import { FolderTabs } from "@/components/ui/technical";
 
 /** Shared by account activation and password recovery. Demo only: nothing is stored. */
 export function NewPasswordForm({ submitLabel, loading: initialLoading = false, onDone, children }: { submitLabel: string; loading?: boolean; onDone: () => void; children?: ReactNode }) {
@@ -26,7 +27,9 @@ export function NewPasswordForm({ submitLabel, loading: initialLoading = false, 
   }
 
   return (
-    <Card>
+    <div>
+    <FolderTabs />
+    <Card className="shadow-[0_18px_40px_-30px_rgba(70,53,119,0.5)]">
       <form noValidate onSubmit={onSubmit} className="space-y-5" aria-busy={loading}>
         {children}
         <PasswordField id="new-password" label="Nueva contraseña" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} error={error.password} />
@@ -37,5 +40,6 @@ export function NewPasswordForm({ submitLabel, loading: initialLoading = false, 
         </Button>
       </form>
     </Card>
+    </div>
   );
 }

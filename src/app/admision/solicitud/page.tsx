@@ -11,7 +11,7 @@ export default async function SolicitudPage({ searchParams }: { searchParams: Pr
   const state = await readState(searchParams, STATES);
   const paso = await readState(searchParams, PASOS, "paso");
   return (
-    <main className="page-gutter pt-8 pb-24 sm:pt-12">
+    <main className="page-gutter pt-10 pb-28 sm:pt-14">
       <div className="content-column">
         <AdmissionWizard key={`${paso}-${state}`} initialStep={paso as StepId | "resumen" | "enviada"} demoState={state} />
       </div>

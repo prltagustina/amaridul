@@ -10,7 +10,7 @@ export default async function SumatePage({ searchParams }: { searchParams: Promi
   assertDemo();
   const state = await readState(searchParams, STATES);
   return (
-    <main className="page-gutter pt-10 pb-20 sm:pt-16">
+    <main className="page-gutter pt-10 pb-28 sm:pt-14">
       <div className="content-column space-y-10">
         {state !== "success" && (
           <SectionHeader

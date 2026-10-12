@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ArrowRight, ClipboardList, FileText, FlaskConical, PackagePlus, UserRound } from "lucide-react";
 import { assertDemo, readState } from "@/lib/demo";
-import { Button, LinkButton } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { DetailList } from "@/components/ui/data-list";
 import { DevStateBar } from "@/components/ui/dev-state-bar";
 import { Alert, Card, DevTag, LoadingBlock, StatusBadge } from "@/components/ui/display";
+import { FolderTabs, TechBand } from "@/components/ui/technical";
+import { LeafMark } from "@/components/brand/botanicals";
 import { demoMember } from "@/demo/fixtures";
 
 export const metadata: Metadata = { title: "Mi espacio | Amarí Dul" };
@@ -27,7 +30,7 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
   const icon = "size-5";
 
   return (
-    <main className="page-gutter pt-10 pb-24 sm:pt-14">
+    <main className="page-gutter pt-10 pb-28 sm:pt-14">
       <div className="nav-column space-y-8">
         <header className="space-y-2">
           <p className="text-eyebrow text-accent">Mi espacio</p>
@@ -43,8 +46,10 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
 
         {state === "default" && (
           <div className="grid gap-6 lg:grid-cols-2">
-            <Card className="space-y-5">
-              <div className="flex items-start justify-between gap-3">
+            <div>
+            <FolderTabs />
+            <Card className="space-y-5 shadow-[0_18px_40px_-30px_rgba(70,53,119,0.5)]">
+              <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
                 <ModuleTitle icon={<UserRound aria-hidden className={icon} strokeWidth={1.5} />}>Mi asociación</ModuleTitle>
                 <StatusBadge tone="success">{demoMember.status}</StatusBadge>
               </div>
@@ -57,6 +62,7 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
                 ]}
               />
             </Card>
+            </div>
 
             <Card className="space-y-5">
               <ModuleTitle icon={<ClipboardList aria-hidden className={icon} strokeWidth={1.5} />}>Mis trámites</ModuleTitle>
@@ -70,15 +76,22 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
               </ul>
             </Card>
 
-            <Card variant="sunken" className="flex flex-col justify-between gap-5 lg:col-span-2 sm:flex-row sm:items-center">
-              <div className="space-y-1.5">
-                <ModuleTitle icon={<FlaskConical aria-hidden className={icon} strokeWidth={1.5} />}>Trazabilidad</ModuleTitle>
-                <p className="text-body text-foreground/85">Consultá el análisis de laboratorio de tu producto con el código del envase.</p>
+            <TechBand className="relative flex flex-col justify-between gap-5 overflow-hidden !rounded-card p-5 sm:flex-row sm:items-center sm:p-6 lg:col-span-2">
+              <LeafMark className="pointer-events-none absolute -right-4 -bottom-6 w-36 text-white/10" />
+              <div className="relative space-y-1.5">
+                <h2 className="flex items-center gap-2.5 text-2xl font-medium tracking-tight">
+                  <FlaskConical aria-hidden className={icon} strokeWidth={1.5} />
+                  Trazabilidad
+                </h2>
+                <p className="text-white/85">Consultá el análisis de laboratorio de tu producto con el código del envase.</p>
               </div>
-              <LinkButton href="/qr/trazabilidad" className="shrink-0">
+              <Link
+                href="/qr/trazabilidad"
+                className="relative inline-flex min-h-11 shrink-0 items-center justify-center gap-2 !rounded-full bg-white px-5 text-base font-medium !text-indigo transition-colors hover:bg-pink-soft"
+              >
                 Consultar lote <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
-              </LinkButton>
-            </Card>
+              </Link>
+            </TechBand>
 
             <Card className="space-y-4">
               <ModuleTitle icon={<FileText aria-hidden className={icon} strokeWidth={1.5} />}>Documentación</ModuleTitle>
@@ -87,7 +100,7 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
               </p>
             </Card>
 
-            <Card className="space-y-4">
+            <Card variant="outline" className="space-y-4 border-lavender-line bg-lavender">
               <ModuleTitle icon={<PackagePlus aria-hidden className={icon} strokeWidth={1.5} />}>Dispensas</ModuleTitle>
               <p className="text-small text-text-muted">Vas a poder solicitar dispensas cuando completes la etapa sanitaria.</p>
               <div className="flex flex-wrap items-center gap-3">
