@@ -48,7 +48,7 @@ export function MemberAccessLink({ tone = "light" }: { tone?: "over-photo" | "li
     <Link
       href="/qr/login"
       className={cn(
-        "inline-flex min-h-10 items-center gap-2 !rounded-full px-4 text-sm tracking-wide transition-colors motion-safe-only",
+        "inline-flex min-h-10 shrink-0 items-center gap-2 !rounded-full px-4 text-sm whitespace-nowrap transition-colors motion-safe-only",
         tone === "over-photo"
           ? "border border-white/50 bg-foreground/20 !text-white backdrop-blur-sm hover:bg-foreground/35"
           : "border border-forest/40 !text-forest hover:bg-forest-soft",

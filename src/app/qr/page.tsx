@@ -2,15 +2,14 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import heroPhoto from "@/assets/demo/qr-portada-provisoria.jpg";
-import { ArrowRight, ChevronDown, Info, UserRound } from "lucide-react";
+import { ArrowRight, ChevronDown, Info, Sprout, UserRound } from "lucide-react";
 import { BRAND, SITE_URL } from "@/lib/constants";
 import { SiteFooter } from "@/components/brand/site-footer";
 import { CircleLogo } from "@/components/brand/circle-logo";
+import { EditorialSection } from "@/components/brand/editorial-section";
 import { MemberAccessLink, MinimalHeader } from "@/components/brand/headers";
 import { Accordion } from "@/components/ui/accordion";
-import { LinkButton } from "@/components/ui/button";
 import { DevTag } from "@/components/ui/display";
-import { FolderTabs } from "@/components/ui/technical";
 import { faqClosingPhrase, faqPlaceholderAnswer, faqQuestions, institutionalPhrase } from "@/demo/content";
 
 const title = BRAND.name;
@@ -44,6 +43,12 @@ export const metadata: Metadata = {
     images: [ogImage],
   },
 };
+
+// The two flows keep their colours: members in hoja, joining in lila.
+const PATHS = [
+  { href: "/qr/login", title: "Acceso socios", detail: "Tu espacio personal", Icon: UserRound, theme: "", badge: "bg-[linear-gradient(135deg,var(--hoja-800),var(--hoja-700))]" },
+  { href: "/sumate", title: "Sumate a la comunidad", detail: "Solicitud de preadmisión", Icon: Sprout, theme: "flujo-sumate", badge: "bg-[linear-gradient(135deg,var(--lila-800),var(--lila-700))]" },
+];
 
 const JOURNEY = [
   { meta: "Online · 5 minutos", title: "Preadmisión", detail: "Contanos quién sos y qué te acerca a Amarí Dul.", href: "/sumate", cta: "Empezar" },
@@ -85,66 +90,71 @@ export default function QRPage() {
         </a>
       </section>
 
-      <main className="relative isolate overflow-hidden page-gutter pt-14 pb-24 sm:pt-20 sm:pb-28">
-        <section id="comunidad" aria-label="Sumate a Amarí Dul" className="content-column relative scroll-mt-6">
-          <FolderTabs className="px-6" />
-          <div className="!rounded-card border border-mist-line bg-white px-5 pt-10 pb-8 text-center shadow-[0_24px_50px_-36px_rgb(29_52_30/0.6)] sm:px-10">
-            {/* eslint-disable-next-line @next/next/no-img-element -- static brand SVG */}
-            <img src="/brand/logo.svg" alt="" className="butterfly-flutter mx-auto !h-auto w-14" />
-            <p className="mx-auto mt-6 max-w-[30ch] text-h2 text-forest">{faqClosingPhrase}</p>
-            <DevTag className="mt-3">Frase pendiente</DevTag>
+      <main>
+        <EditorialSection
+          id="comunidad"
+          eyebrow="Comunidad"
+          title="Sumate a Amarí Dul"
+          intro={
+            <>
+              {faqClosingPhrase} <DevTag className="mt-2">Frase pendiente</DevTag>
+            </>
+          }
+          className="scroll-mt-0"
+        >
+          <ul className="divide-y divide-mist-line border-y border-mist-line">
+            {PATHS.map((path) => (
+              <li key={path.href} className={path.theme}>
+                <Link href={path.href} className="group flex items-center gap-5 py-6 !text-foreground sm:gap-6 sm:py-7">
+                  <span aria-hidden className={`flex size-12 shrink-0 items-center justify-center !rounded-full text-white shadow-[0_10px_24px_-14px_rgb(26_26_24/0.6)] ${path.badge}`}>
+                    <path.Icon className="size-5" strokeWidth={1.5} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-title text-[clamp(1.25rem,1.1rem+0.6vw,1.5rem)] text-forest">{path.title}</span>
+                    <span className="mt-0.5 block text-small text-text-muted">{path.detail}</span>
+                  </span>
+                  <ArrowRight aria-hidden className="size-5 shrink-0 text-forest transition-transform duration-200 group-hover:translate-x-1 motion-safe-only" strokeWidth={1.5} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <Link href="/" className="font-ui mt-6 inline-flex min-h-11 items-center gap-2 text-[0.8125rem] tracking-[0.18em] !text-arena-700 uppercase hover:!text-forest">
+            Conocé más sobre Amarí Dul <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
+          </Link>
+        </EditorialSection>
 
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <LinkButton href="/qr/login" editorial size="lg" full>
-                  <UserRound aria-hidden className="size-5" strokeWidth={1.5} /> Acceso socios
-                </LinkButton>
-                <p className="text-small text-text-muted">Tu espacio personal</p>
+        {/* Joining: its own violet ground, with the butterfly drifting behind. */}
+        <EditorialSection
+          id="sumarte"
+          eyebrow="Asociarse"
+          title="Cómo sumarte"
+          intro="Tres pasos, con el acompañamiento del equipo de la asociación."
+          className="flujo-sumate border-y border-lila-100 bg-[linear-gradient(180deg,var(--lila-50)_0%,var(--lila-100)_100%)]"
+          decor={
+            <>
+              <div aria-hidden className="pointer-events-none absolute top-1/3 -right-28 -z-10 w-72 rotate-[16deg] sm:-top-16 sm:-right-24 sm:w-[28rem]">
+                {/* eslint-disable-next-line @next/next/no-img-element -- static brand SVG */}
+                <img src="/brand/logo.svg" alt="" className="parallax !h-auto w-full opacity-[0.12] [filter:brightness(0)_saturate(100%)_invert(27%)_sepia(14%)_saturate(1200%)_hue-rotate(225deg)]" style={{ "--parallax-from": "-15%", "--parallax-to": "35%" } as React.CSSProperties} />
               </div>
-              <div className="space-y-2">
-                <LinkButton href="/sumate" variant="join" editorial size="lg" full>
-                  Sumate a la comunidad <ArrowRight aria-hidden className="size-5" strokeWidth={1.5} />
-                </LinkButton>
-                <p className="text-small text-text-muted">Solicitud de preadmisión</p>
-              </div>
-            </div>
-            <div className="mt-6">
-              <LinkButton href="/" variant="ghost">
-                Conocé más sobre Amarí Dul <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
-              </LinkButton>
-            </div>
-          </div>
-        </section>
-
-        <section aria-labelledby="sumarte-title" className="flujo-sumate content-column mt-20 sm:mt-24">
-          <div className="text-center">
-            <p className="text-eyebrow text-accent">Asociarse</p>
-            <h2 id="sumarte-title" className="mt-2 text-h1 text-forest">
-              Cómo sumarte
-            </h2>
-            <p className="mx-auto mt-3 max-w-md text-body text-text-muted">Tres pasos, con el acompañamiento del equipo de la asociación.</p>
-          </div>
-
-          <ol className="relative mt-10 grid gap-9 md:grid-cols-3 md:gap-6">
-            <span aria-hidden className="absolute top-[1.375rem] right-[16.66%] left-[16.66%] hidden h-px bg-lila-200 md:block" />
+              <span aria-hidden className="pointer-events-none absolute -bottom-40 -left-32 -z-10 size-96 !rounded-full bg-lila-200/60 blur-3xl" />
+            </>
+          }
+        >
+          <ol>
             {JOURNEY.map((step, i) => (
-              <li key={step.title} className="relative flex gap-5 md:flex-col md:items-center md:gap-4 md:text-center">
-                {i < JOURNEY.length - 1 && <span aria-hidden className="absolute top-11 -bottom-9 left-[1.375rem] w-px bg-lila-200 md:hidden" />}
-                <span
-                  aria-hidden
-                  className="relative z-10 flex size-11 shrink-0 items-center justify-center !rounded-full bg-[linear-gradient(135deg,var(--lila-800),var(--lila-600))] font-medium text-white shadow-[0_8px_18px_-10px_rgb(51_40_64/0.8)] ring-8 ring-background"
-                >
-                  {i + 1}
-                </span>
-                <div className="min-w-0 space-y-1.5 pt-1 md:pt-0">
-                  <p className="text-[11px] font-medium tracking-[0.18em] text-accent uppercase">{step.meta}</p>
-                  <h3 className="text-xl font-title text-forest">
+              <li key={step.title} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-5 border-t border-lila-200 py-7 first:border-t-0 first:pt-0 sm:gap-x-8 sm:py-8">
+                <p aria-hidden className="font-display text-[clamp(2.75rem,2.2rem+2.4vw,4rem)] leading-[0.9] font-medium text-lila-600">
+                  {String(i + 1).padStart(2, "0")}
+                </p>
+                <div>
+                  <p className="text-eyebrow text-lila-700">{step.meta}</p>
+                  <h3 className="mt-1 font-title text-[clamp(1.25rem,1.1rem+0.6vw,1.5rem)] text-foreground">
                     <span className="sr-only">Paso {i + 1}: </span>
                     {step.title}
                   </h3>
-                  <p className="text-small text-text-muted md:mx-auto md:max-w-[16rem]">{step.detail}</p>
+                  <p className="mt-2 text-body text-text-muted">{step.detail}</p>
                   {step.href && (
-                    <Link href={step.href} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium !text-forest underline-offset-4 hover:underline">
+                    <Link href={step.href} className="font-ui mt-2 inline-flex min-h-11 items-center gap-1.5 !text-forest underline-offset-4 hover:underline">
                       {step.cta} <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
                     </Link>
                   )}
@@ -152,25 +162,32 @@ export default function QRPage() {
               </li>
             ))}
           </ol>
-
-          <p className="mt-10 flex items-start gap-3 !rounded-card border border-lila-100 bg-lila-50 px-5 py-4 text-small text-lila-800">
+          <p className="mt-4 flex items-start gap-3 border-t border-lila-200 pt-6 text-small text-lila-800">
             <Info aria-hidden className="mt-0.5 size-5 shrink-0" strokeWidth={1.5} />
             <span>
               <strong className="font-medium">Enviar la preadmisión no implica la admisión.</strong> La decide la Comisión Directiva y te avisamos por email.
             </span>
           </p>
-        </section>
+        </EditorialSection>
 
-        <section id="preguntas" aria-labelledby="preguntas-title" className="content-column relative mt-20 scroll-mt-6 sm:mt-24">
-          <div className="text-center">
-            <p className="text-eyebrow text-accent">Información</p>
-            <h2 id="preguntas-title" className="mt-2 text-h1 text-forest">
-              Preguntas frecuentes
-            </h2>
-          </div>
-
+        {/* FAQ: warm dark sand over the plant photo, which drifts slower than the page. */}
+        <EditorialSection
+          id="preguntas"
+          eyebrow="Información"
+          title="Preguntas frecuentes"
+          tone="dark"
+          className="scroll-mt-0"
+          decor={
+            <>
+              <div aria-hidden className="absolute inset-x-0 -inset-y-[20%] -z-20">
+                <Image src={heroPhoto} alt="" fill quality={75} sizes="100vw" className="parallax object-cover" style={{ "--parallax-from": "-12%", "--parallax-to": "12%" } as React.CSSProperties} />
+              </div>
+              <div aria-hidden className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(49_45_38/0.9)_0%,rgb(49_45_38/0.66)_45%,rgb(49_45_38/0.92)_100%)]" />
+            </>
+          }
+        >
           <Accordion
-            className="relative mt-8"
+            variant="lines-dark"
             items={faqQuestions.map((q) => ({
               id: q.id,
               title: q.title,
@@ -182,10 +199,10 @@ export default function QRPage() {
               ),
             }))}
           />
-        </section>
+        </EditorialSection>
       </main>
 
-      <SiteFooter />
+      <SiteFooter tone="neutral" />
     </>
   );
 }

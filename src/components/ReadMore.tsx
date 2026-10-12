@@ -24,7 +24,7 @@ export default function ReadMore({ id, children }: { id: string; children: React
         aria-expanded={open}
         aria-controls={id}
         onClick={() => setOpen((v) => !v)}
-        className="mt-5 inline-flex min-h-11 items-center gap-2 border-b border-b-transparent text-base sm:text-lg text-[#3f6043] hover:border-b-[#3f6043] transition-colors motion-reduce:transition-none"
+        className="font-ui mt-4 inline-flex min-h-11 items-center gap-2 border-b border-b-transparent text-base text-forest hover:border-b-forest transition-colors motion-reduce:transition-none"
       >
         {open ? "Cerrar" : "Leer más"}
         <svg

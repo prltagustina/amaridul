@@ -1,43 +1,38 @@
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, ChevronDown } from "lucide-react";
+import heroPhoto from "@/assets/demo/qr-portada-provisoria.jpg";
+import { CircleLogo } from "@/components/brand/circle-logo";
+import { institutionalPhrase } from "@/demo/content";
+
+/** Same photographic ground as /qr: portrait photo, soft-focus middle on wide screens, light green veil. */
 export default function Hero() {
   return (
-    <section className="w-full px-6 sm:px-8" style={{minHeight: "calc(100svh - var(--nav-h))", display: "flex", flexDirection: "column", justifyContent: "center", paddingTop: "clamp(2rem, 5svh, 4rem)", paddingBottom: "clamp(1rem, 3svh, 2rem)"}}>
-      <div className="max-w-4xl mx-auto text-center w-full" style={{display: "flex", flexDirection: "column", gap: "clamp(0.75rem, 2.5svh, 3rem)"}}>
-        {/* Logo - Mariposa dominante */}
-        <div className="flex justify-center" style={{marginBottom: "clamp(-3rem, -9svh, -8.5rem)"}}>
-          <div style={{width: "min(clamp(11rem, 30svh, 96rem), calc(100vw - 3rem))", height: "min(clamp(11rem, 30svh, 96rem), calc(100vw - 3rem))", aspectRatio: "1"}}>
-            <img
-              src="/brand/logo.svg"
-              alt=""
-              className="w-full h-full butterfly-flutter"
-            />
-          </div>
-        </div>
-
-        {/* Wordmark y Tagline */}
-        <div className="flex flex-col gap-[clamp(0.75rem,1.5svh,2rem)] sm:gap-[clamp(1.375rem,2.5svh,2.75rem)]">
-          <h1>
-            <img
-              src="/brand/wordmark.svg"
-              alt="Amarí Dul"
-              className="w-full max-w-lg lg:max-w-2xl mx-auto h-auto"
-            />
-          </h1>
-          <div className="flex items-center justify-center gap-4 sm:gap-10">
-            <div className="flex-1 h-px bg-[#3f6043]"></div>
-            <p className="text-[#3f6043] font-light whitespace-nowrap sm:-mr-[0.5em]" style={{fontSize: "min(clamp(1rem, 2.5svh, 1.875rem), calc((100vw - 3rem) / 16.5))", letterSpacing: "0.5em"}}>
-              ASOCIACIÓN CIVIL
-            </p>
-            <div className="flex-1 h-px bg-[#3f6043]"></div>
-          </div>
-        </div>
-
-        {/* Frase institucional - Placeholder */}
-        <div className="max-w-2xl lg:max-w-5xl mx-auto px-4">
-          <p className="text-lead text-text-muted font-light lg:whitespace-nowrap">
-            [Frase institucional breve que define el propósito de Amarí Dul]
-          </p>
-        </div>
+    <section aria-label="Portada" className="relative isolate flex min-h-[100svh] flex-col overflow-hidden">
+      {/* Provisional photo taken from the visual reference; replace with the commissioned shoot. */}
+      <Image src={heroPhoto} alt="" fill preload placeholder="blur" quality={85} sizes="100vw" className="-z-20 object-cover object-center md:scale-110 md:blur-md" />
+      <div aria-hidden className="absolute inset-y-0 left-0 -z-20 hidden w-[40%] [mask-image:linear-gradient(to_right,black_45%,transparent)] md:block">
+        <Image src={heroPhoto} alt="" fill quality={85} sizes="40vw" className="object-cover object-bottom" />
       </div>
+      <div aria-hidden className="absolute inset-y-0 right-0 -z-20 hidden w-[40%] [mask-image:linear-gradient(to_left,black_45%,transparent)] md:block">
+        <Image src={heroPhoto} alt="" fill quality={85} sizes="40vw" className="object-cover object-top" />
+      </div>
+      <div aria-hidden className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(29_52_30/0.45)_0%,rgb(29_52_30/0.05)_45%,rgba(26,44,31,0.7)_100%)]" />
+
+      <h1 className="sr-only">Amarí Dul, asociación civil</h1>
+
+      <div className="page-gutter flex flex-1 flex-col items-center justify-center gap-6 pt-20 pb-24 text-center sm:gap-8">
+        <CircleLogo className="w-[min(86vw,54svh,26rem)] lg:w-[min(56svh,30rem)]" />
+        <p className="mx-auto max-w-[17ch] font-display text-[clamp(2rem,1.45rem+2.6vw,3.25rem)] leading-[1.1] font-medium text-white [text-shadow:0_1px_16px_rgba(0,0,0,0.4)] sm:max-w-[22ch]">{institutionalPhrase}</p>
+        <Link href="/qr" className="font-ui inline-flex min-h-11 items-center gap-2 border-b border-white/50 text-[0.8125rem] tracking-[0.18em] !text-white uppercase transition-colors hover:border-white motion-safe-only">
+          Más información <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
+        </Link>
+      </div>
+
+      <a href="#sobre" className="absolute bottom-6 left-1/2 flex size-11 -translate-x-1/2 items-center justify-center !rounded-full !text-white hover:bg-white/10">
+        <span className="sr-only">Ir a Sobre Amarí Dul</span>
+        <ChevronDown aria-hidden className="size-7 animate-bounce motion-safe-only" strokeWidth={1.25} />
+      </a>
     </section>
   );
 }

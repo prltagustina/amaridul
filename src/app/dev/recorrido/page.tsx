@@ -14,7 +14,7 @@ const GROUPS: Group[] = [
     title: "Público",
     description: "Lo que ve cualquier persona que escanea el QR.",
     items: [
-      { href: "/", label: "Home", note: "Sin cambios en esta fase" },
+      { href: "/", label: "Home", note: "Sitio institucional con el sistema nuevo" },
       { href: "/qr", label: "/qr · landing del QR", note: "Hero, preguntas frecuentes y CTAs" },
       { href: "/sumate", label: "Sumate · preadmisión", states: st("/sumate", ["loading", "error", "success"]) },
     ],

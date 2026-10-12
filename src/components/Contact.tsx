@@ -1,4 +1,5 @@
 import { CONTACT } from "@/lib/constants";
+import { EditorialSection } from "@/components/brand/editorial-section";
 
 const ITEMS = [
   ["Instagram", CONTACT.instagram],
@@ -6,18 +7,17 @@ const ITEMS = [
   ["Email", CONTACT.email],
 ] as const;
 
-export default function Contact({ divider = true }: { divider?: boolean }) {
+export default function Contact() {
   return (
-    <section id="contacto" className={`${divider ? "border-t border-border " : ""}pt-6 sm:pt-8`}>
-      <h3 className="font-medium mb-3 sm:mb-4 text-[#3f6043]" style={{fontSize: "clamp(1.125rem, 3.5vw, 1.5rem)"}}>Contacto</h3>
-      <div className="space-y-2 text-base sm:text-lg">
+    <EditorialSection id="contacto" eyebrow="Escribinos" title="Contacto" className="bg-arena-100 sm:py-24">
+      <dl className="divide-y divide-arena-300 border-y border-arena-300">
         {ITEMS.map(([label, value]) => (
-          <p key={label}>
-            <span className="text-text-muted">{label}:</span>{" "}
-            <span className="text-brand-hover">{value}</span>
-          </p>
+          <div key={label} className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-5">
+            <dt className="text-eyebrow text-arena-700">{label}</dt>
+            <dd className="font-display text-[1.375rem] leading-tight break-words text-foreground">{value}</dd>
+          </div>
         ))}
-      </div>
-    </section>
+      </dl>
+    </EditorialSection>
   );
 }

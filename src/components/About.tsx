@@ -1,4 +1,5 @@
 import ReadMore from "@/components/ReadMore";
+import { EditorialSection } from "@/components/brand/editorial-section";
 
 const BLOCKS = [
   {
@@ -26,35 +27,27 @@ const BLOCKS = [
 
 export default function About() {
   return (
-    <section id="sobre" aria-labelledby="sobre-amari-dul" className="border-t border-border pb-12 sm:pb-16">
-      <header className="border-b border-border page-gutter">
-        <div className="content-column pt-10 pb-9 sm:pt-14 sm:pb-13 lg:pt-16 lg:pb-15">
-          <h2 id="sobre-amari-dul" className="font-medium text-[#3f6043]" style={{fontSize: "clamp(1.75rem, 1.25rem + 2vw, 2.5rem)", lineHeight: 1.2}}>
-            Sobre Amarí Dul
-          </h2>
-        </div>
-      </header>
-
-      <div className="page-gutter">
-        <div className="content-column pt-8 sm:pt-10 space-y-10 sm:space-y-14">
-          {BLOCKS.map((block, i) => (
-            <article key={block.id} aria-labelledby={`${block.id}-title`} className={i === 0 ? undefined : "border-t border-border/50 pt-8 sm:pt-10"}>
-              <p className="text-sm tracking-[0.2em] text-text-muted">{block.number}</p>
-              <h3 id={`${block.id}-title`} className="mt-2 font-medium text-[#3f6043]" style={{fontSize: "clamp(1.125rem, 3.5vw, 1.5rem)"}}>
-                {block.title}
-              </h3>
-              <div className="mt-4 max-w-[36rem] text-body text-text-muted">
-                <p>{block.intro}</p>
-                <ReadMore id={`${block.id}-more`}>
-                  {block.more.map((paragraph) => (
-                    <p key={paragraph.slice(0, 24)}>{paragraph}</p>
-                  ))}
-                </ReadMore>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
+    <EditorialSection id="sobre" eyebrow="Quiénes somos" title="Sobre Amarí Dul">
+      {BLOCKS.map((block) => (
+        <article key={block.id} aria-labelledby={`${block.id}-title`} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-5 border-t border-mist-line py-8 first:border-t-0 first:pt-0 sm:gap-x-8 sm:py-10">
+          <p aria-hidden className="font-display text-[clamp(2.75rem,2.2rem+2.4vw,4rem)] leading-[0.9] font-medium text-arena-500">
+            {block.number}
+          </p>
+          <div>
+            <h3 id={`${block.id}-title`} className="font-title text-[clamp(1.25rem,1.1rem+0.6vw,1.5rem)] text-foreground">
+              {block.title}
+            </h3>
+            <div className="mt-3 text-body text-text-muted">
+              <p>{block.intro}</p>
+              <ReadMore id={`${block.id}-more`}>
+                {block.more.map((paragraph) => (
+                  <p key={paragraph.slice(0, 24)}>{paragraph}</p>
+                ))}
+              </ReadMore>
+            </div>
+          </div>
+        </article>
+      ))}
+    </EditorialSection>
   );
 }
