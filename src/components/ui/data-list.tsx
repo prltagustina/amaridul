@@ -30,13 +30,13 @@ export function DataList<T>({
   const rest = columns.filter((c) => c !== primary);
   return (
     <>
-      <div className="relative hidden overflow-x-auto !rounded-card border border-border/80 bg-surface md:block">
+      <div className="relative hidden overflow-x-auto !rounded-card border border-mist-line bg-white md:block">
         <table className="w-full text-left text-small">
           <caption className="sr-only">{caption}</caption>
-          <thead className="border-b border-border bg-surface-sunken/60">
+          <thead className="bg-forest">
             <tr>
               {columns.map((c) => (
-                <th key={c.key} scope="col" className="px-4 py-3 text-eyebrow font-medium text-text-muted">
+                <th key={c.key} scope="col" className="px-4 py-3 text-xs font-medium tracking-wide text-white">
                   {c.header}
                 </th>
               ))}
@@ -45,7 +45,7 @@ export function DataList<T>({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={rowKey(row)} className="border-b border-border/70 last:border-0 hover:bg-background/60">
+              <tr key={rowKey(row)} className="border-b border-mist-line last:border-0 even:bg-mist/50 hover:bg-forest-soft/60">
                 {columns.map((c) => (
                   <td key={c.key} className={cn("px-4 py-3.5 align-middle text-foreground", c.className)}>
                     {c.render(row)}
@@ -53,7 +53,7 @@ export function DataList<T>({
                 ))}
                 {rowHref && (
                   <td className="px-3 text-right">
-                    <Link href={rowHref(row)} className="inline-flex size-9 items-center justify-center !rounded-control !text-brand hover:bg-brand-soft">
+                    <Link href={rowHref(row)} className="inline-flex size-9 items-center justify-center !rounded-control !text-forest hover:bg-forest-soft">
                       <span className="sr-only">Ver detalle</span>
                       <ChevronRight aria-hidden className="size-5" strokeWidth={1.5} />
                     </Link>
@@ -71,7 +71,7 @@ export function DataList<T>({
             <>
               <div className="flex items-start justify-between gap-3">
                 <div className="text-base font-medium text-foreground">{primary.render(row)}</div>
-                {rowHref && <ChevronRight aria-hidden className="mt-0.5 size-5 shrink-0 text-brand" strokeWidth={1.5} />}
+                {rowHref && <ChevronRight aria-hidden className="mt-0.5 size-5 shrink-0 text-forest" strokeWidth={1.5} />}
               </div>
               <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-small">
                 {rest.map((c) => (
@@ -86,11 +86,11 @@ export function DataList<T>({
           return (
             <li key={rowKey(row)}>
               {rowHref ? (
-                <Link href={rowHref(row)} className="block !rounded-card border border-border/80 bg-surface p-4 hover:border-border-strong">
+                <Link href={rowHref(row)} className="block !rounded-card border border-mist-line bg-white p-4 hover:border-accent/50">
                   {body}
                 </Link>
               ) : (
-                <div className="!rounded-card border border-border/80 bg-surface p-4">{body}</div>
+                <div className="!rounded-card border border-mist-line bg-white p-4">{body}</div>
               )}
             </li>
           );

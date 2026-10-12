@@ -24,11 +24,11 @@ export function buttonClasses({ variant = "primary", shape = "pill", size = "md"
     size === "lg" ? "min-h-13 px-7" : "min-h-11 px-5",
     editorial ? "text-cta" : "text-base font-medium",
     full && "w-full",
-    variant === "primary" && "bg-brand !text-white hover:bg-brand-hover",
-    variant === "accent" && "bg-accent !text-white hover:bg-accent-hover",
-    variant === "secondary" && "border border-brand bg-transparent !text-brand hover:bg-brand-soft",
+    variant === "primary" && "bg-[linear-gradient(135deg,var(--forest)_0%,#3a5f41_100%)] !text-white shadow-[0_10px_24px_-14px_rgba(43,74,51,0.8)] hover:bg-[linear-gradient(135deg,var(--forest-hover)_0%,#467050_100%)]",
+    variant === "accent" && "bg-[linear-gradient(135deg,#3f6043_0%,var(--accent)_55%,#557d4c_100%)] !text-white shadow-[0_10px_24px_-14px_rgba(43,74,51,0.7)] hover:bg-[linear-gradient(135deg,#36593f_0%,#45683e_55%,#4d7045_100%)]",
+    variant === "secondary" && "border border-forest bg-transparent !text-forest hover:bg-forest-soft",
     variant === "danger" && "border border-error-fg bg-transparent !text-error-fg hover:bg-error-bg",
-    variant === "ghost" && "min-h-11 bg-transparent px-1 !text-brand underline-offset-4 hover:underline",
+    variant === "ghost" && "min-h-11 bg-transparent px-1 !text-forest underline-offset-4 hover:underline",
   );
 }
 
@@ -63,5 +63,5 @@ export function LinkButton({ variant, shape, size, editorial, full, className, .
 
 /** Inline text link in brand colour, overriding the global anchor colour. */
 export function TextLink({ className, ...rest }: ComponentProps<typeof Link>) {
-  return <Link {...rest} className={cn("!text-brand !underline underline-offset-4 decoration-1 hover:decoration-2", className)} />;
+  return <Link {...rest} className={cn("!text-forest !underline underline-offset-4 decoration-1 hover:decoration-2", className)} />;
 }

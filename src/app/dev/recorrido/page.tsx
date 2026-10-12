@@ -94,13 +94,13 @@ export default function RecorridoPage() {
       <div className="admin-column space-y-10">
         <header className="space-y-3">
           <p className="text-eyebrow text-accent">Demo local · datos ficticios</p>
-          <h1 className="text-h1 text-brand">Recorrido de pantallas</h1>
+          <h1 className="text-h1 text-forest">Recorrido de pantallas</h1>
           <p className="max-w-2xl text-body text-text-muted">
             Todas las vistas nuevas, con sus estados. Las acciones son simuladas: no se guarda ni se envía nada. En cada pantalla, la barra “Dev” abajo a la derecha cambia de estado.
           </p>
           <nav aria-label="Secciones" className="flex flex-wrap gap-2 pt-1">
             {GROUPS.map((g) => (
-              <a key={g.id} href={`#${g.id}`} className="!rounded-full border border-border-strong/50 px-3.5 py-1.5 text-small !text-brand hover:bg-brand-soft">
+              <a key={g.id} href={`#${g.id}`} className="!rounded-full border border-border-strong/50 px-3.5 py-1.5 text-small !text-forest hover:bg-forest-soft">
                 {g.title}
               </a>
             ))}
@@ -110,7 +110,7 @@ export default function RecorridoPage() {
         {GROUPS.map((g) => (
           <section key={g.id} id={g.id} aria-labelledby={`${g.id}-title`} className="scroll-mt-6 space-y-4">
             <div className="space-y-1">
-              <h2 id={`${g.id}-title`} className="flex items-center gap-2 text-h2 text-brand">
+              <h2 id={`${g.id}-title`} className="flex items-center gap-2 text-h2 text-forest">
                 {g.title}
                 {g.auth && <Lock aria-hidden className="size-5 text-accent" strokeWidth={1.5} />}
               </h2>
@@ -126,7 +126,7 @@ export default function RecorridoPage() {
                 <li key={item.href}>
                   <Card className="h-full space-y-3" padded={false}>
                     <div className="px-5 pt-4">
-                      <Link href={item.href} className="group inline-flex items-center gap-1.5 text-base font-medium !text-brand">
+                      <Link href={item.href} className="group inline-flex items-center gap-1.5 text-base font-medium !text-forest">
                         {item.label}
                         <ArrowUpRight aria-hidden className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" strokeWidth={1.5} />
                       </Link>

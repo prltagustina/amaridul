@@ -18,7 +18,7 @@ export function Accordion({ items, className, headingLevel = 3, multiple = false
         const panelId = `${base}-${item.id}-panel`;
         const buttonId = `${base}-${item.id}-button`;
         return (
-          <div key={item.id} className="!rounded-card bg-surface-sunken">
+          <div key={item.id} className={cn("!rounded-card border bg-white transition-colors", isOpen ? "border-accent/50" : "border-mist-line")}>
             <Heading className="m-0">
               <button
                 id={buttonId}
@@ -26,13 +26,13 @@ export function Accordion({ items, className, headingLevel = 3, multiple = false
                 aria-expanded={isOpen}
                 aria-controls={panelId}
                 onClick={() => setOpen((o) => (multiple ? { ...o, [item.id]: !o[item.id] } : { [item.id]: !o[item.id] }))}
-                className="flex w-full items-center justify-between gap-4 !rounded-card px-5 py-4 text-left text-cta text-foreground sm:px-6"
+                className={cn("flex w-full items-center justify-between gap-4 !rounded-card px-5 py-4 text-left text-cta sm:px-6", isOpen ? "text-forest" : "text-foreground")}
               >
                 <span>{item.title}</span>
                 <ChevronDown
                   aria-hidden
                   strokeWidth={1.5}
-                  className={cn("size-5 shrink-0 text-brand transition-transform duration-300 motion-safe-only", isOpen && "rotate-180")}
+                  className={cn("size-5 shrink-0 text-forest transition-transform duration-300 motion-safe-only", isOpen && "rotate-180")}
                 />
               </button>
             </Heading>

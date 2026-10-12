@@ -13,7 +13,7 @@ export default async function AdminSecurityPage() {
         {user.twoFactorEnabled ? (
           <>
             <Card className="flex items-start gap-4">
-              <ShieldCheck aria-hidden className="mt-0.5 size-6 shrink-0 text-brand" strokeWidth={1.5} />
+              <ShieldCheck aria-hidden className="mt-0.5 size-6 shrink-0 text-forest" strokeWidth={1.5} />
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-h3">Verificación en dos pasos</h2>

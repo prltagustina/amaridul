@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { Boxes, ClipboardCheck, Home, Inbox, Menu, QrCode, ScrollText, ShieldCheck, Tag, UserRound, Users, X } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { BrandButterfly } from "@/components/brand/headers";
 
 const SECTIONS = [
   { href: "/admin", label: "Inicio", icon: Home, demo: false },
@@ -36,10 +37,10 @@ export function AdminNav({ email, demo, signOut }: { email: string; demo: boolea
               aria-current={active ? "page" : undefined}
               className={cn(
                 "flex min-h-11 items-center gap-3 !rounded-control px-3 text-[0.9375rem]",
-                active ? "bg-brand-soft font-medium !text-brand" : "!text-foreground/80 hover:bg-surface-sunken hover:!text-brand",
+                active ? "bg-forest-soft font-medium !text-forest" : "!text-foreground/80 hover:bg-surface-sunken hover:!text-forest",
               )}
             >
-              <Icon aria-hidden className={cn("size-[1.125rem]", active ? "text-brand" : "text-text-muted")} strokeWidth={1.5} />
+              <Icon aria-hidden className={cn("size-[1.125rem]", active ? "text-forest" : "text-text-muted")} strokeWidth={1.5} />
               {label}
             </Link>
           </li>
@@ -50,8 +51,11 @@ export function AdminNav({ email, demo, signOut }: { email: string; demo: boolea
 
   const brand = (
     <Link href="/admin" className="flex flex-col gap-0.5 py-1" aria-label="Amarí Dul, administración">
-      {/* eslint-disable-next-line @next/next/no-img-element -- static brand SVG */}
-      <img src="/brand/wordmark-bold.svg" alt="" className="!h-[1.375rem] !w-auto self-start" />
+      <span className="flex items-center gap-2">
+        <BrandButterfly className="!h-7" />
+        {/* eslint-disable-next-line @next/next/no-img-element -- static brand SVG */}
+        <img src="/brand/wordmark-bold.svg" alt="" className="!h-[1.375rem] !w-auto" />
+      </span>
       <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-accent">Administración</span>
     </Link>
   );
@@ -67,7 +71,7 @@ export function AdminNav({ email, demo, signOut }: { email: string; demo: boolea
             onClick={() => setOpen((o) => !o)}
             aria-expanded={open}
             aria-controls="admin-menu"
-            className="-mr-2 flex size-11 items-center justify-center !rounded-control text-brand"
+            className="-mr-2 flex size-11 items-center justify-center !rounded-control text-forest"
           >
             <span className="sr-only">{open ? "Cerrar menú" : "Abrir menú"}</span>
             {open ? <X aria-hidden className="size-6" strokeWidth={1.5} /> : <Menu aria-hidden className="size-6" strokeWidth={1.5} />}

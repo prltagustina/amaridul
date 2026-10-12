@@ -2,13 +2,12 @@
 
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/display";
 import { PasswordField } from "@/components/ui/password-field";
 import { PasswordRules, passwordChecks } from "@/components/ui/password-rules";
-import { FolderTabs } from "@/components/ui/technical";
+import { TabbedCard } from "@/components/ui/technical";
 
 /** Shared by account activation and password recovery. Demo only: nothing is stored. */
-export function NewPasswordForm({ submitLabel, loading: initialLoading = false, onDone, children }: { submitLabel: string; loading?: boolean; onDone: () => void; children?: ReactNode }) {
+export function NewPasswordForm({ tab, submitLabel, loading: initialLoading = false, onDone, children }: { tab: string; submitLabel: string; loading?: boolean; onDone: () => void; children?: ReactNode }) {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<{ password?: string; confirm?: string }>({});
@@ -27,9 +26,7 @@ export function NewPasswordForm({ submitLabel, loading: initialLoading = false, 
   }
 
   return (
-    <div>
-    <FolderTabs />
-    <Card className="shadow-[0_18px_40px_-30px_rgba(70,53,119,0.5)]">
+    <TabbedCard tab={tab}>
       <form noValidate onSubmit={onSubmit} className="space-y-5" aria-busy={loading}>
         {children}
         <PasswordField id="new-password" label="Nueva contraseña" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} error={error.password} />
@@ -39,7 +36,6 @@ export function NewPasswordForm({ submitLabel, loading: initialLoading = false, 
           {submitLabel}
         </Button>
       </form>
-    </Card>
-    </div>
+    </TabbedCard>
   );
 }

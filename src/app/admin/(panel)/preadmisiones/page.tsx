@@ -31,7 +31,7 @@ export default async function PreadmisionesPage({ searchParams }: { searchParams
             aria-current={f === filter ? "true" : undefined}
             className={cn(
               "inline-flex min-h-9 items-center !rounded-full border px-3.5 text-small",
-              f === filter ? "border-brand bg-brand !text-white" : "border-border-strong/50 !text-foreground hover:border-brand",
+              f === filter ? "border-forest bg-forest !text-white" : "border-border-strong/50 !text-foreground hover:border-forest",
             )}
           >
             {f === "todas" ? "Todas" : preStatus[f as PreAdmissionStatus].label}

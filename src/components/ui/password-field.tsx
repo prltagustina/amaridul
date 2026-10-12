@@ -26,7 +26,7 @@ export function PasswordField({ id, label, hint, error, className, ...rest }: Pr
           onClick={() => setVisible((v) => !v)}
           aria-pressed={visible}
           aria-controls={id}
-          className="absolute inset-y-0 right-0 flex w-11 items-center justify-center !rounded-control text-text-muted hover:text-brand"
+          className="absolute inset-y-0 right-0 flex w-11 items-center justify-center !rounded-control text-text-muted hover:text-forest"
         >
           <span className="sr-only">{visible ? "Ocultar contraseña" : "Mostrar contraseña"}</span>
           {visible ? <EyeOff aria-hidden className="size-5" strokeWidth={1.5} /> : <Eye aria-hidden className="size-5" strokeWidth={1.5} />}

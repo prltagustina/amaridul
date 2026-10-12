@@ -6,6 +6,7 @@ import { Button, LinkButton } from "@/components/ui/button";
 import { Checkbox, CheckboxGroup, RadioGroup } from "@/components/ui/choice";
 import { Alert, Card, DevTag } from "@/components/ui/display";
 import { Select, TextField } from "@/components/ui/field";
+import { RuleList, TabbedCard } from "@/components/ui/technical";
 import { interestOptions, privacySummary, provinces, reprocannOptions } from "@/demo/content";
 
 type Values = {
@@ -76,9 +77,9 @@ export default function SumateForm({ demoState }: { demoState: "default" | "load
   if (status === "success") {
     return (
       <Card className="space-y-6 py-10 text-center sm:py-12" role="status" aria-live="polite">
-        <CircleCheck aria-hidden className="mx-auto size-12 text-brand" strokeWidth={1.25} />
+        <CircleCheck aria-hidden className="mx-auto size-12 text-forest" strokeWidth={1.25} />
         <div className="space-y-3">
-          <h1 className="text-h1 text-brand">Recibimos tu solicitud</h1>
+          <h2 className="text-h1 text-forest">Recibimos tu solicitud</h2>
           <p className="text-eyebrow text-accent">Referencia PRE-2026-0001</p>
           <p className="mx-auto max-w-md text-body text-text-muted">
             El equipo de Amarí Dul va a revisarla y se va a poner en contacto con vos. Enviar la solicitud no implica la admisión como socio.
@@ -123,8 +124,7 @@ export default function SumateForm({ demoState }: { demoState: "default" | "load
         </Alert>
       )}
 
-      <Card className="space-y-5">
-        <h2 className="text-h2 text-brand">Tus datos</h2>
+      <TabbedCard tab="1. Tus datos" bodyClassName="space-y-5">
         <TextField id="nombre" label="Nombre y apellido" autoComplete="name" value={values.nombre} onChange={(e) => set("nombre", e.target.value)} error={errors.nombre} />
         <div className="grid gap-5 sm:grid-cols-2">
           <TextField id="email" type="email" label="Email" autoComplete="email" inputMode="email" value={values.email} onChange={(e) => set("email", e.target.value)} error={errors.email} />
@@ -150,12 +150,12 @@ export default function SumateForm({ demoState }: { demoState: "default" | "load
           />
           <TextField id="localidad" label="Localidad" autoComplete="address-level2" value={values.localidad} onChange={(e) => set("localidad", e.target.value)} error={errors.localidad} />
         </div>
-      </Card>
+      </TabbedCard>
 
-      <Card id="intereses-group" className="space-y-6">
+      <TabbedCard id="intereses-group" tab="2. Motivación" bodyClassName="space-y-6">
         <CheckboxGroup
           name="intereses"
-          legend={<span className="text-h2 text-brand">¿Qué te motiva a acercarte a Amarí Dul?</span>}
+          legend={<span className="text-xl font-medium tracking-tight text-forest">¿Qué te motiva a acercarte a Amarí Dul?</span>}
           hint="Podés elegir más de una opción."
           options={interestOptions}
           values={values.intereses}
@@ -176,12 +176,12 @@ export default function SumateForm({ demoState }: { demoState: "default" | "load
             />
           </div>
         )}
-      </Card>
+      </TabbedCard>
 
-      <Card id="participacion-group">
+      <TabbedCard id="participacion-group" tab="3. Participación">
         <RadioGroup
           name="participacion"
-          legend={<span className="text-h2 text-brand">Participación</span>}
+          legend={<span className="text-xl font-medium tracking-tight text-forest">¿Te gustaría participar?</span>}
           hint="¿Te gustaría participar en actividades comunitarias, educativas, científicas o institucionales?"
           options={[
             { value: "si", label: "Sí" },
@@ -192,10 +192,9 @@ export default function SumateForm({ demoState }: { demoState: "default" | "load
           error={errors.participacion}
           inline
         />
-      </Card>
+      </TabbedCard>
 
-      <Card className="space-y-4">
-        <h2 className="text-h2 text-brand">Privacidad</h2>
+      <TabbedCard tab="4. Privacidad" bodyClassName="space-y-4">
         <p className="text-small text-text-muted">
           {privacySummary} <DevTag>Aviso pendiente</DevTag>
         </p>
@@ -206,7 +205,15 @@ export default function SumateForm({ demoState }: { demoState: "default" | "load
           onChange={(e) => set("privacidad", e.target.checked)}
           error={errors.privacidad}
         />
-      </Card>
+      </TabbedCard>
+
+      <RuleList
+        items={[
+          <>
+            <strong>Enviar la solicitud no implica la admisión.</strong> El equipo la revisa y, si corresponde, te invita al alta formal.
+          </>,
+        ]}
+      />
 
       <div className="flex flex-col items-center gap-3 pt-2">
         <Button type="submit" variant="accent" size="lg" editorial loading={status === "loading"} loadingLabel="Enviando…" className="w-full sm:w-auto">

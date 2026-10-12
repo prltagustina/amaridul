@@ -5,9 +5,9 @@ import { LinkButton } from "./button";
 function StateLayout({ icon, code, title, description, action }: { icon: ReactNode; code?: string; title: string; description: string; action?: ReactNode }) {
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-5 py-16 text-center sm:py-24">
-      <span className="flex size-16 items-center justify-center !rounded-full bg-brand-soft text-brand">{icon}</span>
+      <span className="flex size-16 items-center justify-center !rounded-full bg-forest-soft text-forest">{icon}</span>
       {code && <p className="text-eyebrow text-accent">{code}</p>}
-      <h1 className="text-h1 text-brand">{title}</h1>
+      <h1 className="text-h1 text-forest">{title}</h1>
       <p className="text-body text-text-muted">{description}</p>
       {action && <div className="pt-2">{action}</div>}
     </div>

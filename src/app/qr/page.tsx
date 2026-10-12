@@ -3,13 +3,13 @@ import Image from "next/image";
 import heroPhoto from "@/assets/demo/qr-portada-provisoria.jpg";
 import { ArrowRight, ChevronDown, UserRound } from "lucide-react";
 import { BRAND, SITE_URL } from "@/lib/constants";
-import Footer from "@/components/Footer";
+import { SiteFooter } from "@/components/brand/site-footer";
 import { CircleLogo } from "@/components/brand/circle-logo";
 import { MemberAccessLink, MinimalHeader } from "@/components/brand/headers";
-import { CannabisSprig, CornerLeaves, LeafMark } from "@/components/brand/botanicals";
 import { Accordion } from "@/components/ui/accordion";
 import { LinkButton } from "@/components/ui/button";
 import { DevTag } from "@/components/ui/display";
+import { FolderTabs, RuleList, SectionTab, StepCards } from "@/components/ui/technical";
 import { faqClosingPhrase, faqPlaceholderAnswer, faqQuestions, institutionalPhrase } from "@/demo/content";
 
 const title = BRAND.name;
@@ -58,7 +58,7 @@ export default function QRPage() {
         <div aria-hidden className="absolute inset-y-0 right-0 -z-20 hidden w-[40%] [mask-image:linear-gradient(to_left,black_45%,transparent)] md:block">
           <Image src={heroPhoto} alt="" fill quality={85} sizes="40vw" className="object-cover object-top" />
         </div>
-        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-b from-foreground/30 via-foreground/5 to-foreground/50" />
+        <div aria-hidden className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(43,74,51,0.45)_0%,rgba(43,74,51,0.05)_45%,rgba(26,44,31,0.7)_100%)]" />
         <DevTag className="absolute right-3 bottom-3 z-10">Foto provisoria del mockup</DevTag>
         <MinimalHeader tone="over-photo" right={<MemberAccessLink tone="over-photo" />} />
         <h1 className="sr-only">Amarí Dul, asociación civil</h1>
@@ -78,44 +78,63 @@ export default function QRPage() {
         </a>
       </section>
 
-      <main className="relative isolate overflow-hidden page-gutter pt-14 pb-36 sm:pt-20 sm:pb-44">
-        <section id="comunidad" aria-label="Sumate a Amarí Dul" className="content-column relative scroll-mt-6 text-center">
-          {/* eslint-disable-next-line @next/next/no-img-element -- static brand SVG */}
-          <img src="/brand/logo.svg" alt="" className="butterfly-flutter mx-auto !h-auto w-14" />
-          <p className="mx-auto mt-6 max-w-[30ch] text-h2 text-foreground">{faqClosingPhrase}</p>
-          <DevTag className="mt-3">Frase pendiente</DevTag>
+      <main className="relative isolate overflow-hidden page-gutter pt-14 pb-24 sm:pt-20 sm:pb-28">
+        <section id="comunidad" aria-label="Sumate a Amarí Dul" className="content-column relative scroll-mt-6">
+          <FolderTabs className="px-6" />
+          <div className="!rounded-card border border-mist-line bg-white px-5 pt-10 pb-8 text-center shadow-[0_24px_50px_-36px_rgba(43,74,51,0.6)] sm:px-10">
+            {/* eslint-disable-next-line @next/next/no-img-element -- static brand SVG */}
+            <img src="/brand/logo.svg" alt="" className="butterfly-flutter mx-auto !h-auto w-14" />
+            <p className="mx-auto mt-6 max-w-[30ch] text-h2 text-forest">{faqClosingPhrase}</p>
+            <DevTag className="mt-3">Frase pendiente</DevTag>
 
-          <div className="mt-10 grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <LinkButton href="/qr/login" editorial size="lg" full>
-                <UserRound aria-hidden className="size-5" strokeWidth={1.5} /> Acceso socios
-              </LinkButton>
-              <p className="text-small text-text-muted">Tu espacio personal</p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <LinkButton href="/qr/login" editorial size="lg" full>
+                  <UserRound aria-hidden className="size-5" strokeWidth={1.5} /> Acceso socios
+                </LinkButton>
+                <p className="text-small text-text-muted">Tu espacio personal</p>
+              </div>
+              <div className="space-y-2">
+                <LinkButton href="/sumate" variant="accent" editorial size="lg" full>
+                  Sumate a la comunidad <ArrowRight aria-hidden className="size-5" strokeWidth={1.5} />
+                </LinkButton>
+                <p className="text-small text-text-muted">Solicitud de preadmisión</p>
+              </div>
             </div>
-            <div className="space-y-2">
-              <LinkButton href="/sumate" variant="accent" editorial size="lg" full>
-                Sumate a la comunidad <ArrowRight aria-hidden className="size-5" strokeWidth={1.5} />
+            <div className="mt-6">
+              <LinkButton href="/" variant="ghost">
+                Conocé más sobre Amarí Dul <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
               </LinkButton>
-              <p className="text-small text-text-muted">Solicitud de preadmisión</p>
             </div>
-          </div>
-          <div className="mt-8">
-            <LinkButton href="/" variant="ghost">
-              Conocé más sobre Amarí Dul <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
-            </LinkButton>
           </div>
         </section>
 
-        <CannabisSprig className="pointer-events-none absolute top-1/2 hidden h-[30rem] w-auto -translate-y-1/2 text-brand/60 xl:right-[calc(50%-40rem)] xl:block" />
+        <section aria-labelledby="sumarte-title" className="content-column mt-16 space-y-5 sm:mt-20">
+          <div className="flex">
+            <SectionTab className="!bg-transparent px-0">Comunidad</SectionTab>
+          </div>
+          <h2 id="sumarte-title" className="-mt-2 text-h1 text-forest">
+            Cómo sumarte
+          </h2>
+          <StepCards
+            steps={[
+              { title: "Preadmisión", meta: "Online · 5 minutos", value: "Sumate", detail: "Contanos quién sos y qué te acerca a Amarí Dul." },
+              { title: "Solicitud formal", meta: "Por invitación", value: "9 pasos", detail: "Datos, categoría, estatuto y declaraciones." },
+              { title: "Comisión Directiva", meta: "Decisión", value: "Admisión", detail: "Te avisamos por email y activás tu cuenta." },
+            ]}
+          />
+          <RuleList items={[<><strong>Enviar la preadmisión no implica la admisión.</strong> La decide la Comisión Directiva.</>]} />
+        </section>
 
-        <section id="preguntas" aria-labelledby="preguntas-title" className="content-column relative mt-20 scroll-mt-6 sm:mt-24">
-          <CannabisSprig className="pointer-events-none absolute -top-48 -right-20 -z-10 h-60 w-auto text-brand/45 sm:-right-6 xl:hidden" />
-          <LeafMark className="mb-3 w-9 text-accent" />
-          <div className="flex items-center gap-4">
-            <h2 id="preguntas-title" className="text-h1 text-brand">
+        <section id="preguntas" aria-labelledby="preguntas-title" className="content-column relative mt-16 scroll-mt-6 sm:mt-20">
+          <div className="flex">
+            <SectionTab tone="lilac" className="!bg-transparent px-0">Información</SectionTab>
+          </div>
+          <div className="mt-2 flex items-center gap-4">
+            <h2 id="preguntas-title" className="text-h1 text-forest">
               Preguntas frecuentes
             </h2>
-            <span aria-hidden className="mt-2 h-px flex-1 bg-accent/40" />
+            <span aria-hidden className="mt-2 h-px flex-1 bg-mist-line" />
           </div>
 
           <Accordion
@@ -132,11 +151,9 @@ export default function QRPage() {
             }))}
           />
         </section>
-        <CornerLeaves className="pointer-events-none absolute -bottom-3 -left-8 w-52 text-brand/50 sm:w-72" />
-        <CornerLeaves flip className="pointer-events-none absolute -right-8 -bottom-3 w-40 text-brand/40 sm:w-60" />
       </main>
 
-      <Footer />
+      <SiteFooter />
     </>
   );
 }

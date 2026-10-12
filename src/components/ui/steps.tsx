@@ -42,7 +42,7 @@ export function StepIndicator({ steps, onSelect, hideCurrentLabel }: { steps: St
                 aria-hidden
                 className={cn(
                   "flex size-6 items-center justify-center !rounded-full text-[11px] font-medium",
-                  s.status === "complete" && "bg-brand text-white",
+                  s.status === "complete" && "bg-forest text-white",
                   s.status === "current" && "bg-accent text-white",
                   s.status === "incomplete" && "bg-warning-bg text-warning-fg",
                   s.status === "upcoming" && "border border-border-strong text-text-muted",

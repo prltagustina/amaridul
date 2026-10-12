@@ -55,7 +55,7 @@ export default function AdmissionReview({ admission, openDecision }: { admission
             <Card key={sec.id} className={cn("space-y-4", !complete && "border-dashed bg-transparent")}>
               <div className="flex items-center justify-between gap-3">
                 <h2 className="flex items-center gap-2.5 text-h3">
-                  <span className={cn("flex size-7 items-center justify-center !rounded-full text-xs font-medium", complete ? "bg-brand text-white" : "border border-border-strong text-text-muted")}>
+                  <span className={cn("flex size-7 items-center justify-center !rounded-full text-xs font-medium", complete ? "bg-forest text-white" : "border border-border-strong text-text-muted")}>
                     {sec.id}
                   </span>
                   {sec.title}

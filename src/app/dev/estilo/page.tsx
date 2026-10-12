@@ -1,26 +1,27 @@
 import type { ReactNode } from "react";
 import { Leaf } from "lucide-react";
 import { CircleLogo } from "@/components/brand/circle-logo";
-import { CannabisLeaf, CannabisSprig, CornerLeaves, LeafMark } from "@/components/brand/botanicals";
 import { PhotoPlaceholder } from "@/components/brand/placeholders";
 import { Button, LinkButton, TextLink } from "@/components/ui/button";
 import { Alert, Card, DevTag, EmptyState, LoadingBlock, SectionHeader, StatusBadge, type Tone } from "@/components/ui/display";
 import { Select, TextField, Textarea } from "@/components/ui/field";
 import { CheckList, Chip, FolderTabs, KeyFact, RatioBar, RuleList, SectionTab, StepCards, TechBand, VarietyBadge } from "@/components/ui/technical";
+import { FolderSwitcher } from "@/components/ui/folder-tabs";
 import { InteractiveSamples } from "./interactive";
 
 const COLORS: { name: string; token: string; value: string; note?: string }[] = [
+  { name: "forest · bosque", token: "bg-forest", value: "#2B4A33", note: "Principal: títulos, botones, bandas" },
+  { name: "sage · salvia", token: "bg-sage", value: "#3F6043", note: "Verde del logo" },
+  { name: "accent · hoja", token: "bg-accent", value: "#4D7045", note: "Antetítulos y CTA Sumate" },
+  { name: "forest-soft", token: "bg-forest-soft", value: "#E2EBDD", note: "Selección y hover" },
+  { name: "mist · rocío", token: "bg-mist", value: "#F1F4EE", note: "Superficies técnicas" },
+  { name: "lilac · lila", token: "bg-lilac", value: "#CDB6E3", note: "Toque Dambar: variedades violáceas" },
+  { name: "amber · ámbar", token: "bg-amber", value: "#F0B678", note: "Toque Dambar: pistilos y resina" },
   { name: "background", token: "bg-background", value: "#F2EBDD", note: "Crema base" },
-  { name: "surface", token: "bg-surface", value: "#FBF7EF", note: "Cards" },
-  { name: "surface-sunken", token: "bg-surface-sunken", value: "#EAE2D2" },
   { name: "foreground", token: "bg-foreground", value: "#1A1A18", note: "Texto" },
   { name: "text-muted", token: "bg-text-muted", value: "#6B6A68" },
-  { name: "brand", token: "bg-brand", value: "#3F6043", note: "Verde principal" },
-  { name: "brand-soft", token: "bg-brand-soft", value: "#DCE5D6" },
-  { name: "accent", token: "bg-accent", value: "#7B5E8E", note: "Violeta, nunca dominante" },
-  { name: "accent-soft", token: "bg-accent-soft", value: "#C9B8D3", note: "Solo decorativo" },
-  { name: "border", token: "bg-border", value: "#D5CFBF" },
   { name: "border-strong", token: "bg-border-strong", value: "#958F7D", note: "Bordes de controles (3:1)" },
+  { name: "info", token: "bg-info-fg", value: "#6A4E7D", note: "Avisos informativos (lila)" },
 ];
 
 const TONES: Tone[] = ["neutral", "brand", "success", "warning", "error", "info"];
@@ -28,7 +29,7 @@ const TONES: Tone[] = ["neutral", "brand", "success", "warning", "error", "info"
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="space-y-5 border-t border-border pt-10">
-      <h2 className="text-h2 text-brand">{title}</h2>
+      <h2 className="text-h2 text-forest">{title}</h2>
       {children}
     </section>
   );
@@ -57,16 +58,16 @@ export default function EstiloPage() {
 
         <Section title="Tipografía">
           <div className="space-y-4">
-            <p className="text-display text-brand">Display · Cormorant 500</p>
-            <p className="text-h1 text-brand">H1 · Construyendo comunidad</p>
-            <p className="text-h2 text-brand">H2 · Preguntas frecuentes</p>
+            <p className="text-display text-forest">Display · Cormorant 500</p>
+            <p className="text-h1 text-forest">H1 · Construyendo comunidad</p>
+            <p className="text-h2 text-forest">H2 · Preguntas frecuentes</p>
             <p className="text-h3">H3 · Jost 500 para títulos funcionales</p>
             <p className="text-lead">Lead · Jost 300 para introducciones.</p>
             <p className="text-body">Body · Jost 300. El texto corrido usa una medida cómoda y buen interlineado.</p>
             <p className="text-small text-text-muted">Small · ayudas y metadatos.</p>
             <p className="text-label">Label · etiquetas de formulario</p>
             <p className="text-eyebrow text-accent">Eyebrow · violeta</p>
-            <p className="text-cta text-brand">CTA editorial · Sumate a la comunidad</p>
+            <p className="text-cta text-forest">CTA editorial · Sumate a la comunidad</p>
           </div>
         </Section>
 
@@ -138,32 +139,14 @@ export default function EstiloPage() {
           </div>
         </Section>
 
-        <Section title="Capa técnica · inspirada en Dambar">
+        <Section title="Componentes de información · a la manera de Dambar">
           <p className="max-w-2xl text-body text-text-muted">
-            Para contenido técnico (lotes, composición, dosis, datos del socio). Índigo para datos, rosa y durazno solo como relleno. La portada y las páginas editoriales siguen con el lenguaje de Amarí Dul.
+            Pestañas de carpeta, bandas, bloques de dato clave, reglas, pasos numerados y barras de proporción, con la paleta propia de Amarí Dul: los verdes de la planta, con lila y ámbar como toques. Se usan en toda la web.
           </p>
-          <ul className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-            {[
-              ["indigo", "bg-indigo", "#463577"],
-              ["indigo-2", "bg-indigo-2", "#4049A0"],
-              ["lavender", "bg-lavender", "#ECEAF1"],
-              ["pink", "bg-pink", "#FFA7FD"],
-              ["peach", "bg-peach", "#FAAF88"],
-              ["pink-soft", "bg-pink-soft", "#FFE8FE"],
-            ].map(([n, c, v]) => (
-              <li key={n} className="overflow-hidden !rounded-control border border-border bg-white">
-                <span aria-hidden className={`block h-12 ${c}`} />
-                <span className="block px-2.5 py-1.5 text-xs">
-                  <span className="block font-medium">{n}</span>
-                  <span className="font-mono text-text-muted">{v}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
           <div className="grid gap-6 md:grid-cols-2">
             <div>
               <FolderTabs />
-              <div className="overflow-hidden !rounded-card border border-lavender-line bg-white">
+              <div className="overflow-hidden !rounded-card border border-mist-line bg-white">
                 <TechBand className="px-5 pt-5">
                   <p className="text-xl font-medium tracking-tight">Banda técnica</p>
                   <div className="mt-4 flex">
@@ -188,6 +171,14 @@ export default function EstiloPage() {
               <RuleList items={[<><strong>Regla práctica:</strong> bloque oscuro para indicaciones clave.</>, "Una idea por fila."]} />
             </div>
           </div>
+          <FolderSwitcher
+            label="Fichas de ejemplo"
+            tabs={[
+              { id: "comunidad", label: "Comunidad", tone: "green", content: <p className="text-body">Verde: asociación, admisión, acceso y socios.</p> },
+              { id: "trazabilidad", label: "Trazabilidad", tone: "lilac", content: <p className="text-body">Lila: producto, lote, composición y laboratorio.</p> },
+              { id: "tramites", label: "Trámites", tone: "amber", content: <p className="text-body">Ámbar: trámites, documentación, salud y dispensas.</p> },
+            ]}
+          />
           <StepCards
             steps={[
               { title: "Fase de inicio", meta: "Duración 2 semanas", value: "Paso 1", detail: "Texto de ejemplo." },
@@ -206,22 +197,11 @@ export default function EstiloPage() {
         </Section>
 
         <Section title="Marca y placeholders">
-          <div className="grid items-center gap-6 md:grid-cols-3">
-            <div className="flex justify-center !rounded-card bg-brand p-8">
+          <div className="grid items-center gap-6 md:grid-cols-2">
+            <div className="flex justify-center !rounded-card bg-forest p-8">
               <CircleLogo className="w-56" />
             </div>
             <PhotoPlaceholder className="aspect-[4/3] !rounded-card" />
-            <div className="flex items-end justify-center gap-4 text-brand">
-              <CannabisSprig className="h-64 w-auto" />
-            </div>
-          </div>
-          <div className="grid items-end gap-6 sm:grid-cols-3">
-            <CannabisLeaf className="mx-auto w-48 text-brand" />
-            <CornerLeaves className="mx-auto w-48 text-brand/80" />
-            <div className="flex items-center justify-center gap-4 text-brand">
-              <LeafMark className="w-10" />
-              <LeafMark className="w-6 text-accent" />
-            </div>
           </div>
           <p className="flex flex-wrap items-center gap-2 text-small text-text-muted">
             Las marcas de desarrollo se ven solo en local: <DevTag>Pendiente</DevTag>

@@ -6,7 +6,7 @@ export type Tone = "neutral" | "brand" | "success" | "warning" | "error" | "info
 
 const toneClasses: Record<Tone, string> = {
   neutral: "bg-surface-sunken text-foreground",
-  brand: "bg-brand-soft text-brand",
+  brand: "bg-forest-soft text-forest",
   success: "bg-success-bg text-success-fg",
   warning: "bg-warning-bg text-warning-fg",
   error: "bg-error-bg text-error-fg",
@@ -29,9 +29,9 @@ export function Card({ variant = "surface", padded = true, className, ...rest }:
     <div
       className={cn(
         "!rounded-card",
-        variant === "surface" && "border border-border/80 bg-surface",
-        variant === "sunken" && "bg-surface-sunken",
-        variant === "outline" && "border border-border",
+        variant === "surface" && "border border-mist-line bg-white shadow-[0_18px_40px_-34px_rgba(43,74,51,0.55)]",
+        variant === "sunken" && "bg-mist",
+        variant === "outline" && "border border-mist-line",
         padded && "p-5 sm:p-6",
         className,
       )}
@@ -64,7 +64,7 @@ export function SectionHeader({ eyebrow, title, description, level = "h1", as = 
         </div>
       )}
       {eyebrow && <p className="text-eyebrow text-accent">{eyebrow}</p>}
-      <Heading className={cn(level === "display" ? "text-display" : level === "h1" ? "text-h1" : "text-h2", "text-brand")}>{title}</Heading>
+      <Heading className={cn(level === "display" ? "text-display" : level === "h1" ? "text-h1" : "text-h2", "text-forest")}>{title}</Heading>
       {description && <div className="text-body text-text-muted">{description}</div>}
     </header>
   );
@@ -96,9 +96,9 @@ export function Alert({ tone = "info", title, children, live, className }: { ton
 
 export function EmptyState({ icon, title, description, action, className }: { icon?: ReactNode; title: ReactNode; description?: ReactNode; action?: ReactNode; className?: string }) {
   return (
-    <div className={cn("flex flex-col items-center gap-3 !rounded-card border border-dashed border-border-strong/60 px-6 py-10 text-center", className)}>
+    <div className={cn("flex flex-col items-center gap-3 !rounded-card border border-mist-line bg-white px-6 py-10 text-center", className)}>
       {icon && <span className="text-accent">{icon}</span>}
-      <p className="text-h3 text-foreground">{title}</p>
+      <p className="text-h3 text-forest">{title}</p>
       {description && <p className="max-w-md text-small text-text-muted">{description}</p>}
       {action && <div className="pt-2">{action}</div>}
     </div>

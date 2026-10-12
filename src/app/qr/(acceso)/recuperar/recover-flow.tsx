@@ -3,9 +3,10 @@
 import { useState, type FormEvent } from "react";
 import { CircleCheck, MailCheck, MailWarning } from "lucide-react";
 import { Button, LinkButton, TextLink } from "@/components/ui/button";
-import { Card, DevTag, EmptyState } from "@/components/ui/display";
+import { DevTag, EmptyState } from "@/components/ui/display";
 import { TextField } from "@/components/ui/field";
-import { FolderTabs } from "@/components/ui/technical";
+import { TabbedCard } from "@/components/ui/technical";
+import { AccessShell } from "../access-shell";
 import { NewPasswordForm } from "../new-password-form";
 
 type Step = "default" | "enviado" | "nueva" | "expired" | "success";
@@ -26,81 +27,78 @@ export default function RecoverFlow({ initial }: { initial: Step }) {
 
   if (step === "enviado") {
     return (
-      <EmptyState
-        icon={<MailCheck aria-hidden className="size-10" strokeWidth={1.25} />}
-        title="Revisá tu email"
-        description="Si el DNI corresponde a una cuenta activa, te enviamos un link para crear una contraseña nueva. Vence en 30 minutos."
-        action={
-          <div className="flex flex-col items-center gap-3">
-            <Button variant="secondary" onClick={() => setStep("nueva")}>
-              Simular link del email
-            </Button>
-            <DevTag>Demo · no se envió ningún email</DevTag>
-          </div>
-        }
-      />
+      <AccessShell eyebrow="Socios" title="Revisá tu email" tab="Recuperación">
+        <EmptyState
+          icon={<MailCheck aria-hidden className="size-10" strokeWidth={1.25} />}
+          title="Te enviamos un link"
+          description="Si el DNI corresponde a una cuenta activa, vas a recibir un link para crear una contraseña nueva. Vence en 30 minutos."
+          action={
+            <div className="flex flex-col items-center gap-3">
+              <Button variant="secondary" onClick={() => setStep("nueva")}>
+                Simular link del email
+              </Button>
+              <DevTag>Demo · no se envió ningún email</DevTag>
+            </div>
+          }
+        />
+      </AccessShell>
     );
   }
 
   if (step === "expired") {
     return (
-      <EmptyState
-        icon={<MailWarning aria-hidden className="size-10" strokeWidth={1.25} />}
-        title="El link venció o ya se usó"
-        description="Pedí uno nuevo. Por seguridad, cada link sirve una sola vez."
-        action={
-          <Button variant="secondary" onClick={() => setStep("default")}>
-            Pedir un link nuevo
-          </Button>
-        }
-      />
+      <AccessShell eyebrow="Socios" title="Recuperá tu contraseña" tab="Recuperación">
+        <EmptyState
+          icon={<MailWarning aria-hidden className="size-10" strokeWidth={1.25} />}
+          title="El link venció o ya se usó"
+          description="Pedí uno nuevo. Por seguridad, cada link sirve una sola vez."
+          action={
+            <Button variant="secondary" onClick={() => setStep("default")}>
+              Pedir un link nuevo
+            </Button>
+          }
+        />
+      </AccessShell>
     );
   }
 
   if (step === "success") {
     return (
-      <EmptyState
-        icon={<CircleCheck aria-hidden className="size-10" strokeWidth={1.25} />}
-        title="Listo, actualizamos tu contraseña"
-        description="Cerramos las sesiones abiertas en otros dispositivos."
-        action={<LinkButton href="/qr/login">Ingresar</LinkButton>}
-      />
+      <AccessShell eyebrow="Socios" title="Contraseña actualizada" tab="Recuperación">
+        <EmptyState
+          icon={<CircleCheck aria-hidden className="size-10" strokeWidth={1.25} />}
+          title="Listo"
+          description="Cerramos las sesiones abiertas en otros dispositivos. Ya podés ingresar con tu contraseña nueva."
+          action={<LinkButton href="/qr/login">Ingresar</LinkButton>}
+        />
+      </AccessShell>
     );
   }
 
   if (step === "nueva") {
     return (
-      <div className="space-y-8">
-        <header className="space-y-2 text-center">
-          <p className="text-eyebrow text-accent">Socios</p>
-          <h1 className="text-h1 text-brand">Creá una contraseña nueva</h1>
-        </header>
-        <NewPasswordForm submitLabel="Guardar contraseña" onDone={() => setStep("success")} />
-      </div>
+      <AccessShell eyebrow="Socios" title="Creá una contraseña nueva" tab="Recuperación">
+        <NewPasswordForm tab="Nueva contraseña" submitLabel="Guardar contraseña" onDone={() => setStep("success")} />
+      </AccessShell>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <header className="space-y-2 text-center">
-        <p className="text-eyebrow text-accent">Socios</p>
-        <h1 className="text-h1 text-brand">Recuperá tu contraseña</h1>
-        <p className="text-body text-text-muted">Escribí tu DNI. Te enviamos un link al email registrado en la asociación.</p>
-      </header>
-      <div>
-      <FolderTabs />
-      <Card className="shadow-[0_18px_40px_-30px_rgba(70,53,119,0.5)]">
+    <AccessShell eyebrow="Socios" title="Recuperá tu contraseña" description="Escribí tu DNI. Te enviamos un link al email registrado en la asociación." tab="Recuperación">
+      <TabbedCard tab="Tu DNI">
         <form noValidate onSubmit={onSubmit} className="space-y-5" aria-busy={loading}>
           <TextField id="dni" label="DNI" inputMode="numeric" autoComplete="username" hint="Sin puntos." value={dni} onChange={(e) => setDni(e.target.value)} error={error} />
           <Button type="submit" full size="lg" loading={loading} loadingLabel="Enviando…">
             Enviar link
           </Button>
         </form>
-      </Card>
-      </div>
+      </TabbedCard>
       <p className="text-center text-small text-text-muted">
-        ¿Cambiaste de email? Escribinos y lo actualizamos. <TextLink href="/qr/login" className="inline-flex min-h-11 items-center">Volver al ingreso</TextLink>
+        ¿Cambiaste de email? Escribinos y lo actualizamos.{" "}
+        <TextLink href="/qr/login" className="inline-flex min-h-11 items-center">
+          Volver al ingreso
+        </TextLink>
       </p>
-    </div>
+    </AccessShell>
   );
 }

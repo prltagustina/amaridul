@@ -1,121 +1,120 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, ClipboardList, FileText, FlaskConical, PackagePlus, UserRound } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { assertDemo, readState } from "@/lib/demo";
-import { Button } from "@/components/ui/button";
+import { PageBand } from "@/components/brand/page-band";
 import { DetailList } from "@/components/ui/data-list";
 import { DevStateBar } from "@/components/ui/dev-state-bar";
-import { Alert, Card, DevTag, LoadingBlock, StatusBadge } from "@/components/ui/display";
-import { FolderTabs, TechBand } from "@/components/ui/technical";
-import { LeafMark } from "@/components/brand/botanicals";
+import { Alert, DevTag, LoadingBlock, StatusBadge } from "@/components/ui/display";
+import { TabbedCard } from "@/components/ui/technical";
 import { demoMember } from "@/demo/fixtures";
 
 export const metadata: Metadata = { title: "Mi espacio | Amarí Dul" };
 
 const STATES = ["default", "loading", "error"] as const;
 
-function ModuleTitle({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <h2 className="flex items-center gap-2.5 text-h2 text-brand">
-      <span className="text-accent">{icon}</span>
-      {children}
-    </h2>
-  );
+/** Bottom strip of a dashboard card: always aligned across the row. */
+function CardFoot({ children }: { children: React.ReactNode }) {
+  return <div className="mt-auto border-t border-mist-line pt-4">{children}</div>;
 }
 
 export default async function MiEspacioPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   assertDemo();
   const state = await readState(searchParams, STATES);
   const firstName = demoMember.name.split(" ")[0];
-  const icon = "size-5";
+  const done = demoMember.procedures.filter((p) => p.tone === "success").length;
+  const total = demoMember.procedures.length;
 
   return (
-    <main className="page-gutter pt-10 pb-28 sm:pt-14">
-      <div className="nav-column space-y-8">
-        <header className="space-y-2">
-          <p className="text-eyebrow text-accent">Mi espacio</p>
-          <h1 className="text-h1 text-brand">Hola, {firstName}</h1>
-        </header>
+    <main>
+      <PageBand compact eyebrow="Mi espacio" title={`Hola, ${firstName}`} description={`Socio ${demoMember.number} · categoría ${demoMember.category}`} tab="Resumen" width="wide" />
+      <div className="page-gutter pt-8 pb-20">
+        <div className="admin-column">
+          {state === "loading" && <LoadingBlock label="Cargando tu información…" lines={6} />}
+          {state === "error" && (
+            <Alert tone="error" title="No pudimos cargar tu información" live>
+              Probá recargar la página en unos minutos.
+            </Alert>
+          )}
 
-        {state === "loading" && <LoadingBlock label="Cargando tu información…" lines={6} />}
-        {state === "error" && (
-          <Alert tone="error" title="No pudimos cargar tu información" live>
-            Probá recargar la página en unos minutos.
-          </Alert>
-        )}
+          {state === "default" && (
+            <div className="grid items-stretch gap-x-6 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
+              <TabbedCard tab="Asociación" fill bodyClassName="gap-5">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xl font-medium tracking-tight text-forest">Tu membresía</p>
+                  <StatusBadge tone="success">{demoMember.status}</StatusBadge>
+                </div>
+                <DetailList
+                  items={[
+                    { label: "Número", value: demoMember.number },
+                    { label: "Categoría", value: demoMember.category },
+                    { label: "Socio desde", value: demoMember.since },
+                    { label: "Cuota", value: <span>Al día <DevTag>Demo</DevTag></span> },
+                  ]}
+                />
+                <CardFoot>
+                  <p className="text-small text-text-muted">Si cambió algún dato, avisanos para actualizarlo.</p>
+                </CardFoot>
+              </TabbedCard>
 
-        {state === "default" && (
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div>
-            <FolderTabs />
-            <Card className="space-y-5 shadow-[0_18px_40px_-30px_rgba(70,53,119,0.5)]">
-              <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
-                <ModuleTitle icon={<UserRound aria-hidden className={icon} strokeWidth={1.5} />}>Mi asociación</ModuleTitle>
-                <StatusBadge tone="success">{demoMember.status}</StatusBadge>
-              </div>
-              <DetailList
-                items={[
-                  { label: "Número de socio", value: demoMember.number },
-                  { label: "Categoría", value: demoMember.category },
-                  { label: "Socio desde", value: demoMember.since },
-                  { label: "Cuota social", value: <span>Al día <DevTag>Demo</DevTag></span> },
-                ]}
-              />
-            </Card>
+              <TabbedCard tab="Trámites" tone="amber" fill bodyClassName="gap-5">
+                <div className="space-y-2">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <p className="text-xl font-medium tracking-tight text-amber-ink">
+                      {done} de {total} completos
+                    </p>
+                  </div>
+                  <div aria-hidden className="h-1.5 overflow-hidden !rounded-full bg-amber-soft">
+                    <div className="h-full !rounded-full bg-[linear-gradient(90deg,var(--amber-deep),var(--amber))]" style={{ width: `${(done / total) * 100}%` }} />
+                  </div>
+                </div>
+                <ul className="divide-y divide-mist-line">
+                  {demoMember.procedures.map((p) => (
+                    <li key={p.label} className="flex items-center justify-between gap-3 py-2.5 first:pt-0">
+                      <span className="text-[0.9375rem]">{p.label}</span>
+                      <StatusBadge tone={p.tone}>{p.status}</StatusBadge>
+                    </li>
+                  ))}
+                </ul>
+                <CardFoot>
+                  <dl className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 text-small">
+                    <dt className="text-text-muted">Documentación</dt>
+                    <dd className="text-amber-ink">Sin documentos</dd>
+                    <dt className="text-text-muted">Dispensas</dt>
+                    <dd>
+                      <StatusBadge tone="warning">Próximamente</StatusBadge>
+                    </dd>
+                  </dl>
+                </CardFoot>
+              </TabbedCard>
+
+              <TabbedCard tab="Trazabilidad" tone="lilac" fill className="md:col-span-2 lg:col-span-1" bodyClassName="gap-5">
+                <p className="text-xl font-medium tracking-tight text-lilac-ink">Conocé tu producto</p>
+                <p className="text-[0.9375rem] leading-relaxed text-text-muted">Con el código del envase ves el lote, su composición y el análisis de laboratorio.</p>
+                <ol className="space-y-2.5 text-[0.9375rem] text-lilac-ink">
+                  {["Elegí el producto", "Escribí el código del envase", "Mirá el análisis y el certificado"].map((t, i) => (
+                    <li key={t} className="flex items-center gap-3">
+                      <span aria-hidden className="flex size-7 shrink-0 items-center justify-center !rounded-[8px] bg-lilac-soft text-sm font-medium">
+                        {i + 1}
+                      </span>
+                      {t}
+                    </li>
+                  ))}
+                </ol>
+                <CardFoot>
+                  <Link
+                    href="/qr/trazabilidad"
+                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 !rounded-full bg-[linear-gradient(135deg,var(--lilac-deep),#5d4880)] px-6 text-base font-medium !text-white shadow-[0_10px_24px_-14px_rgba(61,47,85,0.8)]"
+                  >
+                    Consultar lote <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
+                  </Link>
+                </CardFoot>
+              </TabbedCard>
             </div>
-
-            <Card className="space-y-5">
-              <ModuleTitle icon={<ClipboardList aria-hidden className={icon} strokeWidth={1.5} />}>Mis trámites</ModuleTitle>
-              <ul className="divide-y divide-border">
-                {demoMember.procedures.map((p) => (
-                  <li key={p.label} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
-                    <span className="text-base">{p.label}</span>
-                    <StatusBadge tone={p.tone}>{p.status}</StatusBadge>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-
-            <TechBand className="relative flex flex-col justify-between gap-5 overflow-hidden !rounded-card p-5 sm:flex-row sm:items-center sm:p-6 lg:col-span-2">
-              <LeafMark className="pointer-events-none absolute -right-4 -bottom-6 w-36 text-white/10" />
-              <div className="relative space-y-1.5">
-                <h2 className="flex items-center gap-2.5 text-2xl font-medium tracking-tight">
-                  <FlaskConical aria-hidden className={icon} strokeWidth={1.5} />
-                  Trazabilidad
-                </h2>
-                <p className="text-white/85">Consultá el análisis de laboratorio de tu producto con el código del envase.</p>
-              </div>
-              <Link
-                href="/qr/trazabilidad"
-                className="relative inline-flex min-h-11 shrink-0 items-center justify-center gap-2 !rounded-full bg-white px-5 text-base font-medium !text-indigo transition-colors hover:bg-pink-soft"
-              >
-                Consultar lote <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
-              </Link>
-            </TechBand>
-
-            <Card className="space-y-4">
-              <ModuleTitle icon={<FileText aria-hidden className={icon} strokeWidth={1.5} />}>Documentación</ModuleTitle>
-              <p className="!rounded-control border border-dashed border-border-strong/50 px-4 py-6 text-center text-small text-text-muted">
-                Todavía no hay documentos en tu espacio.
-              </p>
-            </Card>
-
-            <Card variant="outline" className="space-y-4 border-lavender-line bg-lavender">
-              <ModuleTitle icon={<PackagePlus aria-hidden className={icon} strokeWidth={1.5} />}>Dispensas</ModuleTitle>
-              <p className="text-small text-text-muted">Vas a poder solicitar dispensas cuando completes la etapa sanitaria.</p>
-              <div className="flex flex-wrap items-center gap-3">
-                <Button variant="secondary" disabled aria-describedby="dispensa-proximamente">
-                  Nueva dispensa
-                </Button>
-                <StatusBadge tone="info">
-                  <span id="dispensa-proximamente">Próximamente</span>
-                </StatusBadge>
-              </div>
-            </Card>
-          </div>
-        )}
+          )}
+        </div>
+        <DevStateBar path="/qr/mi-espacio" states={STATES} current={state} label="Mi espacio" />
       </div>
-      <DevStateBar path="/qr/mi-espacio" states={STATES} current={state} label="Mi espacio" />
     </main>
   );
 }

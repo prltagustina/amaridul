@@ -4,10 +4,11 @@ import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { Button, TextLink } from "@/components/ui/button";
-import { Alert, Card, DevTag } from "@/components/ui/display";
+import { Alert, DevTag } from "@/components/ui/display";
 import { TextField } from "@/components/ui/field";
 import { PasswordField } from "@/components/ui/password-field";
-import { FolderTabs } from "@/components/ui/technical";
+import { TabbedCard } from "@/components/ui/technical";
+import { AccessShell } from "../access-shell";
 
 type DemoState = "default" | "loading" | "error" | "expired" | "disabled";
 
@@ -45,12 +46,7 @@ export default function MemberLoginForm({ demoState }: { demoState: DemoState })
   }
 
   return (
-    <div className="space-y-8">
-      <header className="space-y-2 text-center">
-        <p className="text-eyebrow text-accent">Socios</p>
-        <h1 className="text-h1 text-brand">Ingresá a tu espacio</h1>
-        <p className="text-body text-text-muted">Con tu DNI y la contraseña que creaste al activar tu cuenta.</p>
-      </header>
+    <AccessShell eyebrow="Socios" title="Ingresá a tu espacio" description="Con tu DNI y la contraseña que creaste al activar tu cuenta." tab="Acceso">
 
       {demoState === "expired" && (
         <Alert tone="warning" title="Tu sesión terminó">
@@ -70,9 +66,7 @@ export default function MemberLoginForm({ demoState }: { demoState: DemoState })
         </div>
       )}
 
-      <div>
-      <FolderTabs />
-      <Card className="shadow-[0_18px_40px_-30px_rgba(70,53,119,0.5)]">
+      <TabbedCard tab="Ingreso con DNI">
         <form noValidate onSubmit={onSubmit} className="space-y-5" aria-busy={loading}>
           <TextField
             id="dni"
@@ -101,8 +95,7 @@ export default function MemberLoginForm({ demoState }: { demoState: DemoState })
             <TextLink href="/qr/recuperar" className="inline-flex min-h-11 items-center">Olvidé mi contraseña</TextLink>
           </p>
         </form>
-      </Card>
-      </div>
+      </TabbedCard>
 
       <p className="text-center text-small text-text-muted">
         ¿Todavía no sos socio? <TextLink href="/sumate" className="inline-flex min-h-11 items-center">Sumate a la comunidad</TextLink>
@@ -110,6 +103,6 @@ export default function MemberLoginForm({ demoState }: { demoState: DemoState })
       <p className="text-center">
         <DevTag>Demo · cualquier DNI entra · 99000099 muestra error</DevTag>
       </p>
-    </div>
+    </AccessShell>
   );
 }

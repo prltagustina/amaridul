@@ -3,7 +3,7 @@ import { CircleAlert } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const box = cn(
-  "mt-0.5 size-5 shrink-0 accent-[#3f6043] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+  "mt-0.5 size-5 shrink-0 accent-[#3f6043] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest",
 );
 
 type CheckboxProps = Omit<ComponentProps<"input">, "type" | "id"> & {
@@ -23,7 +23,7 @@ export function Checkbox({ id, label, description, error, card, className, ...re
         className={cn(
           "flex cursor-pointer items-start gap-3",
           card &&
-            "!rounded-control border border-border bg-surface px-4 py-3.5 transition-colors motion-safe-only hover:border-border-strong has-[:checked]:border-brand has-[:checked]:bg-brand-soft/40",
+            "!rounded-control border border-border bg-surface px-4 py-3.5 transition-colors motion-safe-only hover:border-border-strong has-[:checked]:border-forest has-[:checked]:bg-forest-soft/40",
         )}
       >
         <input
@@ -125,7 +125,7 @@ export function RadioGroup({
           <label
             key={o.value}
             htmlFor={`${name}-${o.value}`}
-            className="flex cursor-pointer items-start gap-3 !rounded-control border border-border bg-surface px-4 py-3.5 transition-colors motion-safe-only hover:border-border-strong has-[:checked]:border-brand has-[:checked]:bg-brand-soft/40"
+            className="flex cursor-pointer items-start gap-3 !rounded-control border border-border bg-surface px-4 py-3.5 transition-colors motion-safe-only hover:border-border-strong has-[:checked]:border-forest has-[:checked]:bg-forest-soft/40"
           >
             <input
               type="radio"

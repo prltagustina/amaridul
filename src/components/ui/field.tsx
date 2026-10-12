@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 
 export const controlClasses = cn(
   "block w-full !rounded-control border border-border-strong bg-white px-3.5 py-2.5 text-base text-foreground",
-  "placeholder:text-text-muted/80 focus:outline-2 focus:outline-offset-2 focus:outline-brand",
+  "placeholder:text-text-muted/80 focus:outline-2 focus:outline-offset-2 focus:outline-forest",
   "aria-[invalid=true]:border-error-fg disabled:cursor-not-allowed disabled:bg-surface-sunken disabled:opacity-70",
 );
 

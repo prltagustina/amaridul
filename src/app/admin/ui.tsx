@@ -18,7 +18,7 @@ export function EnvironmentNotice() {
 export function AdminShell({ email, children }: { email: string; children: ReactNode }) {
   const signOut = (
     <form action={logout}>
-      <button type="submit" className="inline-flex min-h-11 items-center gap-2 text-sm !text-text-muted hover:!text-brand">
+      <button type="submit" className="inline-flex min-h-11 items-center gap-2 text-sm !text-text-muted hover:!text-forest">
         <LogOut aria-hidden className="size-4" strokeWidth={1.5} /> Cerrar sesión
       </button>
     </form>
@@ -40,14 +40,14 @@ export function AdminPageHeader({ title, eyebrow, description, actions, back }: 
   return (
     <header className="mb-8 space-y-4">
       {back && (
-        <Link href={back.href} className="inline-flex min-h-10 items-center gap-1.5 text-small !text-text-muted hover:!text-brand">
+        <Link href={back.href} className="inline-flex min-h-10 items-center gap-1.5 text-small !text-text-muted hover:!text-forest">
           <ArrowLeft aria-hidden className="size-4" strokeWidth={1.5} /> {back.label}
         </Link>
       )}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1.5">
           {eyebrow && <p className="text-eyebrow text-accent">{eyebrow}</p>}
-          <h1 className="text-h1 text-brand">{title}</h1>
+          <h1 className="text-h1 text-forest">{title}</h1>
           {description && <p className="max-w-2xl text-body text-text-muted">{description}</p>}
         </div>
         {actions && <div className="flex flex-wrap gap-2">{actions}</div>}

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { cormorant } from "@/app/fonts";
-import Footer from "@/components/Footer";
+import { SiteFooter } from "@/components/brand/site-footer";
 import { MinimalHeader } from "@/components/brand/headers";
 import { NotFoundState } from "@/components/ui/system-states";
 
@@ -13,7 +13,7 @@ export default function NotFound() {
       <main className="flex-1 page-gutter">
         <NotFoundState />
       </main>
-      <Footer />
+      <SiteFooter />
     </div>
   );
 }

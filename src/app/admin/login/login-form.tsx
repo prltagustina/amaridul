@@ -44,7 +44,7 @@ export default function LoginForm({ initialStep = "password" }: { initialStep?: 
         <Button type="submit" shape="admin" full loading={pendingFactor} loadingLabel="Verificando…">
           Verificar
         </Button>
-        <button type="button" className="min-h-10 text-small !text-brand underline underline-offset-4" onClick={() => setMethod(method === "totp" ? "backup" : "totp")}>
+        <button type="button" className="min-h-10 text-small !text-forest underline underline-offset-4" onClick={() => setMethod(method === "totp" ? "backup" : "totp")}>
           {method === "totp" ? "Usar un código de respaldo" : "Usar la app de autenticación"}
         </button>
       </form>

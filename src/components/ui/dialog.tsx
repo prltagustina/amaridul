@@ -57,12 +57,12 @@ export function Dialog({
     >
       <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
         <div className="space-y-1">
-          <h2 id={titleId} className="text-h2 text-brand">
+          <h2 id={titleId} className="text-h2 text-forest">
             {title}
           </h2>
           {description && <p className="text-small text-text-muted">{description}</p>}
         </div>
-        <button type="button" onClick={onClose} className="-mr-2 flex size-10 shrink-0 items-center justify-center !rounded-control text-text-muted hover:text-brand">
+        <button type="button" onClick={onClose} className="-mr-2 flex size-10 shrink-0 items-center justify-center !rounded-control text-text-muted hover:text-forest">
           <span className="sr-only">Cerrar</span>
           <X aria-hidden className="size-5" strokeWidth={1.5} />
         </button>

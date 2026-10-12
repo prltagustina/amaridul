@@ -1,11 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { FileBadge, Info } from "lucide-react";
-import { LeafMark } from "@/components/brand/botanicals";
+import { Droplet, FileBadge, FlaskConical, Info, Sprout } from "lucide-react";
 import { PhotoPlaceholder } from "@/components/brand/placeholders";
 import { DevTag } from "@/components/ui/display";
-import { Chip, KeyFact, RatioBar, SectionTab, TechBand, VarietyBadge } from "@/components/ui/technical";
+import { FolderSwitcher } from "@/components/ui/folder-tabs";
+import { Chip, KeyFact, RatioBar, TechBand, VarietyBadge } from "@/components/ui/technical";
 import { labNote } from "@/demo/content";
 import type { Lot } from "@/demo/fixtures";
 
@@ -29,114 +29,133 @@ export function LotCard({ lot, onCertificate }: { lot: Lot; onCertificate: () =>
   ];
   const c = lot.composition;
   return (
-    <article aria-labelledby="lot-title" className="@container overflow-hidden !rounded-card border border-lavender-line bg-white shadow-[0_18px_40px_-28px_rgba(70,53,119,0.45)]">
-      <TechBand className="px-5 pt-5 @md:px-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-[11px] font-medium tracking-[0.18em] text-white/75 uppercase">Ficha del lote</p>
-            <h2 id="lot-title" className="mt-1 font-mono text-xl tracking-wide break-all">
-              {lot.code}
-            </h2>
-            <p className="mt-1 font-display text-2xl leading-tight">{lot.product}</p>
-          </div>
-          <LeafMark className="w-10 shrink-0 text-white/80" />
-        </div>
-        <div className="mt-4 flex">
-          <SectionTab>Trazabilidad</SectionTab>
-        </div>
+    <article aria-labelledby="lot-title" className="@container overflow-hidden !rounded-card border border-mist-line bg-white shadow-[0_18px_40px_-28px_rgba(26,26,24,0.35)]">
+      <TechBand tone="lilac" className="relative overflow-hidden px-5 pt-4 pb-5 @md:px-6">
+        <span aria-hidden className="pointer-events-none absolute -top-16 -right-12 size-44 !rounded-full bg-lilac/25 blur-3xl" />
+        <p className="relative text-[11px] font-medium tracking-[0.18em] text-white/75 uppercase">Ficha del lote</p>
+        <h2 id="lot-title" className="relative mt-1 font-mono text-xl tracking-wide break-all">
+          {lot.code}
+        </h2>
+        <p className="relative mt-1 font-display text-2xl leading-tight">{lot.product}</p>
       </TechBand>
 
-      <div className="grid gap-6 p-5 @xl:grid-cols-[minmax(0,15rem)_1fr] @md:p-6">
-        {lot.image ? (
-          <div className="relative aspect-[4/3] overflow-hidden !rounded-[14px] bg-lavender @xl:aspect-[4/5]">
-            <Image src={lot.image} alt={`Flor del lote ${lot.code}`} fill placeholder="blur" quality={85} sizes="(min-width: 640px) 15rem, 92vw" className="object-cover" />
-            <DevTag className="absolute right-2 bottom-2">Foto provisoria</DevTag>
-          </div>
-        ) : (
-          <PhotoPlaceholder label="Imagen del producto pendiente" className="aspect-[4/3] !rounded-[14px] @xl:aspect-[4/5]" />
-        )}
-        <dl className="grid grid-cols-2 content-start gap-x-5 gap-y-4">
-          {data.map(([k, v]) => (
-            <div key={k} className="min-w-0">
-              <dt className="text-xs text-indigo/85">{k}</dt>
-              <dd className="mt-0.5 font-medium break-words text-indigo">{v}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-
-      {c && (
-        <section aria-labelledby="composition-title" className="space-y-5 border-t border-lavender-line px-5 py-6 @md:px-6">
-          <div className="!rounded-card border border-lavender-line bg-lavender p-4 @md:p-5">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <VarietyBadge>{lot.chemotype.split("(")[0].trim()}</VarietyBadge>
-              <RatioBar thc={c.thc} cbd={c.cbd} label="Proporción" className="w-full max-w-[13rem]" />
-            </div>
-            <h3 id="composition-title" className="mt-5 text-xl font-medium tracking-tight text-indigo">
-              Ratio THC:CBD ≈ {ratioLabel(c.thc, c.cbd)}
-            </h3>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Chip>THC ~{num(c.thc)} mg/ml</Chip>
-              <Chip>CBD ~{num(c.cbd)} mg/ml</Chip>
-            </div>
-          </div>
-          <KeyFact
-            value={<>1 gota = {num(c.total / c.dropsPerMl)} mg</>}
-            caption="de cannabinoides totales"
-            rows={[
-              ["Concentración", `${num(c.total)} mg/ml`],
-              ["Gotero estándar", `${c.dropsPerMl} gotas/ml`],
-            ]}
-          />
-        </section>
-      )}
-
-      <section aria-labelledby="hplc-title" className="space-y-4 border-t border-lavender-line px-5 py-6 @md:px-6">
-        <div>
-          <p className="text-[11px] font-medium tracking-[0.18em] text-indigo/85 uppercase">Cromatografía (HPLC)</p>
-          <h3 id="hplc-title" className="mt-1 text-2xl font-medium tracking-tight text-indigo">
-            Perfil de cannabinoides
-          </h3>
-        </div>
-        <div className="overflow-hidden !rounded-[12px] border border-lavender-line">
-          <table className="w-full text-left text-indigo">
-            <caption className="sr-only">Concentración de cannabinoides del lote {lot.code}</caption>
-            <thead className="bg-indigo text-xs text-white">
-              <tr>
-                <th scope="col" className="px-4 py-2.5 font-medium">Compuesto</th>
-                <th scope="col" className="px-4 py-2.5 text-right font-medium">Concentración</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lot.cannabinoids.map((x) => (
-                <tr key={x.compound} className="border-t border-lavender-line odd:bg-lavender/50">
-                  <th scope="row" className="px-4 py-2.5 font-medium">{x.compound}</th>
-                  <td className="px-4 py-2.5 text-right tabular-nums">{x.value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="flex items-start gap-3 !rounded-[12px] bg-lavender px-4 py-3 text-sm text-indigo">
-          <Info aria-hidden className="mt-0.5 size-5 shrink-0" strokeWidth={1.5} />
-          {labNote}
+      <div className="bg-mist/60 px-3 pt-4 pb-4 @md:px-5 @md:pb-5">
+        <FolderSwitcher
+          flat
+          label={`Ficha del lote ${lot.code}`}
+          tabs={[
+            {
+              id: "origen",
+              label: "Origen",
+              tone: "green",
+              icon: <Sprout className="size-4" strokeWidth={1.75} />,
+              content: (
+                <div className="grid gap-6 @xl:grid-cols-[minmax(0,12rem)_1fr]">
+                  {lot.image ? (
+                    <div className="relative aspect-[4/3] overflow-hidden !rounded-[14px] bg-mist @xl:aspect-square">
+                      <Image src={lot.image} alt={`Flor del lote ${lot.code}`} fill placeholder="blur" quality={85} sizes="(min-width: 640px) 12rem, 92vw" className="object-cover" />
+                      <DevTag className="absolute right-2 bottom-2">Foto provisoria</DevTag>
+                    </div>
+                  ) : (
+                    <PhotoPlaceholder label="Imagen del producto pendiente" className="aspect-[4/3] !rounded-[14px] @xl:aspect-square" />
+                  )}
+                  <dl className="grid grid-cols-2 content-start gap-x-5 gap-y-4">
+                    {data.map(([k, v]) => (
+                      <div key={k} className="min-w-0">
+                        <dt className="text-xs text-forest/85">{k}</dt>
+                        <dd className="mt-0.5 font-medium break-words text-forest">{v}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              ),
+            },
+            {
+              id: "composicion",
+              label: "Composición",
+              tone: "lilac",
+              icon: <Droplet className="size-4" strokeWidth={1.75} />,
+              content: c ? (
+                <div className="space-y-5">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <VarietyBadge tone="lilac">{lot.chemotype.split("(")[0].trim()}</VarietyBadge>
+                    <RatioBar tone="lilac" thc={c.thc} cbd={c.cbd} label="Proporción" className="w-full max-w-[13rem]" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-medium tracking-tight text-lilac-ink">Ratio THC:CBD ≈ {ratioLabel(c.thc, c.cbd)}</h3>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Chip tone="lilac">THC ~{num(c.thc)} mg/ml</Chip>
+                      <Chip tone="lilac">CBD ~{num(c.cbd)} mg/ml</Chip>
+                    </div>
+                  </div>
+                  <KeyFact
+                    tone="lilac"
+                    value={<>1 gota = {num(c.total / c.dropsPerMl)} mg</>}
+                    caption="de cannabinoides totales"
+                    rows={[
+                      ["Concentración", `${num(c.total)} mg/ml`],
+                      ["Gotero estándar", `${c.dropsPerMl} gotas/ml`],
+                    ]}
+                  />
+                </div>
+              ) : (
+                <p className="!rounded-control bg-lilac-soft px-4 py-5 text-center text-small text-lilac-ink">La composición se publica cuando el laboratorio entrega el análisis.</p>
+              ),
+            },
+            {
+              id: "analisis",
+              label: "Análisis",
+              tone: "amber",
+              icon: <FlaskConical className="size-4" strokeWidth={1.75} />,
+              content: (
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-[11px] font-medium tracking-[0.18em] text-amber-ink/85 uppercase">Cromatografía (HPLC)</p>
+                    <h3 className="mt-1 text-xl font-medium tracking-tight text-amber-ink">Perfil de cannabinoides</h3>
+                  </div>
+                  <div className="overflow-hidden !rounded-[12px] border border-mist-line">
+                    <table className="w-full text-left text-amber-ink">
+                      <caption className="sr-only">Concentración de cannabinoides del lote {lot.code}</caption>
+                      <thead className="bg-amber-ink text-xs text-white">
+                        <tr>
+                          <th scope="col" className="px-4 py-2.5 font-medium">Compuesto</th>
+                          <th scope="col" className="px-4 py-2.5 text-right font-medium">Concentración</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {lot.cannabinoids.map((x) => (
+                          <tr key={x.compound} className="border-t border-mist-line odd:bg-amber-soft/50">
+                            <th scope="row" className="px-4 py-2.5 font-medium">{x.compound}</th>
+                            <td className="px-4 py-2.5 text-right tabular-nums">{x.value}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="flex items-start gap-3 !rounded-[12px] bg-amber-soft px-4 py-3 text-sm text-amber-ink">
+                    <Info aria-hidden className="mt-0.5 size-5 shrink-0" strokeWidth={1.5} />
+                    {labNote}
+                  </p>
+                  {lot.hasCertificate ? (
+                    <button
+                      type="button"
+                      onClick={onCertificate}
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 !rounded-full bg-[linear-gradient(135deg,var(--amber-deep),#7a4c22)] px-5 text-[15px] font-medium !text-white @md:w-auto @md:text-base"
+                    >
+                      <FileBadge aria-hidden className="size-4" strokeWidth={1.5} /> Ver certificado de análisis
+                    </button>
+                  ) : (
+                    <p className="text-small text-amber-ink">El certificado de análisis de este lote todavía no está disponible.</p>
+                  )}
+                </div>
+              ),
+            },
+          ]}
+        />
+        <p className="mt-3 px-2">
+          <DevTag>Valores DEMO · no son análisis reales</DevTag>
         </p>
-      </section>
-
-      <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-lavender-line px-5 py-4 @md:px-6">
-        {lot.hasCertificate ? (
-          <button
-            type="button"
-            onClick={onCertificate}
-            className="inline-flex min-h-11 w-full items-center justify-center gap-2 !rounded-full border border-indigo px-4 text-[15px] font-medium !text-indigo hover:bg-lavender @md:w-auto @md:px-5 @md:text-base"
-          >
-            <FileBadge aria-hidden className="size-4" strokeWidth={1.5} /> Ver certificado de análisis
-          </button>
-        ) : (
-          <p className="text-small text-indigo/80">El certificado de análisis de este lote todavía no está disponible.</p>
-        )}
-        <DevTag>Valores DEMO · no son análisis reales</DevTag>
-      </footer>
+      </div>
     </article>
   );
 }

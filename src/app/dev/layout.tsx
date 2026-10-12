@@ -24,7 +24,7 @@ export default function DevLayout({ children }: { children: React.ReactNode }) {
           <span className="text-eyebrow text-info-fg">Amarí Dul · demo local</span>
           <nav aria-label="Herramientas de demo" className="flex gap-4 text-sm">
             {LINKS.map((l) => (
-              <Link key={l.href} href={l.href} className="!text-brand underline-offset-4 hover:underline">
+              <Link key={l.href} href={l.href} className="!text-forest underline-offset-4 hover:underline">
                 {l.label}
               </Link>
             ))}

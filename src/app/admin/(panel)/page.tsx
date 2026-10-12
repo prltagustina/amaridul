@@ -55,21 +55,21 @@ export default async function AdminHomePage() {
     <>
       <AdminPageHeader eyebrow="Inicio" title={`Hola, ${user.name?.split(" ")[0] || "equipo"}`} description="Lo que necesita tu atención hoy." />
       <section aria-labelledby="pendientes" className="space-y-4">
-        <h2 id="pendientes" className="text-h2 text-brand">
+        <h2 id="pendientes" className="text-h2 text-forest">
           Pendientes
         </h2>
         <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {pending.map(({ href, icon: Icon, count, label }) => (
             <li key={label}>
-              <Link href={href} className="group flex h-full items-center gap-4 !rounded-card border border-border/80 bg-surface p-5 hover:border-brand/50">
-                <span className="flex size-11 shrink-0 items-center justify-center !rounded-full bg-brand-soft text-brand">
+              <Link href={href} className="group flex h-full items-center gap-4 !rounded-card border border-border/80 bg-surface p-5 hover:border-forest/50">
+                <span className="flex size-11 shrink-0 items-center justify-center !rounded-full bg-forest-soft text-forest">
                   <Icon aria-hidden className="size-5" strokeWidth={1.5} />
                 </span>
                 <span className="flex-1">
-                  <span className="block text-3xl font-medium leading-none text-brand tabular-nums">{count}</span>
+                  <span className="block text-3xl font-medium leading-none text-forest tabular-nums">{count}</span>
                   <span className="mt-1 block text-small text-text-muted">{label}</span>
                 </span>
-                <ArrowRight aria-hidden className="size-4 text-brand opacity-0 transition-opacity group-hover:opacity-100" strokeWidth={1.5} />
+                <ArrowRight aria-hidden className="size-4 text-forest opacity-0 transition-opacity group-hover:opacity-100" strokeWidth={1.5} />
               </Link>
             </li>
           ))}
@@ -78,10 +78,10 @@ export default async function AdminHomePage() {
 
       <section aria-labelledby="actividad" className="mt-10 space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 id="actividad" className="text-h2 text-brand">
+          <h2 id="actividad" className="text-h2 text-forest">
             Actividad reciente
           </h2>
-          <Link href="/admin/auditoria" className="text-small !text-brand underline underline-offset-4">
+          <Link href="/admin/auditoria" className="text-small !text-forest underline underline-offset-4">
             Ver auditoría
           </Link>
         </div>

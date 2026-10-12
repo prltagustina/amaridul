@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Footer from "@/components/Footer";
+import { SiteFooter } from "@/components/brand/site-footer";
 import { MemberHeader } from "@/components/brand/member-header";
 import { demoMember } from "@/demo/fixtures";
 
@@ -13,7 +13,7 @@ export default function SocioLayout({ children }: { children: React.ReactNode })
     <>
       <MemberHeader memberName={demoMember.name} />
       <div className="flex-1">{children}</div>
-      <Footer />
+      <SiteFooter wide />
     </>
   );
 }

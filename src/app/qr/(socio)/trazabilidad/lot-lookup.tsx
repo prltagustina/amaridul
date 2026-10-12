@@ -4,7 +4,8 @@ import { useRef, useState, type FormEvent } from "react";
 import { Leaf, Search } from "lucide-react";
 import { CertificatePreview, LotCard } from "@/components/lots/lot-card";
 import { Button } from "@/components/ui/button";
-import { Alert, Card, DevTag, EmptyState, LoadingBlock } from "@/components/ui/display";
+import { Alert, DevTag, EmptyState, LoadingBlock } from "@/components/ui/display";
+import { TabbedCard } from "@/components/ui/technical";
 import { Dialog } from "@/components/ui/dialog";
 import { Select, TextField } from "@/components/ui/field";
 import { findLotByCode, lots, products, type Lot } from "@/demo/fixtures";
@@ -55,9 +56,9 @@ export default function LotLookup({ initial }: { initial: LookupState }) {
   }
 
   return (
-    <div className="space-y-8">
-      <Card>
-        <form noValidate onSubmit={onSubmit} className="grid gap-5 sm:grid-cols-[1fr_1fr_auto] sm:items-start" aria-busy={result.kind === "loading"}>
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:items-start">
+      <TabbedCard tab="Tu envase" tone="lilac" className="lg:sticky lg:top-6">
+        <form noValidate onSubmit={onSubmit} className="grid gap-5 sm:grid-cols-[1fr_1fr_auto] sm:items-start lg:grid-cols-1" aria-busy={result.kind === "loading"}>
           <Select
             id="producto"
             label="Producto"
@@ -78,14 +79,14 @@ export default function LotLookup({ initial }: { initial: LookupState }) {
             error={errors.code}
             className="font-mono uppercase tracking-wide placeholder:normal-case"
           />
-          <Button type="submit" size="md" loading={result.kind === "loading"} loadingLabel="Buscando…" className="sm:mt-[1.85rem]">
+          <Button type="submit" size="md" loading={result.kind === "loading"} loadingLabel="Buscando…" className="sm:mt-[1.85rem] lg:mt-0">
             <Search aria-hidden className="size-4" strokeWidth={1.5} /> Consultar
           </Button>
         </form>
         <p className="mt-4">
           <DevTag>Demo · códigos AD-2025-08-01 y AD-2025-11-02</DevTag>
         </p>
-      </Card>
+      </TabbedCard>
 
       <div ref={resultRef} tabIndex={-1} aria-live="polite" className="outline-none">
         {result.kind === "idle" && (

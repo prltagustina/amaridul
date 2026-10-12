@@ -203,9 +203,9 @@ img {
   --surface: #fbf7ef;
   --surface-sunken: #eae2d2;
   --brand-soft: #dce5d6;
-  --accent: #7b5e8e;
-  --accent-hover: #6a4e7d;
-  --accent-soft: #c9b8d3; /* decorative only, never text */
+  --accent: #4d7045; /* leaf green: eyebrows, secondary CTA; 4.7:1 on cream */
+  --accent-hover: #3f6043;
+  --accent-soft: #c9dbbf; /* decorative only, never text */
   --border-strong: #958f7d; /* form controls: ≥3:1 against surface/white */
   --success-fg: #2f4a33;
   --success-bg: #e2eadb;
@@ -215,15 +215,24 @@ img {
   --error-bg: #f3ded8;
   --info-fg: #6a4e7d;
   --info-bg: #ece4f0;
-  /* Technical layer borrowed from the Dambar system (fichas técnicas): data, ratios, rules. */
-  --indigo: #463577; /* text and fills; 10:1 on white */
-  --indigo-2: #4049a0; /* gradient end */
-  --lavender: #eceaf1; /* technical surfaces */
-  --lavender-line: #d4d0df;
-  --pink: #ffa7fd; /* fills only; indigo text on it is 6:1 */
-  --pink-soft: #ffe8fe;
-  --peach: #faaf88; /* fills only; indigo text on it is 5.7:1 */
-  --peach-soft: #fde0d1;
+  /* Amarí Dul palette: the greens of the plant, with Dambar's professional structure
+     (gradients, bands, tabs, data blocks). Lilac (purple strains) and amber (pistils, resin)
+     are the subtle Dambar touches: fills only, never text. */
+  --forest: #2b4a33; /* primary: headings, buttons, bands; 9.8:1 on white */
+  --forest-hover: #36593f;
+  --forest-soft: #e2ebdd;
+  --mist: #f1f4ee; /* technical surfaces */
+  --mist-line: #d9e2d3;
+  --lilac: #cdb6e3; /* forest text on it is 5.3:1 */
+  --lilac-soft: #f1eaf7;
+  --amber: #f0b678; /* forest text on it is 5.5:1 */
+  --amber-soft: #fcefe0;
+  /* Three information tones (folder tabs): green = comunidad, lilac = trazabilidad, amber = trámites y salud. */
+  --lilac-ink: #4a3863; /* text on white 10:1 */
+  --lilac-deep: #3d2f55;
+  --amber-ink: #7a4a1e; /* text on white 7.5:1 */
+  --amber-deep: #553617;
+  --sage: #3f6043; /* logo green */
 }
 
 @theme inline {
@@ -242,14 +251,20 @@ img {
   --color-error-bg: var(--error-bg);
   --color-info-fg: var(--info-fg);
   --color-info-bg: var(--info-bg);
-  --color-indigo: var(--indigo);
-  --color-indigo-2: var(--indigo-2);
-  --color-lavender: var(--lavender);
-  --color-lavender-line: var(--lavender-line);
-  --color-pink: var(--pink);
-  --color-pink-soft: var(--pink-soft);
-  --color-peach: var(--peach);
-  --color-peach-soft: var(--peach-soft);
+  --color-forest: var(--forest);
+  --color-forest-hover: var(--forest-hover);
+  --color-forest-soft: var(--forest-soft);
+  --color-mist: var(--mist);
+  --color-mist-line: var(--mist-line);
+  --color-lilac: var(--lilac);
+  --color-lilac-soft: var(--lilac-soft);
+  --color-amber: var(--amber);
+  --color-lilac-ink: var(--lilac-ink);
+  --color-lilac-deep: var(--lilac-deep);
+  --color-amber-ink: var(--amber-ink);
+  --color-amber-deep: var(--amber-deep);
+  --color-amber-soft: var(--amber-soft);
+  --color-sage: var(--sage);
   --font-display: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
   --radius-card: 16px;
   --radius-control: 10px;

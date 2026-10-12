@@ -213,9 +213,9 @@ export default function AdmissionWizard({ initialStep, demoState }: { initialSte
   if (view === "enviada") {
     return (
       <Card className="space-y-6 py-10 text-center sm:py-12" role="status" aria-live="polite">
-        <CircleCheck aria-hidden className="mx-auto size-12 text-brand" strokeWidth={1.25} />
+        <CircleCheck aria-hidden className="mx-auto size-12 text-forest" strokeWidth={1.25} />
         <div className="space-y-3">
-          <h1 className="text-h1 text-brand">Recibimos tu solicitud formal</h1>
+          <h2 className="text-h1 text-forest">Recibimos tu solicitud formal</h2>
           <p className="text-eyebrow text-accent">Referencia ADM-2026-0003</p>
           <p className="mx-auto max-w-md text-body text-text-muted">
             La Comisión Directiva va a evaluar tu solicitud. Te vamos a avisar por email cuando haya una decisión.
@@ -235,15 +235,18 @@ export default function AdmissionWizard({ initialStep, demoState }: { initialSte
 
   return (
     <div className="space-y-8">
-      <header className="space-y-2">
-        <p className="text-eyebrow text-accent">ADM-2026-0003</p>
-        <h1 className="text-h1 text-brand">Solicitud formal de admisión</h1>
-      </header>
-
       <div className="space-y-5">
         {view !== "resumen" && <StepIndicator steps={steps} onSelect={(id) => go(id as StepId)} hideCurrentLabel />}
-        <h2 ref={headingRef} tabIndex={-1} className="text-h2 text-foreground outline-none">
-          {view === "resumen" ? "Revisá tu solicitud" : `${view}. ${STEP_LABELS[view]}`}
+        <h2 ref={headingRef} tabIndex={-1} className="flex items-center gap-3 text-2xl font-medium tracking-tight text-forest outline-none">
+          {view !== "resumen" && (
+            <span aria-hidden className="flex size-10 shrink-0 items-center justify-center !rounded-[10px] bg-forest text-lg text-white">
+              {view}
+            </span>
+          )}
+          <span>
+            {view === "resumen" ? "Revisá tu solicitud" : STEP_LABELS[view]}
+            {view !== "resumen" && <span className="sr-only">, paso {view}</span>}
+          </span>
         </h2>
       </div>
 
@@ -331,7 +334,7 @@ export default function AdmissionWizard({ initialStep, demoState }: { initialSte
             <Card className="space-y-5 border-accent/40">
               <div className="space-y-1">
                 <p className="text-eyebrow text-accent">Categoría paciente</p>
-                <h3 className="text-h2 text-brand">Información adicional</h3>
+                <h3 className="text-h2 text-forest">Información adicional</h3>
               </div>
               <Checkbox
                 id="pacienteAcompanamiento"
@@ -562,7 +565,7 @@ function Summary({ data, onEdit }: { data: Data; onEdit: (id: StepId) => void })
             <button
               type="button"
               onClick={() => onEdit(id)}
-              className="m-2 inline-flex min-h-10 shrink-0 items-center gap-1.5 !rounded-control px-3 text-small !text-brand hover:bg-brand-soft"
+              className="m-2 inline-flex min-h-10 shrink-0 items-center gap-1.5 !rounded-control px-3 text-small !text-forest hover:bg-forest-soft"
             >
               <Pencil aria-hidden className="size-4" strokeWidth={1.5} />
               Editar<span className="sr-only"> {STEP_LABELS[id]}</span>
