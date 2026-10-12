@@ -41,7 +41,7 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
             <div className="grid items-stretch gap-x-6 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
               <TabbedCard tab="Asociación" fill bodyClassName="gap-5">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-xl font-medium tracking-tight text-forest">Tu membresía</p>
+                  <p className="text-xl font-title text-forest">Tu membresía</p>
                   <StatusBadge tone="success">{demoMember.status}</StatusBadge>
                 </div>
                 <DetailList
@@ -60,7 +60,7 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
               <TabbedCard tab="Trámites" tone="amber" fill bodyClassName="gap-5">
                 <div className="space-y-2">
                   <div className="flex items-baseline justify-between gap-3">
-                    <p className="text-xl font-medium tracking-tight text-amber-ink">
+                    <p className="text-xl font-title text-amber-ink">
                       {done} de {total} completos
                     </p>
                   </div>
@@ -89,7 +89,7 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
               </TabbedCard>
 
               <TabbedCard tab="Trazabilidad" tone="lilac" fill className="md:col-span-2 lg:col-span-1" bodyClassName="gap-5">
-                <p className="text-xl font-medium tracking-tight text-lilac-ink">Conocé tu producto</p>
+                <p className="text-xl font-title text-lilac-ink">Conocé tu producto</p>
                 <p className="text-[0.9375rem] leading-relaxed text-text-muted">Con el código del envase ves el lote, su composición y el análisis de laboratorio.</p>
                 <ol className="space-y-2.5 text-[0.9375rem] text-lilac-ink">
                   {["Elegí el producto", "Escribí el código del envase", "Mirá el análisis y el certificado"].map((t, i) => (

@@ -237,7 +237,7 @@ export default function AdmissionWizard({ initialStep, demoState }: { initialSte
     <div className="space-y-8">
       <div className="space-y-5">
         {view !== "resumen" && <StepIndicator steps={steps} onSelect={(id) => go(id as StepId)} hideCurrentLabel />}
-        <h2 ref={headingRef} tabIndex={-1} className="flex items-center gap-3 text-2xl font-medium tracking-tight text-forest outline-none">
+        <h2 ref={headingRef} tabIndex={-1} className="flex items-center gap-3 text-2xl font-title text-forest outline-none">
           {view !== "resumen" && (
             <span aria-hidden className="flex size-10 shrink-0 items-center justify-center !rounded-[10px] bg-forest text-lg text-white">
               {view}

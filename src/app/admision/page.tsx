@@ -42,7 +42,7 @@ export default async function AdmisionPage({ searchParams }: { searchParams: Pro
               </TabbedCard>
 
               <section aria-labelledby="circuito" className="space-y-4">
-                <h2 id="circuito" className="text-xl font-medium tracking-tight text-forest">
+                <h2 id="circuito" className="text-xl font-title text-forest">
                   Cómo sigue el proceso
                 </h2>
                 <StepCards

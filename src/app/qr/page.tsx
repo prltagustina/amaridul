@@ -138,7 +138,7 @@ export default function QRPage() {
                 </span>
                 <div className="min-w-0 space-y-1.5 pt-1 md:pt-0">
                   <p className="text-[11px] font-medium tracking-[0.18em] text-accent uppercase">{step.meta}</p>
-                  <h3 className="text-xl font-medium tracking-tight text-forest">
+                  <h3 className="text-xl font-title text-forest">
                     <span className="sr-only">Paso {i + 1}: </span>
                     {step.title}
                   </h3>

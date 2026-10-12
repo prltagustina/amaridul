@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { Cormorant_Garamond, Fraunces, Instrument_Serif, Inter, Inter_Tight, Jost, Manrope, Newsreader, Plus_Jakarta_Sans } from "next/font/google";
+import { Cormorant_Garamond, Fraunces, Instrument_Serif, Inter, Inter_Tight, Jost, Newsreader, Plus_Jakarta_Sans } from "next/font/google";
 import { ArrowRight, UserRound } from "lucide-react";
 
 // Type exploration only (dev). Each option is loaded here and nowhere else.
@@ -9,7 +9,6 @@ const interTight = Inter_Tight({ subsets: ["latin"], weight: ["600", "700"], dis
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600"], display: "swap" });
 const fraunces = Fraunces({ subsets: ["latin"], weight: ["400", "600"], display: "swap" });
 const newsreader = Newsreader({ subsets: ["latin"], weight: ["400", "500"], display: "swap" });
-const manrope = Manrope({ subsets: ["latin"], weight: ["400", "500", "700"], display: "swap" });
 const instrument = Instrument_Serif({ subsets: ["latin"], weight: ["400"], display: "swap" });
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["400", "500", "700"], display: "swap" });
 
@@ -29,7 +28,7 @@ const OPTIONS: Option[] = [
   { id: "actual", name: "1 · Actual", note: "Cormorant Garamond + Jost. Muy editorial y liviana; en datos y textos chicos pierde firmeza.", display: cormorant.style.fontFamily, heading: jost.style.fontFamily, body: jost.style.fontFamily, headingStyle: { fontWeight: 500 }, bodyWeight: 300 },
   { id: "profesional", name: "2 · Profesional", note: "Inter Tight + Inter, el lenguaje de Dambar. La serif queda solo para frases de marca. La más clara para datos y formularios.", display: cormorant.style.fontFamily, heading: interTight.style.fontFamily, body: inter.style.fontFamily, headingStyle: { fontWeight: 700, letterSpacing: "-0.02em" }, bodyWeight: 400 },
   { id: "editorial", name: "3 · Editorial cálida", note: "Fraunces + Inter. Serif suave y contemporánea con cuerpo; sans neutra y precisa.", display: fraunces.style.fontFamily, heading: fraunces.style.fontFamily, body: inter.style.fontFamily, displayStyle: { fontWeight: 400, letterSpacing: "-0.01em" }, headingStyle: { fontWeight: 600, letterSpacing: "-0.01em" }, bodyWeight: 400 },
-  { id: "clasica", name: "4 · Clásica legible", note: "Newsreader + Manrope. Serif de lectura sobria con una sans geométrica amable.", display: newsreader.style.fontFamily, heading: manrope.style.fontFamily, body: manrope.style.fontFamily, displayStyle: { fontWeight: 500 }, headingStyle: { fontWeight: 700, letterSpacing: "-0.01em" }, bodyWeight: 400 },
+  { id: "clasica", name: "4 · Clásica legible", note: "Newsreader + Inter. Serif de lectura sobria con una sans neutra.", display: newsreader.style.fontFamily, heading: inter.style.fontFamily, body: inter.style.fontFamily, displayStyle: { fontWeight: 500 }, headingStyle: { fontWeight: 700, letterSpacing: "-0.01em" }, bodyWeight: 400 },
   { id: "contemporanea", name: "5 · Contemporánea", note: "Instrument Serif + Plus Jakarta Sans. Titulares finos y elegantes con una sans moderna y redonda.", display: instrument.style.fontFamily, heading: jakarta.style.fontFamily, body: jakarta.style.fontFamily, displayStyle: { fontWeight: 400 }, headingStyle: { fontWeight: 700, letterSpacing: "-0.015em" }, bodyWeight: 400 },
 ];
 

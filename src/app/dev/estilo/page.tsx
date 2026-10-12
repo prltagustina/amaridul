@@ -38,7 +38,7 @@ export default function EstiloPage() {
   return (
     <main className="page-gutter pt-10 pb-24">
       <div className="admin-column space-y-10">
-        <SectionHeader eyebrow="Sistema visual" title="Guía de estilo" description="Tokens, tipografía y componentes de la fase UI. Cormorant Garamond 500 para títulos y CTAs editoriales; Jost para la interfaz." />
+        <SectionHeader eyebrow="Sistema visual" title="Guía de estilo" description="Tokens, tipografía y componentes de la fase UI. Cormorant Garamond 500 para frases de marca y títulos de página; Inter Tight para títulos funcionales y botones; Inter para textos y datos." />
 
         <Section title="Sistema de color">
           <p className="max-w-2xl text-body text-text-muted">
@@ -77,9 +77,9 @@ export default function EstiloPage() {
             <p className="text-display text-forest">Display · Cormorant 500</p>
             <p className="text-h1 text-forest">H1 · Construyendo comunidad</p>
             <p className="text-h2 text-forest">H2 · Preguntas frecuentes</p>
-            <p className="text-h3">H3 · Jost 500 para títulos funcionales</p>
-            <p className="text-lead">Lead · Jost 300 para introducciones.</p>
-            <p className="text-body">Body · Jost 300. El texto corrido usa una medida cómoda y buen interlineado.</p>
+            <p className="text-h3">H3 · Inter Tight 700 para títulos funcionales</p>
+            <p className="text-lead">Lead · Inter 400 para introducciones.</p>
+            <p className="text-body">Body · Inter 400. El texto corrido usa una medida cómoda y buen interlineado.</p>
             <p className="text-small text-text-muted">Small · ayudas y metadatos.</p>
             <p className="text-label">Label · etiquetas de formulario</p>
             <p className="text-eyebrow text-accent">Eyebrow · violeta</p>
@@ -164,7 +164,7 @@ export default function EstiloPage() {
               <FolderTabs />
               <div className="overflow-hidden !rounded-card border border-mist-line bg-white">
                 <TechBand className="px-5 pt-5">
-                  <p className="text-xl font-medium tracking-tight">Banda técnica</p>
+                  <p className="text-xl font-title">Banda técnica</p>
                   <div className="mt-4 flex">
                     <SectionTab>1. Pestaña de sección</SectionTab>
                   </div>

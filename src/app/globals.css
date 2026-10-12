@@ -380,9 +380,20 @@ img {
   font-size: clamp(1.625rem, 1.35rem + 1.25vw, 2rem);
   line-height: 1.15;
 }
-/* Functional type: Jost. */
+/* Functional type: Inter Tight for titles, Inter for text (scoped by .tipo-sistema; the home keeps Jost). */
+@utility font-title {
+  font-family: var(--font-inter-tight), "Inter Tight", var(--font-inter), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+@utility font-ui {
+  font-family: var(--font-inter-tight), "Inter Tight", var(--font-inter), system-ui, sans-serif;
+  font-weight: 600;
+}
 @utility text-h3 {
-  font-weight: 500;
+  font-family: var(--font-inter-tight), "Inter Tight", var(--font-inter), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   font-size: clamp(1.125rem, 1.05rem + 0.35vw, 1.25rem);
   line-height: 1.35;
 }
@@ -403,11 +414,11 @@ img {
   text-transform: uppercase;
 }
 @utility text-cta {
-  font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
-  font-variant-numeric: lining-nums;
-  font-weight: 500;
-  font-size: 1.25rem;
+  font-family: var(--font-inter-tight), "Inter Tight", var(--font-inter), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.0625rem;
   line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
 /* Admin works on a wider column than the editorial one. */
@@ -420,6 +431,21 @@ img {
 /* New views use a bone background (hueso) instead of the home's cream. Scoped so the home is untouched. */
 .theme-hueso {
   --background: #f6f3ec;
+}
+/* New views: Inter for text and data, Inter Tight for headings and buttons. In the base layer so utilities still win. */
+@layer base {
+  .tipo-sistema {
+    font-family: var(--font-inter), "Inter", system-ui, sans-serif;
+    font-weight: 400;
+    font-feature-settings: "cv11" 1, "ss01" 0;
+  }
+  .tipo-sistema :where(h1, h2, h3, h4, h5, h6, legend, button, th) {
+    font-family: var(--font-inter-tight), "Inter Tight", var(--font-inter), system-ui, sans-serif;
+  }
+  .tipo-sistema :where(h1, h2, h3, h4, h5, h6) {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
 }
 /* Joining flow (Sumate, invitación, solicitud formal): the semantic roles point to the lila scale,
    so buttons, headings, tabs, selection and focus turn violet together. Members stay in hoja. */

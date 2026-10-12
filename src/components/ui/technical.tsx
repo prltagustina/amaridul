@@ -64,7 +64,7 @@ export function TechBand({ tone = "green", className, children }: { tone?: InfoT
 }
 
 export function VarietyBadge({ tone = "green", children, className }: { tone?: InfoTone; children: ReactNode; className?: string }) {
-  return <span className={cn("inline-flex items-center !rounded-[10px] px-3.5 py-1.5 text-lg font-medium tracking-tight text-white", TONE[tone].fill, className)}>{children}</span>;
+  return <span className={cn("inline-flex items-center !rounded-[10px] px-3.5 py-1.5 text-lg font-title text-white", TONE[tone].fill, className)}>{children}</span>;
 }
 
 export function Chip({ tone = "green", children, className }: { tone?: InfoTone; children: ReactNode; className?: string }) {
@@ -99,7 +99,7 @@ export function KeyFact({ value, caption, rows, tone = "green", className }: { v
       <div className="flex items-center gap-3">
         <Droplet aria-hidden className="size-9 shrink-0 fill-white/90 stroke-none" />
         <div>
-          <p className="text-[clamp(1.6rem,1.2rem+2vw,2.25rem)] leading-none font-medium tracking-tight whitespace-nowrap tabular-nums">{value}</p>
+          <p className="text-[clamp(1.6rem,1.2rem+2vw,2.25rem)] leading-none font-title whitespace-nowrap tabular-nums">{value}</p>
           <p className="mt-1 text-xs text-white/75">{caption}</p>
         </div>
       </div>
@@ -144,7 +144,7 @@ export function StepCards({ steps, tone = "green", className }: { steps: { title
               {s.meta && <p className="mt-0.5 text-[11px] tracking-[0.12em] uppercase opacity-80">{s.meta}</p>}
             </div>
           </div>
-          <span className="text-xl font-medium tracking-tight tabular-nums">{s.value}</span>
+          <span className="text-xl font-title tabular-nums">{s.value}</span>
           {s.detail && <span className="text-sm leading-relaxed opacity-90">{s.detail}</span>}
         </li>
       ))}

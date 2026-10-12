@@ -82,7 +82,7 @@ export function LotCard({ lot, onCertificate }: { lot: Lot; onCertificate: () =>
                     <RatioBar tone="lilac" thc={c.thc} cbd={c.cbd} label="Proporción" className="w-full max-w-[13rem]" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-medium tracking-tight text-lilac-ink">Ratio THC:CBD ≈ {ratioLabel(c.thc, c.cbd)}</h3>
+                    <h3 className="text-xl font-title text-lilac-ink">Ratio THC:CBD ≈ {ratioLabel(c.thc, c.cbd)}</h3>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Chip tone="lilac">THC ~{num(c.thc)} mg/ml</Chip>
                       <Chip tone="lilac">CBD ~{num(c.cbd)} mg/ml</Chip>
@@ -111,7 +111,7 @@ export function LotCard({ lot, onCertificate }: { lot: Lot; onCertificate: () =>
                 <div className="space-y-4">
                   <div>
                     <p className="text-[11px] font-medium tracking-[0.18em] text-amber-ink/85 uppercase">Cromatografía (HPLC)</p>
-                    <h3 className="mt-1 text-xl font-medium tracking-tight text-amber-ink">Perfil de cannabinoides</h3>
+                    <h3 className="mt-1 text-xl font-title text-amber-ink">Perfil de cannabinoides</h3>
                   </div>
                   <div className="overflow-hidden !rounded-[12px] border border-mist-line">
                     <table className="w-full text-left text-amber-ink">

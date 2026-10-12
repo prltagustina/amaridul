@@ -10,7 +10,7 @@ type StyleProps = {
   variant?: ButtonVariant;
   shape?: ButtonShape;
   size?: "md" | "lg";
-  /** Cormorant CTA type, for public editorial calls to action. */
+  /** Larger, bolder CTA type for public calls to action. */
   editorial?: boolean;
   full?: boolean;
 };
@@ -22,7 +22,7 @@ export function buttonClasses({ variant = "primary", shape = "pill", size = "md"
     "disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
     shape === "pill" ? "!rounded-full" : "!rounded-control",
     size === "lg" ? "min-h-13 px-7" : "min-h-11 px-5",
-    editorial ? "text-cta" : "text-base font-medium",
+    editorial ? "text-cta" : "font-ui text-base",
     full && "w-full",
     variant === "primary" && "bg-[linear-gradient(135deg,var(--forest)_0%,var(--forest-hover)_100%)] !text-white shadow-[0_10px_24px_-14px_rgb(26_26_24/0.6)] hover:bg-[linear-gradient(135deg,var(--forest-hover)_0%,var(--forest-hover)_100%)]",
     variant === "accent" && "bg-[linear-gradient(135deg,var(--accent)_0%,var(--accent-hover)_100%)] !text-white shadow-[0_10px_24px_-14px_rgb(26_26_24/0.55)] hover:bg-[linear-gradient(135deg,var(--accent-hover)_0%,var(--accent-hover)_100%)]",

@@ -155,7 +155,7 @@ export default function SumateForm({ demoState }: { demoState: "default" | "load
       <TabbedCard id="intereses-group" tab="2. Motivación" bodyClassName="space-y-6">
         <CheckboxGroup
           name="intereses"
-          legend={<span className="text-xl font-medium tracking-tight text-forest">¿Qué te motiva a acercarte a Amarí Dul?</span>}
+          legend={<span className="text-xl font-title text-forest">¿Qué te motiva a acercarte a Amarí Dul?</span>}
           hint="Podés elegir más de una opción."
           options={interestOptions}
           values={values.intereses}
@@ -181,7 +181,7 @@ export default function SumateForm({ demoState }: { demoState: "default" | "load
       <TabbedCard id="participacion-group" tab="3. Participación">
         <RadioGroup
           name="participacion"
-          legend={<span className="text-xl font-medium tracking-tight text-forest">¿Te gustaría participar?</span>}
+          legend={<span className="text-xl font-title text-forest">¿Te gustaría participar?</span>}
           hint="¿Te gustaría participar en actividades comunitarias, educativas, científicas o institucionales?"
           options={[
             { value: "si", label: "Sí" },
