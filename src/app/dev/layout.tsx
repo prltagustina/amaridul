@@ -11,6 +11,7 @@ export const metadata: Metadata = { title: "Demo | Amarí Dul", robots: { index:
 const LINKS = [
   { href: "/dev/recorrido", label: "Recorrido" },
   { href: "/dev/estilo", label: "Estilo" },
+  { href: "/dev/tipografia", label: "Tipografía" },
   { href: "/dev/estados", label: "Estados" },
 ];
 

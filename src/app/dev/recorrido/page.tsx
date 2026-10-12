@@ -84,6 +84,7 @@ const GROUPS: Group[] = [
       { href: "/una-ruta-que-no-existe", label: "404 real" },
       { href: "/dev/estados", label: "Estados de sistema", states: st("/dev/estados", ["expired", "unauthorized", "error", "offline"]) },
       { href: "/dev/estilo", label: "Guía de estilo", note: "Tokens, tipografía y componentes" },
+      { href: "/dev/tipografia", label: "Tipografía", note: "Cinco combinaciones para elegir" },
     ],
   },
 ];
