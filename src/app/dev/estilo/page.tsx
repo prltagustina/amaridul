@@ -55,7 +55,7 @@ export default function EstiloPage() {
                   {sc.steps.map(([step, hex]) => (
                     <li key={step} className="flex min-h-20 flex-col justify-end p-2 text-[10px] leading-tight" style={{ background: hex, color: step >= 600 ? "#fff" : "#1a1a18" }}>
                       <span className="font-medium">{step}</span>
-                      <span className="font-mono opacity-80">{hex}</span>
+                      <span className="font-mono">{hex}</span>
                     </li>
                   ))}
                 </ul>
