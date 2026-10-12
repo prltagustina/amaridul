@@ -18,7 +18,7 @@ const LINKS = [
 export default function DevLayout({ children }: { children: React.ReactNode }) {
   assertDemo();
   return (
-    <div className={`${cormorant.variable} flex min-h-screen flex-col bg-background text-foreground`} {...demoAttr()}>
+    <div className={`${cormorant.variable} theme-hueso flex min-h-screen flex-col bg-background text-foreground`} {...demoAttr()}>
       <header className="border-b border-dashed border-accent/50 bg-info-bg page-gutter">
         <div className="admin-column flex min-h-12 flex-wrap items-center gap-x-6 gap-y-1 py-2">
           <span className="text-eyebrow text-info-fg">Amarí Dul · demo local</span>

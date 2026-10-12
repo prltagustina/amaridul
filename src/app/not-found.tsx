@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Página no encontrada | Amarí Dul",
 
 export default function NotFound() {
   return (
-    <div className={`${cormorant.variable} flex min-h-screen flex-col bg-background text-foreground`}>
+    <div className={`${cormorant.variable} theme-hueso flex min-h-screen flex-col bg-background text-foreground`}>
       <MinimalHeader homeHref="/" />
       <main className="flex-1 page-gutter">
         <NotFoundState />

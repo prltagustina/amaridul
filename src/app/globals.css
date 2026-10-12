@@ -417,6 +417,11 @@ img {
   margin-inline: auto;
 }
 
+/* New views use a bone background (hueso) instead of the home's cream. Scoped so the home is untouched. */
+.theme-hueso {
+  --background: #f3efe6;
+}
+
 /* Development-only markers: hidden unless the layout flags the demo environment. */
 .dev-only {
   display: none !important;
