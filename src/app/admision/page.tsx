@@ -14,6 +14,7 @@ export default async function AdmisionPage({ searchParams }: { searchParams: Pro
   return (
     <main>
       <PageBand
+        tone="lilac"
         eyebrow="Invitación personal"
         title="Solicitud formal de admisión"
         description="Te invitamos a completar la solicitud formal para asociarte a Amarí Dul. La admisión la decide la Comisión Directiva."

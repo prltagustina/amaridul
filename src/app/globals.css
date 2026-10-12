@@ -421,6 +421,16 @@ img {
 .theme-hueso {
   --background: #f6f3ec;
 }
+/* Joining flow (Sumate, invitación, solicitud formal): the semantic roles point to the lila scale,
+   so buttons, headings, tabs, selection and focus turn violet together. Members stay in hoja. */
+.flujo-sumate {
+  --forest: var(--lila-800);
+  --forest-hover: var(--lila-700);
+  --forest-soft: var(--lila-100);
+  --accent: var(--lila-700);
+  --accent-hover: var(--lila-800);
+  --accent-soft: var(--lila-200);
+}
 body:has(.theme-hueso) {
   background-color: #f6f3ec;
 }

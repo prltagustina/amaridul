@@ -3,7 +3,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-export type ButtonVariant = "primary" | "secondary" | "accent" | "ghost" | "danger";
+export type ButtonVariant = "primary" | "secondary" | "accent" | "join" | "ghost" | "danger";
 export type ButtonShape = "pill" | "admin";
 
 type StyleProps = {
@@ -24,8 +24,9 @@ export function buttonClasses({ variant = "primary", shape = "pill", size = "md"
     size === "lg" ? "min-h-13 px-7" : "min-h-11 px-5",
     editorial ? "text-cta" : "text-base font-medium",
     full && "w-full",
-    variant === "primary" && "bg-[linear-gradient(135deg,var(--hoja-800)_0%,var(--hoja-700)_100%)] !text-white shadow-[0_10px_24px_-14px_rgb(29_52_30/0.8)] hover:bg-[linear-gradient(135deg,var(--hoja-700)_0%,var(--hoja-600)_100%)]",
-    variant === "accent" && "bg-[linear-gradient(135deg,var(--hoja-700)_0%,var(--hoja-600)_100%)] !text-white shadow-[0_10px_24px_-14px_rgb(29_52_30/0.7)] hover:bg-[linear-gradient(135deg,var(--hoja-800)_0%,var(--hoja-700)_100%)]",
+    variant === "primary" && "bg-[linear-gradient(135deg,var(--forest)_0%,var(--forest-hover)_100%)] !text-white shadow-[0_10px_24px_-14px_rgb(26_26_24/0.6)] hover:bg-[linear-gradient(135deg,var(--forest-hover)_0%,var(--forest-hover)_100%)]",
+    variant === "accent" && "bg-[linear-gradient(135deg,var(--accent)_0%,var(--accent-hover)_100%)] !text-white shadow-[0_10px_24px_-14px_rgb(26_26_24/0.55)] hover:bg-[linear-gradient(135deg,var(--accent-hover)_0%,var(--accent-hover)_100%)]",
+    variant === "join" && "bg-[linear-gradient(135deg,var(--lila-800)_0%,var(--lila-700)_100%)] !text-white shadow-[0_10px_24px_-14px_rgb(51_40_64/0.8)] hover:bg-[linear-gradient(135deg,var(--lila-700)_0%,var(--lila-600)_100%)]",
     variant === "secondary" && "border border-forest bg-transparent !text-forest hover:bg-forest-soft",
     variant === "danger" && "border border-error-fg bg-transparent !text-error-fg hover:bg-error-bg",
     variant === "ghost" && "min-h-11 bg-transparent px-1 !text-forest underline-offset-4 hover:underline",

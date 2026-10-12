@@ -510,7 +510,7 @@ export default function AdmissionWizard({ initialStep, demoState }: { initialSte
         )}
         {view === "resumen" ? (
           <Button
-            variant="accent"
+            variant="join"
             size="lg"
             editorial
             loading={saving}

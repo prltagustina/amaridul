@@ -216,7 +216,7 @@ export default function SumateForm({ demoState }: { demoState: "default" | "load
       />
 
       <div className="flex flex-col items-center gap-3 pt-2">
-        <Button type="submit" variant="accent" size="lg" editorial loading={status === "loading"} loadingLabel="Enviando…" className="w-full sm:w-auto">
+        <Button type="submit" variant="join" size="lg" editorial loading={status === "loading"} loadingLabel="Enviando…" className="w-full sm:w-auto">
           Enviar solicitud <ArrowRight aria-hidden className="size-5" strokeWidth={1.5} />
         </Button>
         <p className="text-small text-text-muted">Te respondemos por email o WhatsApp.</p>

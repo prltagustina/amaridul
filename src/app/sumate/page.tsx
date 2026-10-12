@@ -13,6 +13,7 @@ export default async function SumatePage({ searchParams }: { searchParams: Promi
   return (
     <main>
       <PageBand
+        tone="lilac"
         eyebrow="Sumate a la comunidad"
         title="Solicitud de preadmisión"
         description={

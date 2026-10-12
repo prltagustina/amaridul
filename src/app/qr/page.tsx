@@ -102,7 +102,7 @@ export default function QRPage() {
                 <p className="text-small text-text-muted">Tu espacio personal</p>
               </div>
               <div className="space-y-2">
-                <LinkButton href="/sumate" variant="accent" editorial size="lg" full>
+                <LinkButton href="/sumate" variant="join" editorial size="lg" full>
                   Sumate a la comunidad <ArrowRight aria-hidden className="size-5" strokeWidth={1.5} />
                 </LinkButton>
                 <p className="text-small text-text-muted">Solicitud de preadmisión</p>
@@ -116,7 +116,7 @@ export default function QRPage() {
           </div>
         </section>
 
-        <section aria-labelledby="sumarte-title" className="content-column mt-20 sm:mt-24">
+        <section aria-labelledby="sumarte-title" className="flujo-sumate content-column mt-20 sm:mt-24">
           <div className="text-center">
             <p className="text-eyebrow text-accent">Asociarse</p>
             <h2 id="sumarte-title" className="mt-2 text-h1 text-forest">
@@ -126,13 +126,13 @@ export default function QRPage() {
           </div>
 
           <ol className="relative mt-10 grid gap-9 md:grid-cols-3 md:gap-6">
-            <span aria-hidden className="absolute top-[1.375rem] right-[16.66%] left-[16.66%] hidden h-px bg-hoja-200 md:block" />
+            <span aria-hidden className="absolute top-[1.375rem] right-[16.66%] left-[16.66%] hidden h-px bg-lila-200 md:block" />
             {JOURNEY.map((step, i) => (
               <li key={step.title} className="relative flex gap-5 md:flex-col md:items-center md:gap-4 md:text-center">
-                {i < JOURNEY.length - 1 && <span aria-hidden className="absolute top-11 -bottom-9 left-[1.375rem] w-px bg-hoja-200 md:hidden" />}
+                {i < JOURNEY.length - 1 && <span aria-hidden className="absolute top-11 -bottom-9 left-[1.375rem] w-px bg-lila-200 md:hidden" />}
                 <span
                   aria-hidden
-                  className="relative z-10 flex size-11 shrink-0 items-center justify-center !rounded-full bg-[linear-gradient(135deg,var(--hoja-800),var(--hoja-600))] font-medium text-white shadow-[0_8px_18px_-10px_rgb(29_52_30/0.8)] ring-8 ring-background"
+                  className="relative z-10 flex size-11 shrink-0 items-center justify-center !rounded-full bg-[linear-gradient(135deg,var(--lila-800),var(--lila-600))] font-medium text-white shadow-[0_8px_18px_-10px_rgb(51_40_64/0.8)] ring-8 ring-background"
                 >
                   {i + 1}
                 </span>
@@ -153,7 +153,7 @@ export default function QRPage() {
             ))}
           </ol>
 
-          <p className="mt-10 flex items-start gap-3 !rounded-card border border-hoja-100 bg-hoja-50 px-5 py-4 text-small text-hoja-800">
+          <p className="mt-10 flex items-start gap-3 !rounded-card border border-lila-100 bg-lila-50 px-5 py-4 text-small text-lila-800">
             <Info aria-hidden className="mt-0.5 size-5 shrink-0" strokeWidth={1.5} />
             <span>
               <strong className="font-medium">Enviar la preadmisión no implica la admisión.</strong> La decide la Comisión Directiva y te avisamos por email.

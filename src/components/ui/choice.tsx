@@ -3,7 +3,7 @@ import { CircleAlert } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const box = cn(
-  "mt-0.5 size-5 shrink-0 accent-[var(--hoja-800)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest",
+  "mt-0.5 size-5 shrink-0 accent-[var(--forest)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest",
 );
 
 type CheckboxProps = Omit<ComponentProps<"input">, "type" | "id"> & {

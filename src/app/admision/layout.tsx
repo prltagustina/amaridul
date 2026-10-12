@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function AdmisionLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className={`${cormorant.variable} theme-hueso flex min-h-screen flex-col bg-background text-foreground`} {...demoAttr()}>
+    <div className={`${cormorant.variable} theme-hueso flujo-sumate flex min-h-screen flex-col bg-background text-foreground`} {...demoAttr()}>
       <MinimalHeader />
       <div className="relative isolate flex-1 overflow-hidden">
         {children}
