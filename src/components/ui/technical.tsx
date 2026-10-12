@@ -13,7 +13,7 @@ export type InfoTone = "green" | "lilac" | "amber";
 
 export const TONE = {
   green: {
-    band: "bg-[linear-gradient(118deg,var(--forest)_0%,#3a5f41_55%,var(--accent)_100%)]",
+    band: "bg-[linear-gradient(118deg,var(--hoja-900)_0%,var(--hoja-800)_50%,var(--hoja-700)_100%)]",
     tab: "border-accent",
     ink: "text-forest",
     fill: "bg-forest",
@@ -21,7 +21,7 @@ export const TONE = {
     line: "border-forest/70",
   },
   lilac: {
-    band: "bg-[linear-gradient(118deg,var(--lilac-deep)_0%,#56437a_55%,#73598d_100%)]",
+    band: "bg-[linear-gradient(118deg,var(--lila-900)_0%,var(--lila-800)_50%,var(--lila-700)_100%)]",
     tab: "border-lilac",
     ink: "text-lilac-ink",
     fill: "bg-lilac-ink",
@@ -29,7 +29,7 @@ export const TONE = {
     line: "border-lilac-ink/70",
   },
   amber: {
-    band: "bg-[linear-gradient(118deg,var(--amber-deep)_0%,#704621_55%,#8d5a2a_100%)]",
+    band: "bg-[linear-gradient(118deg,var(--ambar-900)_0%,var(--ambar-800)_50%,var(--ambar-700)_100%)]",
     tab: "border-amber",
     ink: "text-amber-ink",
     fill: "bg-amber-ink",
@@ -198,7 +198,7 @@ export function TabbedCard({
           {tab}
         </SectionTab>
       </Heading>
-      <div className={cn("!rounded-card !rounded-tl-none border border-mist-line bg-white p-5 shadow-[0_18px_40px_-32px_rgba(43,74,51,0.55)] sm:p-6", fill && "flex flex-1 flex-col", bodyClassName)}>{children}</div>
+      <div className={cn("!rounded-card !rounded-tl-none border border-mist-line bg-white p-5 shadow-[0_18px_40px_-32px_rgb(29_52_30/0.55)] sm:p-6", fill && "flex flex-1 flex-col", bodyClassName)}>{children}</div>
     </section>
   );
 }

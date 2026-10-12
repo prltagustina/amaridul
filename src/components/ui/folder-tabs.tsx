@@ -9,20 +9,20 @@ export type FolderTab = { id: string; label: string; tone: InfoTone; icon?: Reac
 // Each folder has its own colour: the closed tab shows it softly, the open one in full.
 const STYLE: Record<InfoTone, { closed: string; open: string; edge: string; ring: string }> = {
   green: {
-    closed: "bg-forest-soft text-forest hover:bg-[#d5e2ce]",
-    open: "bg-[linear-gradient(135deg,var(--forest),#3a5f41)] text-white",
+    closed: "bg-hoja-100 text-hoja-800 hover:bg-hoja-200",
+    open: "bg-[linear-gradient(135deg,var(--hoja-800),var(--hoja-700))] text-white",
     edge: "border-t-forest",
     ring: "focus-visible:outline-forest",
   },
   lilac: {
-    closed: "bg-lilac-soft text-lilac-ink hover:bg-[#e6daf0]",
-    open: "bg-[linear-gradient(135deg,var(--lilac-deep),#5d4880)] text-white",
+    closed: "bg-lila-100 text-lila-800 hover:bg-lila-200",
+    open: "bg-[linear-gradient(135deg,var(--lila-800),var(--lila-700))] text-white",
     edge: "border-t-lilac-ink",
     ring: "focus-visible:outline-lilac-ink",
   },
   amber: {
-    closed: "bg-amber-soft text-amber-ink hover:bg-[#f8e2c8]",
-    open: "bg-[linear-gradient(135deg,var(--amber-deep),#7a4c22)] text-white",
+    closed: "bg-ambar-100 text-ambar-800 hover:bg-ambar-200",
+    open: "bg-[linear-gradient(135deg,var(--ambar-800),var(--ambar-700))] text-white",
     edge: "border-t-amber-ink",
     ring: "focus-visible:outline-amber-ink",
   },

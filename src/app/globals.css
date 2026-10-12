@@ -203,36 +203,82 @@ img {
   --surface: #fbf7ef;
   --surface-sunken: #eae2d2;
   --brand-soft: #dce5d6;
-  --accent: #4d7045; /* leaf green: eyebrows, secondary CTA; 4.7:1 on cream */
-  --accent-hover: #3f6043;
-  --accent-soft: #c9dbbf; /* decorative only, never text */
+  --accent: var(--hoja-700); /* eyebrows, secondary CTA; 6.6:1 on white, 5.6:1 on cream */
+  --accent-hover: var(--hoja-800);
+  --accent-soft: var(--hoja-200); /* decorative only, never text */
   --border-strong: #958f7d; /* form controls: ≥3:1 against surface/white */
-  --success-fg: #2f4a33;
-  --success-bg: #e2eadb;
-  --warning-fg: #7a5512;
-  --warning-bg: #f4e6c8;
+  --success-fg: var(--hoja-800);
+  --success-bg: var(--hoja-100);
+  --warning-fg: var(--ambar-800);
+  --warning-bg: var(--ambar-100);
   --error-fg: #8a2f2f;
   --error-bg: #f3ded8;
-  --info-fg: #6a4e7d;
-  --info-bg: #ece4f0;
-  /* Amarí Dul palette: the greens of the plant, with Dambar's professional structure
-     (gradients, bands, tabs, data blocks). Lilac (purple strains) and amber (pistils, resin)
-     are the subtle Dambar touches: fills only, never text. */
-  --forest: #2b4a33; /* primary: headings, buttons, bands; 9.8:1 on white */
-  --forest-hover: #36593f;
-  --forest-soft: #e2ebdd;
-  --mist: #f1f4ee; /* technical surfaces */
-  --mist-line: #d9e2d3;
-  --lilac: #cdb6e3; /* forest text on it is 5.3:1 */
-  --lilac-soft: #f1eaf7;
-  --amber: #f0b678; /* forest text on it is 5.5:1 */
-  --amber-soft: #fcefe0;
-  /* Three information tones (folder tabs): green = comunidad, lilac = trazabilidad, amber = trámites y salud. */
-  --lilac-ink: #4a3863; /* text on white 10:1 */
-  --lilac-deep: #3d2f55;
-  --amber-ink: #7a4a1e; /* text on white 7.5:1 */
-  --amber-deep: #553617;
-  --sage: #3f6043; /* logo green */
+  --info-fg: var(--lila-800);
+  --info-bg: var(--lila-100);
+  /* ── Amarí Dul colour system ──────────────────────────────────────────────
+     Four scales built in OKLCH with the same lightness per step, so any step of
+     one scale sits well next to the same step of another. hoja-700 is the logo green.
+       hoja  · plant greens: identity, comunidad
+       lila  · purple strains: trazabilidad, producto, laboratorio
+       ámbar · pistils and resin: trámites, salud, avisos
+       arena · warm neutrals that sit on the cream background
+     Text uses 700–900; fills 100–300; gradients run 900 → 800 → 700. */
+  --hoja-50: #f3f9f2;
+  --hoja-100: #e6f3e6;
+  --hoja-200: #cfe5ce;
+  --hoja-300: #b0d2b0;
+  --hoja-400: #8cb88d;
+  --hoja-500: #6a9a6b;
+  --hoja-600: #517f53;
+  --hoja-700: #3f6640;
+  --hoja-800: #2c4b2d;
+  --hoja-900: #1d341e;
+  --lila-50: #f8f5fc;
+  --lila-100: #f1ebf9;
+  --lila-200: #e3d8f2;
+  --lila-300: #cfbfe4;
+  --lila-400: #b5a0cf;
+  --lila-500: #9780b3;
+  --lila-600: #7c6695;
+  --lila-700: #64517a;
+  --lila-800: #493b5a;
+  --lila-900: #332840;
+  --ambar-50: #fef5ee;
+  --ambar-100: #fcebdd;
+  --ambar-200: #f7d7bd;
+  --ambar-300: #ecbd95;
+  --ambar-400: #d89d68;
+  --ambar-500: #bb7c40;
+  --ambar-600: #9d6226;
+  --ambar-700: #804d18;
+  --ambar-800: #5f370d;
+  --ambar-900: #442606;
+  --arena-50: #f8f7f4;
+  --arena-100: #f0eeea;
+  --arena-200: #e1ded5;
+  --arena-300: #cdc7bb;
+  --arena-400: #b1aa9b;
+  --arena-500: #938b7b;
+  --arena-600: #787161;
+  --arena-700: #615a4d;
+  --arena-800: #474238;
+  --arena-900: #312d26;
+
+  /* Semantic roles (components use these, never raw scale steps for meaning). */
+  --forest: var(--hoja-800); /* primary: headings, buttons, bands; 9.8:1 on white */
+  --forest-hover: var(--hoja-700);
+  --forest-soft: var(--hoja-100);
+  --mist: var(--arena-50); /* technical surfaces */
+  --mist-line: var(--arena-200);
+  --lilac: var(--lila-300); /* fills only */
+  --lilac-soft: var(--lila-100);
+  --lilac-ink: var(--lila-800); /* text, 10:1 on white */
+  --lilac-deep: var(--lila-900);
+  --amber: var(--ambar-300); /* fills only */
+  --amber-soft: var(--ambar-100);
+  --amber-ink: var(--ambar-800); /* text, 10:1 on white */
+  --amber-deep: var(--ambar-900);
+  --sage: var(--hoja-700); /* logo green */
 }
 
 @theme inline {
@@ -251,6 +297,46 @@ img {
   --color-error-bg: var(--error-bg);
   --color-info-fg: var(--info-fg);
   --color-info-bg: var(--info-bg);
+  --color-hoja-50: var(--hoja-50);
+  --color-hoja-100: var(--hoja-100);
+  --color-hoja-200: var(--hoja-200);
+  --color-hoja-300: var(--hoja-300);
+  --color-hoja-400: var(--hoja-400);
+  --color-hoja-500: var(--hoja-500);
+  --color-hoja-600: var(--hoja-600);
+  --color-hoja-700: var(--hoja-700);
+  --color-hoja-800: var(--hoja-800);
+  --color-hoja-900: var(--hoja-900);
+  --color-lila-50: var(--lila-50);
+  --color-lila-100: var(--lila-100);
+  --color-lila-200: var(--lila-200);
+  --color-lila-300: var(--lila-300);
+  --color-lila-400: var(--lila-400);
+  --color-lila-500: var(--lila-500);
+  --color-lila-600: var(--lila-600);
+  --color-lila-700: var(--lila-700);
+  --color-lila-800: var(--lila-800);
+  --color-lila-900: var(--lila-900);
+  --color-ambar-50: var(--ambar-50);
+  --color-ambar-100: var(--ambar-100);
+  --color-ambar-200: var(--ambar-200);
+  --color-ambar-300: var(--ambar-300);
+  --color-ambar-400: var(--ambar-400);
+  --color-ambar-500: var(--ambar-500);
+  --color-ambar-600: var(--ambar-600);
+  --color-ambar-700: var(--ambar-700);
+  --color-ambar-800: var(--ambar-800);
+  --color-ambar-900: var(--ambar-900);
+  --color-arena-50: var(--arena-50);
+  --color-arena-100: var(--arena-100);
+  --color-arena-200: var(--arena-200);
+  --color-arena-300: var(--arena-300);
+  --color-arena-400: var(--arena-400);
+  --color-arena-500: var(--arena-500);
+  --color-arena-600: var(--arena-600);
+  --color-arena-700: var(--arena-700);
+  --color-arena-800: var(--arena-800);
+  --color-arena-900: var(--arena-900);
   --color-forest: var(--forest);
   --color-forest-hover: var(--forest-hover);
   --color-forest-soft: var(--forest-soft);

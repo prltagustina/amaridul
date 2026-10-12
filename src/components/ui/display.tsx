@@ -29,7 +29,7 @@ export function Card({ variant = "surface", padded = true, className, ...rest }:
     <div
       className={cn(
         "!rounded-card",
-        variant === "surface" && "border border-mist-line bg-white shadow-[0_18px_40px_-34px_rgba(43,74,51,0.55)]",
+        variant === "surface" && "border border-mist-line bg-white shadow-[0_18px_40px_-34px_rgb(29_52_30/0.55)]",
         variant === "sunken" && "bg-mist",
         variant === "outline" && "border border-mist-line",
         padded && "p-5 sm:p-6",

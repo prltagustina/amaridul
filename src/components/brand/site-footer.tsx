@@ -6,7 +6,7 @@ import { BrandButterfly } from "./headers";
 export function SiteFooter({ wide = false }: { wide?: boolean }) {
   const column = wide ? "admin-column" : "nav-column";
   return (
-    <footer className="page-gutter bg-[linear-gradient(118deg,var(--forest)_0%,#3a5f41_60%,var(--accent)_100%)] py-10 text-white">
+    <footer className="page-gutter bg-[linear-gradient(118deg,var(--hoja-900)_0%,var(--hoja-800)_50%,var(--hoja-700)_100%)] py-10 text-white">
       <div className={`${column} flex flex-col items-center gap-5 text-center sm:flex-row sm:justify-between sm:text-left`}>
         <div className="space-y-2">
           <span className="flex items-center justify-center gap-2 sm:justify-start">

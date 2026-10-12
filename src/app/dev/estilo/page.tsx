@@ -9,19 +9,18 @@ import { CheckList, Chip, FolderTabs, KeyFact, RatioBar, RuleList, SectionTab, S
 import { FolderSwitcher } from "@/components/ui/folder-tabs";
 import { InteractiveSamples } from "./interactive";
 
-const COLORS: { name: string; token: string; value: string; note?: string }[] = [
-  { name: "forest · bosque", token: "bg-forest", value: "#2B4A33", note: "Principal: títulos, botones, bandas" },
-  { name: "sage · salvia", token: "bg-sage", value: "#3F6043", note: "Verde del logo" },
-  { name: "accent · hoja", token: "bg-accent", value: "#4D7045", note: "Antetítulos y CTA Sumate" },
-  { name: "forest-soft", token: "bg-forest-soft", value: "#E2EBDD", note: "Selección y hover" },
-  { name: "mist · rocío", token: "bg-mist", value: "#F1F4EE", note: "Superficies técnicas" },
-  { name: "lilac · lila", token: "bg-lilac", value: "#CDB6E3", note: "Toque Dambar: variedades violáceas" },
-  { name: "amber · ámbar", token: "bg-amber", value: "#F0B678", note: "Toque Dambar: pistilos y resina" },
-  { name: "background", token: "bg-background", value: "#F2EBDD", note: "Crema base" },
-  { name: "foreground", token: "bg-foreground", value: "#1A1A18", note: "Texto" },
-  { name: "text-muted", token: "bg-text-muted", value: "#6B6A68" },
-  { name: "border-strong", token: "bg-border-strong", value: "#958F7D", note: "Bordes de controles (3:1)" },
-  { name: "info", token: "bg-info-fg", value: "#6A4E7D", note: "Avisos informativos (lila)" },
+const SCALES: { name: string; token: string; role: string; steps: [number, string][] }[] = [
+  { name: "Hoja", token: "hoja", role: "Identidad y comunidad: asociación, admisión, acceso. 700 es el verde del logo.", steps: [[50, "#f3f9f2"], [100, "#e6f3e6"], [200, "#cfe5ce"], [300, "#b0d2b0"], [400, "#8cb88d"], [500, "#6a9a6b"], [600, "#517f53"], [700, "#3f6640"], [800, "#2c4b2d"], [900, "#1d341e"]] },
+  { name: "Lila", token: "lila", role: "Trazabilidad: producto, lote, composición y laboratorio.", steps: [[50, "#f8f5fc"], [100, "#f1ebf9"], [200, "#e3d8f2"], [300, "#cfbfe4"], [400, "#b5a0cf"], [500, "#9780b3"], [600, "#7c6695"], [700, "#64517a"], [800, "#493b5a"], [900, "#332840"]] },
+  { name: "Ámbar", token: "ambar", role: "Trámites y salud: documentación, dispensas, avisos.", steps: [[50, "#fef5ee"], [100, "#fcebdd"], [200, "#f7d7bd"], [300, "#ecbd95"], [400, "#d89d68"], [500, "#bb7c40"], [600, "#9d6226"], [700, "#804d18"], [800, "#5f370d"], [900, "#442606"]] },
+  { name: "Arena", token: "arena", role: "Neutros cálidos: bordes, superficies técnicas, texto secundario.", steps: [[50, "#f8f7f4"], [100, "#f0eeea"], [200, "#e1ded5"], [300, "#cdc7bb"], [400, "#b1aa9b"], [500, "#938b7b"], [600, "#787161"], [700, "#615a4d"], [800, "#474238"], [900, "#312d26"]] },
+];
+
+const ROLES: [string, string][] = [
+  ["Texto y títulos", "700–900"],
+  ["Rellenos y fondos suaves", "50–300"],
+  ["Degradés de bandas y botones", "900 → 800 → 700"],
+  ["Mismo paso en distintas escalas", "misma luminosidad: combinan entre sí"],
 ];
 
 const TONES: Tone[] = ["neutral", "brand", "success", "warning", "error", "info"];
@@ -41,19 +40,36 @@ export default function EstiloPage() {
       <div className="admin-column space-y-10">
         <SectionHeader eyebrow="Sistema visual" title="Guía de estilo" description="Tokens, tipografía y componentes de la fase UI. Cormorant Garamond 500 para títulos y CTAs editoriales; Jost para la interfaz." />
 
-        <Section title="Color">
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {COLORS.map((c) => (
-              <li key={c.name} className="overflow-hidden !rounded-control border border-border bg-surface">
-                <span aria-hidden className={`block h-16 ${c.token}`} />
-                <span className="block px-3 py-2">
-                  <span className="block text-label">{c.name}</span>
-                  <span className="block font-mono text-xs text-text-muted">{c.value}</span>
-                  {c.note && <span className="block text-xs text-text-muted">{c.note}</span>}
-                </span>
-              </li>
+        <Section title="Sistema de color">
+          <p className="max-w-2xl text-body text-text-muted">
+            Cuatro escalas construidas en OKLCH con la misma luminosidad en cada paso. La estructura viene de Dambar (bandas en degradé, fichas, bloques de datos); los colores son propios de Amarí Dul.
+          </p>
+          <div className="space-y-6">
+            {SCALES.map((sc) => (
+              <div key={sc.token} className="space-y-2">
+                <div className="flex flex-wrap items-baseline gap-x-3">
+                  <h3 className="text-lg font-medium text-foreground">{sc.name}</h3>
+                  <p className="text-small text-text-muted">{sc.role}</p>
+                </div>
+                <ul className="grid grid-cols-5 overflow-hidden !rounded-card border border-mist-line sm:grid-cols-10">
+                  {sc.steps.map(([step, hex]) => (
+                    <li key={step} className="flex min-h-20 flex-col justify-end p-2 text-[10px] leading-tight" style={{ background: hex, color: step >= 600 ? "#fff" : "#1a1a18" }}>
+                      <span className="font-medium">{step}</span>
+                      <span className="font-mono opacity-80">{hex}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
+          <dl className="grid gap-3 sm:grid-cols-2">
+            {ROLES.map(([k, v]) => (
+              <div key={k} className="!rounded-control border border-mist-line bg-white px-4 py-3">
+                <dt className="text-small text-text-muted">{k}</dt>
+                <dd className="font-medium text-forest">{v}</dd>
+              </div>
+            ))}
+          </dl>
         </Section>
 
         <Section title="Tipografía">

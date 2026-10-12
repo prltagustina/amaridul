@@ -104,7 +104,7 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
                 <CardFoot>
                   <Link
                     href="/qr/trazabilidad"
-                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 !rounded-full bg-[linear-gradient(135deg,var(--lilac-deep),#5d4880)] px-6 text-base font-medium !text-white shadow-[0_10px_24px_-14px_rgba(61,47,85,0.8)]"
+                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 !rounded-full bg-[linear-gradient(135deg,var(--lila-800),var(--lila-700))] px-6 text-base font-medium !text-white shadow-[0_10px_24px_-14px_rgb(51_40_64/0.8)]"
                   >
                     Consultar lote <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
                   </Link>

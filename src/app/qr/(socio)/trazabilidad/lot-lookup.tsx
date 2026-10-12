@@ -56,9 +56,9 @@ export default function LotLookup({ initial }: { initial: LookupState }) {
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:items-start">
-      <TabbedCard tab="Tu envase" tone="lilac" className="lg:sticky lg:top-6">
-        <form noValidate onSubmit={onSubmit} className="grid gap-5 sm:grid-cols-[1fr_1fr_auto] sm:items-start lg:grid-cols-1" aria-busy={result.kind === "loading"}>
+    <div className="space-y-8">
+      <TabbedCard tab="Tu envase" tone="lilac">
+        <form noValidate onSubmit={onSubmit} className="grid gap-5 sm:grid-cols-[1fr_1fr_auto] sm:items-start" aria-busy={result.kind === "loading"}>
           <Select
             id="producto"
             label="Producto"
@@ -79,7 +79,7 @@ export default function LotLookup({ initial }: { initial: LookupState }) {
             error={errors.code}
             className="font-mono uppercase tracking-wide placeholder:normal-case"
           />
-          <Button type="submit" size="md" loading={result.kind === "loading"} loadingLabel="Buscando…" className="sm:mt-[1.85rem] lg:mt-0">
+          <Button type="submit" size="md" loading={result.kind === "loading"} loadingLabel="Buscando…" className="sm:mt-[1.85rem]">
             <Search aria-hidden className="size-4" strokeWidth={1.5} /> Consultar
           </Button>
         </form>

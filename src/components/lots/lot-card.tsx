@@ -50,10 +50,10 @@ export function LotCard({ lot, onCertificate }: { lot: Lot; onCertificate: () =>
               tone: "green",
               icon: <Sprout className="size-4" strokeWidth={1.75} />,
               content: (
-                <div className="grid gap-6 @xl:grid-cols-[minmax(0,12rem)_1fr]">
+                <div className="grid gap-6 @xl:grid-cols-[minmax(0,14rem)_1fr]">
                   {lot.image ? (
                     <div className="relative aspect-[4/3] overflow-hidden !rounded-[14px] bg-mist @xl:aspect-square">
-                      <Image src={lot.image} alt={`Flor del lote ${lot.code}`} fill placeholder="blur" quality={85} sizes="(min-width: 640px) 12rem, 92vw" className="object-cover" />
+                      <Image src={lot.image} alt={`Flor del lote ${lot.code}`} fill placeholder="blur" quality={85} sizes="(min-width: 640px) 14rem, 92vw" className="object-cover" />
                       <DevTag className="absolute right-2 bottom-2">Foto provisoria</DevTag>
                     </div>
                   ) : (
@@ -140,7 +140,7 @@ export function LotCard({ lot, onCertificate }: { lot: Lot; onCertificate: () =>
                     <button
                       type="button"
                       onClick={onCertificate}
-                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 !rounded-full bg-[linear-gradient(135deg,var(--amber-deep),#7a4c22)] px-5 text-[15px] font-medium !text-white @md:w-auto @md:text-base"
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 !rounded-full bg-[linear-gradient(135deg,var(--ambar-800),var(--ambar-700))] px-5 text-[15px] font-medium !text-white @md:w-auto @md:text-base"
                     >
                       <FileBadge aria-hidden className="size-4" strokeWidth={1.5} /> Ver certificado de análisis
                     </button>

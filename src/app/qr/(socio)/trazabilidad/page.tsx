@@ -20,10 +20,9 @@ export default async function TrazabilidadPage({ searchParams }: { searchParams:
         title="Conocé tu producto"
         description="Lote, composición y análisis de laboratorio."
         tab="Consulta por lote"
-        width="wide"
       />
       <div className="page-gutter pt-8 pb-20">
-        <div className="admin-column">
+        <div className="content-column">
           <LotLookup key={state} initial={state} />
         </div>
         <DevStateBar path="/qr/trazabilidad" states={STATES} current={state} label="Trazabilidad" />
