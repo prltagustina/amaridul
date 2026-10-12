@@ -419,7 +419,10 @@ img {
 
 /* New views use a bone background (hueso) instead of the home's cream. Scoped so the home is untouched. */
 .theme-hueso {
-  --background: #f3efe6;
+  --background: #f6f3ec;
+}
+body:has(.theme-hueso) {
+  background-color: #f6f3ec;
 }
 
 /* Development-only markers: hidden unless the layout flags the demo environment. */
