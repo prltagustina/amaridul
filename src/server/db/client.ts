@@ -22,7 +22,15 @@ export async function openPglite(dataDir?: string): Promise<Database> {
   return db as unknown as Database;
 }
 
+/**
+ * Provider URLs (Neon) say sslmode=require, which pg already treats as verify-full and warns about on
+ * every connection. Saying verify-full explicitly keeps that strict check and silences the warning.
+ */
+export function withStrictSsl(url: string): string {
+  return url.replace(/([?&]sslmode=)(prefer|require|verify-ca)(?=&|$)/, "$1verify-full");
+}
+
 /** Remote Postgres. Migrations are never applied implicitly here: use `npm run db:migrate`. */
 export function openPostgres(url: string): Database {
-  return drizzlePg(new Pool({ connectionString: url, max: 5 }), { schema }) as unknown as Database;
+  return drizzlePg(new Pool({ connectionString: withStrictSsl(url), max: 5 }), { schema }) as unknown as Database;
 }

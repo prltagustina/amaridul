@@ -7,6 +7,7 @@ import { MemoryRateLimiter } from "@/server/rate-limit/limiter";
 import { MemoryEmailSender } from "@/server/email/sender";
 import { emailTemplates } from "@/server/email/templates";
 import { parseEnv } from "@/server/env";
+import { withStrictSsl } from "@/server/db/client";
 
 describe("local object storage", () => {
   it("stores and reads files under its root", async () => {
@@ -71,5 +72,17 @@ describe("env", () => {
   it("requires DATABASE_URL in production and a long secret", () => {
     expect(() => parseEnv({ ...base, APP_ENV: "production" })).toThrow();
     expect(() => parseEnv({ ...base, BETTER_AUTH_SECRET: "short" })).toThrow();
+  });
+});
+
+describe("postgres url", () => {
+  it.each([
+    ["postgres://u:p@h/db?sslmode=require", "postgres://u:p@h/db?sslmode=verify-full"],
+    ["postgres://u:p@h/db?sslmode=require&channel_binding=require", "postgres://u:p@h/db?sslmode=verify-full&channel_binding=require"],
+    ["postgres://u:p@h/db?channel_binding=require&sslmode=prefer", "postgres://u:p@h/db?channel_binding=require&sslmode=verify-full"],
+    ["postgres://u:p@h/db?sslmode=verify-full", "postgres://u:p@h/db?sslmode=verify-full"],
+    ["postgres://u:p@h/db", "postgres://u:p@h/db"],
+  ])("keeps the strict SSL check explicit: %s", (input, expected) => {
+    expect(withStrictSsl(input)).toBe(expected);
   });
 });

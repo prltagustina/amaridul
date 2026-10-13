@@ -17,7 +17,7 @@ export class ConsoleEmailSender implements EmailSender {
   async send(message: EmailMessage): Promise<void> {
     console.info(
       [
-        "──── email (local, no enviado) ────",
+        `──── EMAIL NO ENVIADO (solo registro) · ${message.subject} ────`,
         `From: ${this.from}`,
         `To: ${message.to}`,
         message.replyTo ? `Reply-To: ${message.replyTo}` : null,
