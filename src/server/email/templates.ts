@@ -53,9 +53,36 @@ export const emailTemplates = {
       "Amarí Dul · Asociación civil",
     ].join("\n"),
   }),
-  admission_approved: (p: { memberNumber: string }): Rendered => ({
+  // Provisional copy, consistent with the site; replace with the approved text.
+  admission_approved: (p: { name: string; memberNumber: string; url: string; expiresAt: Date }): Rendered => ({
     subject: "Tu admisión fue aprobada",
-    text: `${PENDING}\n\nNúmero de socio: ${p.memberNumber}`,
+    text: [
+      `Hola, ${p.name}:`,
+      "",
+      "La Comisión Directiva aprobó tu admisión. ¡Te damos la bienvenida a Amarí Dul!",
+      "",
+      `Tu número de socio es ${p.memberNumber}.`,
+      "",
+      "Para entrar a tu espacio, activá tu cuenta creando una contraseña en este link personal:",
+      p.url,
+      "",
+      `El link vence el ${longDate.format(p.expiresAt)} y sirve una sola vez. Después ingresás con tu DNI y esa contraseña.`,
+      "",
+      "Amarí Dul · Asociación civil",
+    ].join("\n"),
+  }),
+  // Provisional copy; replace with the approved text.
+  admission_rejected: (p: { name: string }): Rendered => ({
+    subject: "Sobre tu solicitud de admisión",
+    text: [
+      `Hola, ${p.name}:`,
+      "",
+      "La Comisión Directiva evaluó tu solicitud formal de admisión y en esta oportunidad no fue aprobada.",
+      "",
+      "Si querés conocer más detalles, respondé este email y el equipo de la asociación se va a comunicar con vos.",
+      "",
+      "Amarí Dul · Asociación civil",
+    ].join("\n"),
   }),
   account_activation: (p: { url: string; expiresAt: Date }): Rendered => ({
     subject: "Activá tu cuenta",

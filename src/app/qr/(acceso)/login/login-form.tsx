@@ -9,6 +9,7 @@ import { TextField } from "@/components/ui/field";
 import { PasswordField } from "@/components/ui/password-field";
 import { TabbedCard } from "@/components/ui/technical";
 import { AccessShell } from "../access-shell";
+import { memberLogin } from "../actions";
 
 type DemoState = "default" | "loading" | "error" | "expired" | "disabled";
 
@@ -24,7 +25,7 @@ export default function MemberLoginForm({ demoState }: { demoState: DemoState })
   const [loading, setLoading] = useState(demoState === "loading");
   const alertRef = useRef<HTMLDivElement>(null);
 
-  function onSubmit(ev: FormEvent) {
+  async function onSubmit(ev: FormEvent) {
     ev.preventDefault();
     const e: typeof fieldErrors = {};
     if (!/^\d{7,8}$/.test(dni.replace(/\D/g, ""))) e.dni = "Revisá tu DNI: tiene 7 u 8 números.";
@@ -33,16 +34,15 @@ export default function MemberLoginForm({ demoState }: { demoState: DemoState })
     setFormError("");
     if (Object.keys(e).length) return;
     setLoading(true);
-    // Demo only: no credentials are checked. 99000099 shows the generic error.
-    window.setTimeout(() => {
-      if (dni.replace(/\D/g, "") === "99000099") {
-        setLoading(false);
-        setFormError(GENERIC_ERROR);
-        requestAnimationFrame(() => alertRef.current?.focus());
-        return;
-      }
+    const r = await memberLogin(dni, password).catch(() => ({ ok: false as const, error: "generic" as const }));
+    if (r.ok) {
       router.push("/qr/mi-espacio");
-    }, 700);
+      router.refresh();
+      return;
+    }
+    setLoading(false);
+    setFormError(r.error === "rate" ? "Demasiados intentos. Esperá unos minutos y volvé a probar." : GENERIC_ERROR);
+    requestAnimationFrame(() => alertRef.current?.focus());
   }
 
   return (
@@ -100,7 +100,7 @@ export default function MemberLoginForm({ demoState }: { demoState: DemoState })
         ¿Todavía no sos socio? <TextLink href="/sumate" className="inline-flex min-h-11 items-center">Sumate a la comunidad</TextLink>
       </p>
       <p>
-        <DevTag>Demo · cualquier DNI entra · 99000099 muestra error</DevTag>
+        <DevTag>Local: ingresá con el DNI de un socio activado</DevTag>
       </p>
     </AccessShell>
   );

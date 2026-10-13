@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { readState } from "@/lib/demo";
+import { isDemoEnabled, readState } from "@/lib/demo";
 import { DevStateBar } from "@/components/ui/dev-state-bar";
 import RecoverFlow from "./recover-flow";
 
@@ -11,7 +11,7 @@ export default async function RecoverPage({ searchParams }: { searchParams: Prom
   const state = await readState(searchParams, STATES);
   return (
     <>
-      <RecoverFlow key={state} initial={state} />
+      <RecoverFlow key={state} initial={state} demo={isDemoEnabled()} />
       <DevStateBar path="/qr/recuperar" states={STATES} current={state} label="Recuperar" />
     </>
   );

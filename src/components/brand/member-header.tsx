@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { LogOut, Menu, X } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { memberSignOut } from "@/app/qr/(acceso)/actions";
 import { BrandLockup } from "./headers";
 
 const LINKS = [
@@ -12,7 +13,7 @@ const LINKS = [
   { href: "/qr/trazabilidad", label: "Trazabilidad" },
 ];
 
-/** Private navigation for the member portal. "Salir" is visual in the demo. */
+/** Private navigation for the member portal. "Salir" closes the session. */
 export function MemberHeader({ memberName }: { memberName: string }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -48,9 +49,11 @@ export function MemberHeader({ memberName }: { memberName: string }) {
           {LINKS.map((l) => link(l))}
           <span className="h-5 w-px bg-border" aria-hidden />
           <span className="text-small whitespace-nowrap text-text-muted">{memberName}</span>
-          <Link href="/qr/login" className="inline-flex min-h-11 items-center gap-1.5 text-sm !text-text-muted hover:!text-forest">
-            <LogOut aria-hidden className="size-4" strokeWidth={1.5} /> Salir
-          </Link>
+          <form action={memberSignOut}>
+            <button type="submit" className="inline-flex min-h-11 items-center gap-1.5 text-sm !text-text-muted hover:!text-forest">
+              <LogOut aria-hidden className="size-4" strokeWidth={1.5} /> Salir
+            </button>
+          </form>
         </nav>
         <button
           type="button"
@@ -66,9 +69,11 @@ export function MemberHeader({ memberName }: { memberName: string }) {
       <nav id="member-menu" aria-label="Portal de socios" hidden={!open} className="admin-column border-t border-border/70 pt-2 pb-4 lg:hidden">
         <p className="py-2 text-small text-text-muted">{memberName}</p>
         <div className="flex flex-col">{LINKS.map((l) => link(l, true))}</div>
-        <Link href="/qr/login" className="mt-2 inline-flex min-h-11 items-center gap-2 px-1 text-lg !text-text-muted">
-          <LogOut aria-hidden className="size-5" strokeWidth={1.5} /> Salir
-        </Link>
+        <form action={memberSignOut}>
+          <button type="submit" className="mt-2 inline-flex min-h-11 items-center gap-2 px-1 text-lg !text-text-muted">
+            <LogOut aria-hidden className="size-5" strokeWidth={1.5} /> Salir
+          </button>
+        </form>
       </nav>
     </header>
   );

@@ -22,6 +22,13 @@
       "when": 1791862995215,
       "tag": "0002_fase1_admisiones",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791864161938,
+      "tag": "0003_fase1_socios",
+      "breakpoints": true
     }
   ]
 }

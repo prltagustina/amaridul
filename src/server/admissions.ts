@@ -222,6 +222,7 @@ export async function getAdmission(db: Database, rings: Keyrings, id: string) {
     phone: row.phone,
     notificationEmail: a.notificationEmail,
     category: categoryOptions.find((c) => c.value === a.category)?.label ?? a.category,
+    categoryValue: a.category,
     interest: health.interes,
     patient: health.paciente && {
       acompanamiento: health.paciente.acompanamiento,

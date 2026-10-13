@@ -1,5 +1,5 @@
 // Fase 1: preadmissions sent from the public Sumate form.
-import { boolean, index, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, date, index, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { persons, retentionColumns } from "./core";
 
@@ -99,3 +99,51 @@ export const admissions = pgTable(
   },
   (t) => [index("admissions_status_idx").on(t.status), index("admissions_submitted_at_idx").on(t.submittedAt)],
 );
+
+export const admissionDecision = pgEnum("admission_decision", ["aprobada", "rechazada", "diferida"]);
+
+/** Comisión Directiva decisions, append-only: a deferral and the later approval both stay on record. */
+export const admissionDecisions = pgTable(
+  "admission_decisions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    admissionId: uuid("admission_id")
+      .notNull()
+      .references(() => admissions.id, { onDelete: "restrict" }),
+    decision: admissionDecision("decision").notNull(),
+    meetingDate: date("meeting_date").notNull(),
+    minutes: text("minutes").notNull(),
+    approvedCategory: admissionCategory("approved_category"),
+    recordedBy: uuid("recorded_by")
+      .notNull()
+      .references(() => user.id, { onDelete: "restrict" }),
+    recordedAt: timestamp("recorded_at", tz).notNull().defaultNow(),
+  },
+  (t) => [index("admission_decisions_admission_idx").on(t.admissionId)],
+);
+
+export const memberStatus = pgEnum("member_status", ["activo", "suspendido", "baja"]);
+
+/** Members, created when the Comisión Directiva approves an admission. */
+export const members = pgTable("members", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  memberNumber: text("member_number").notNull().unique(),
+  personId: uuid("person_id")
+    .notNull()
+    .unique()
+    .references(() => persons.id, { onDelete: "restrict" }),
+  userId: uuid("user_id")
+    .notNull()
+    .unique()
+    .references(() => user.id, { onDelete: "restrict" }),
+  admissionId: uuid("admission_id")
+    .notNull()
+    .unique()
+    .references(() => admissions.id, { onDelete: "restrict" }),
+  category: admissionCategory("category").notNull(),
+  since: date("since").notNull(),
+  status: memberStatus("status").notNull().default("activo"),
+  createdAt: timestamp("created_at", tz).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", tz).notNull().defaultNow(),
+  ...retentionColumns,
+});

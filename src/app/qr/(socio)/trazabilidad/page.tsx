@@ -3,12 +3,15 @@ import { readState } from "@/lib/demo";
 import { PageBand } from "@/components/brand/page-band";
 import { DevStateBar } from "@/components/ui/dev-state-bar";
 import LotLookup, { type LookupState } from "./lot-lookup";
+import { currentMember } from "@/server/member-session";
 
 export const metadata: Metadata = { title: "Trazabilidad | Amarí Dul" };
 
 const STATES: readonly LookupState[] = ["default", "lote", "invalido", "loading", "error", "sin-certificado", "certificado"];
 
 export default async function TrazabilidadPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  // Members only: without a member session this sends to the login (demo locally and on previews).
+  await currentMember();
   const state = await readState(searchParams, STATES);
   return (
     <main>

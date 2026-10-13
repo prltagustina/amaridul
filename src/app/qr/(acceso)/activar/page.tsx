@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { readState } from "@/lib/demo";
+import { isDemoEnabled, readState } from "@/lib/demo";
 import { DevStateBar } from "@/components/ui/dev-state-bar";
 import ActivateFlow from "./activate-flow";
 
@@ -11,7 +11,7 @@ export default async function ActivatePage({ searchParams }: { searchParams: Pro
   const state = await readState(searchParams, STATES);
   return (
     <>
-      <ActivateFlow key={state} initial={state} />
+      <ActivateFlow key={state} initial={state} demo={isDemoEnabled()} />
       <DevStateBar path="/qr/activar" states={STATES} current={state} label="Activación" />
     </>
   );

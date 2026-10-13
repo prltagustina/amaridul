@@ -4,17 +4,19 @@ import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
 import { countPreAdmissions } from "@/server/pre-admissions";
 import { countAdmissions } from "@/server/admissions";
+import { listMembers } from "@/server/members";
 import { Card, DevTag } from "@/components/ui/display";
-import { auditEntries, lots, members } from "@/demo/fixtures";
+import { auditEntries, lots } from "@/demo/fixtures";
 import { AdminPageHeader } from "../ui";
 
 export default async function AdminHomePage() {
   const { user } = await requireAdmin();
   const db = await getDb();
-  const [newPreAdmissions, toElevate, inCommission] = await Promise.all([
+  const [newPreAdmissions, toElevate, inCommission, memberRows] = await Promise.all([
     countPreAdmissions(db, ["recibida"]),
     countAdmissions(db, ["recibida"]),
     countAdmissions(db, ["comision"]),
+    listMembers(db),
   ]);
 
   const pending = [
@@ -39,7 +41,7 @@ export default async function AdminHomePage() {
     {
       href: "/admin/socios",
       icon: Users,
-      count: members.filter((m) => m.web === "Activación pendiente").length,
+      count: memberRows.filter((m) => m.accountStatus === "pending_activation").length,
       label: "socios con activación pendiente",
     },
     {

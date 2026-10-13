@@ -10,6 +10,7 @@ import { audit } from "@/server/audit/log";
 import type { Keyring } from "@/server/crypto/keyring";
 import type { EmailSender } from "@/server/email/sender";
 import { emailTemplates } from "@/server/email/templates";
+import { memberEmailOf } from "@/server/members";
 import { dniSignIn } from "./dni-sign-in";
 import { hashPassword, MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, verifyPassword } from "./password";
 
@@ -76,7 +77,9 @@ export function createAuth(deps: AuthDeps) {
       sendResetPassword: async ({ user, token }) => {
         // Token goes in the fragment: never sent to the server, logs or Referer.
         const { subject, text } = emailTemplates.password_reset({ url: `${deps.baseURL}/qr/recuperar#t=${token}` });
-        await deps.email.send({ to: user.email, subject, text, template: "password_reset", replyTo: deps.replyTo });
+        // Member accounts carry an internal address; the person's real one is on their admission.
+        const to = (await memberEmailOf(db, user.id)) ?? user.email;
+        await deps.email.send({ to, subject, text, template: "password_reset", replyTo: deps.replyTo });
       },
     },
     rateLimit: {

@@ -3,6 +3,7 @@ import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
 import { getKeyrings } from "@/server/crypto";
 import { getAdmission } from "@/server/admissions";
+import { latestDecision, memberOfAdmission } from "@/server/members";
 import { DetailList } from "@/components/ui/data-list";
 import { Card } from "@/components/ui/display";
 import { AdminPageHeader } from "../../../ui";
@@ -14,8 +15,10 @@ const yes = (b: boolean) => (b ? "Sí" : "No");
 export default async function AdmisionPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
-  const adm = await getAdmission(await getDb(), getKeyrings(), id);
+  const db = await getDb();
+  const adm = await getAdmission(db, getKeyrings(), id);
   if (!adm) notFound();
+  const [lastDecision, member] = await Promise.all([latestDecision(db, adm.id), memberOfAdmission(db, adm.id)]);
 
   const sections: { id: string; title: string; items: { label: string; value: string }[] }[] = [
     {
@@ -80,7 +83,15 @@ export default async function AdmisionPage({ params }: { params: Promise<{ id: s
             </Card>
           ))}
         </div>
-        <AdmissionReview id={adm.id} reference={adm.reference} status={adm.status} />
+        <AdmissionReview
+          id={adm.id}
+          reference={adm.reference}
+          fullName={adm.fullName}
+          status={adm.status}
+          requestedCategory={adm.categoryValue}
+          lastDecision={lastDecision}
+          member={member}
+        />
       </div>
     </>
   );

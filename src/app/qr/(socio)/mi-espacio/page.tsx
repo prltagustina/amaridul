@@ -8,6 +8,8 @@ import { DevStateBar } from "@/components/ui/dev-state-bar";
 import { Alert, DevTag, LoadingBlock, StatusBadge } from "@/components/ui/display";
 import { TabbedCard } from "@/components/ui/technical";
 import { demoMember } from "@/demo/fixtures";
+import { currentMember } from "@/server/member-session";
+import type { Tone } from "@/components/ui/display";
 
 export const metadata: Metadata = { title: "Mi espacio | Amarí Dul" };
 
@@ -20,13 +22,34 @@ function CardFoot({ children }: { children: React.ReactNode }) {
 
 export default async function MiEspacioPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const state = await readState(searchParams, STATES);
-  const firstName = demoMember.name.split(" ")[0];
-  const done = demoMember.procedures.filter((p) => p.tone === "success").length;
-  const total = demoMember.procedures.length;
+  const m = await currentMember();
+  // The real member's data; the fictitious demo member when reviewing the screens locally.
+  const view =
+    m === "demo"
+      ? { firstName: demoMember.name.split(" ")[0], number: demoMember.number, category: demoMember.category, since: demoMember.since, status: demoMember.status, fee: <span>Al día <DevTag>Demo</DevTag></span>, procedures: demoMember.procedures }
+      : {
+          firstName: m.firstName,
+          number: m.memberNumber,
+          category: m.categoryLabel,
+          since: m.since.split("-").reverse().join("/"),
+          status: "Activo",
+          fee: "A confirmar por la asociación",
+          procedures: [
+            { label: "Alta asociativa", status: "Completa", tone: "success" as Tone },
+            ...(m.category === "paciente"
+              ? [
+                  { label: "Evaluación médica", status: "Pendiente", tone: "warning" as Tone },
+                  { label: "Vinculación REPROCANN", status: "Pendiente", tone: "warning" as Tone },
+                ]
+              : []),
+          ],
+        };
+  const done = view.procedures.filter((p) => p.tone === "success").length;
+  const total = view.procedures.length;
 
   return (
     <main>
-      <PageBand compact eyebrow="Mi espacio" title={`Hola, ${firstName}`} description={`Socio ${demoMember.number} · categoría ${demoMember.category}`} tab="Resumen" width="wide" />
+      <PageBand compact eyebrow="Mi espacio" title={`Hola, ${view.firstName}`} description={`Socio ${view.number} · categoría ${view.category}`} tab="Resumen" width="wide" />
       <div className="page-gutter pt-6 pb-8">
         <div className="admin-column">
           {state === "loading" && <LoadingBlock label="Cargando tu información…" lines={6} />}
@@ -41,14 +64,14 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
               <TabbedCard tab="Asociación" fill bodyClassName="gap-5">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-xl font-title text-forest">Tu membresía</p>
-                  <StatusBadge tone="success">{demoMember.status}</StatusBadge>
+                  <StatusBadge tone="success">{view.status}</StatusBadge>
                 </div>
                 <DetailList
                   items={[
-                    { label: "Número", value: demoMember.number },
-                    { label: "Categoría", value: demoMember.category },
-                    { label: "Socio desde", value: demoMember.since },
-                    { label: "Cuota", value: <span>Al día <DevTag>Demo</DevTag></span> },
+                    { label: "Número", value: view.number },
+                    { label: "Categoría", value: view.category },
+                    { label: "Socio desde", value: view.since },
+                    { label: "Cuota", value: view.fee },
                   ]}
                 />
                 <CardFoot>
@@ -68,7 +91,7 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
                   </div>
                 </div>
                 <ul className="divide-y divide-mist-line">
-                  {demoMember.procedures.map((p) => (
+                  {view.procedures.map((p) => (
                     <li key={p.label} className="flex items-center justify-between gap-3 py-2.5 first:pt-0">
                       <span className="text-[0.9375rem]">{p.label}</span>
                       <StatusBadge tone={p.tone}>{p.status}</StatusBadge>
