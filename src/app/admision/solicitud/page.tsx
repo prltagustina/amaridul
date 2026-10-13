@@ -1,4 +1,4 @@
-import { readState } from "@/lib/demo";
+import { isDemoEnabled, readState } from "@/lib/demo";
 import { DevStateBar } from "@/components/ui/dev-state-bar";
 import { STEP_IDS, type StepId } from "./steps";
 import AdmissionWizard from "./wizard";
@@ -12,10 +12,10 @@ export default async function SolicitudPage({ searchParams }: { searchParams: Pr
   const paso = await readState(searchParams, PASOS, "paso");
   return (
     <main>
-      <PageBand compact tone="lilac" eyebrow="ADM-2026-0003" title="Solicitud formal de admisión" tab="Paso a paso" back={{ href: "/admision", label: "Invitación" }} />
-      <div className="page-gutter pt-8 pb-28 sm:pt-10">
+      <PageBand compact tone="lilac" eyebrow="Invitación personal" title="Solicitud formal de admisión" tab="Paso a paso" />
+      <div className="page-gutter pt-8 pb-12 sm:pt-10">
         <div className="content-column">
-          <AdmissionWizard key={`${paso}-${state}`} initialStep={paso as StepId | "resumen" | "enviada"} demoState={state} />
+          <AdmissionWizard key={`${paso}-${state}`} initialStep={paso as StepId | "resumen" | "enviada"} demoState={state} demo={isDemoEnabled()} />
         </div>
         <DevStateBar path="/admision/solicitud" states={STATES} current={state} keep={{ paso: paso === "A" ? undefined : paso }} />
       </div>

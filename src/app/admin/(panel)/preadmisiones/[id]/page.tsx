@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
 import { getKeyrings } from "@/server/crypto";
-import { CLOSE_REASONS, getPreAdmission, latestInvitation } from "@/server/pre-admissions";
+import { CLOSE_REASONS, formalAdmissionOf, getPreAdmission, latestInvitation } from "@/server/pre-admissions";
 import { DetailList } from "@/components/ui/data-list";
 import { Card } from "@/components/ui/display";
 import { AdminPageHeader } from "../../../ui";
@@ -17,7 +17,7 @@ export default async function PreadmisionPage({ params }: { params: Promise<{ id
   const db = await getDb();
   const pre = await getPreAdmission(db, getKeyrings().field, id);
   if (!pre) notFound();
-  const invitation = await latestInvitation(db, pre.id);
+  const [invitation, formal] = await Promise.all([latestInvitation(db, pre.id), formalAdmissionOf(db, pre.id)]);
 
   return (
     <>
@@ -54,6 +54,7 @@ export default async function PreadmisionPage({ params }: { params: Promise<{ id
           id={pre.id}
           reference={pre.reference}
           email={pre.email}
+          formal={formal}
           status={pre.status}
           invitation={invitation && { sentAt: noteFormat.format(invitation.createdAt), expiresAt: noteFormat.format(invitation.expiresAt), expired: invitation.expiresAt <= new Date() }}
           closedReason={pre.closedReason}

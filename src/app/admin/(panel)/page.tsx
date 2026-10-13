@@ -3,13 +3,19 @@ import { ArrowRight, Boxes, ClipboardCheck, Inbox, Users } from "lucide-react";
 import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
 import { countPreAdmissions } from "@/server/pre-admissions";
+import { countAdmissions } from "@/server/admissions";
 import { Card, DevTag } from "@/components/ui/display";
-import { admissions, auditEntries, lots, members } from "@/demo/fixtures";
+import { auditEntries, lots, members } from "@/demo/fixtures";
 import { AdminPageHeader } from "../ui";
 
 export default async function AdminHomePage() {
   const { user } = await requireAdmin();
-  const newPreAdmissions = await countPreAdmissions(await getDb(), ["recibida"]);
+  const db = await getDb();
+  const [newPreAdmissions, toElevate, inCommission] = await Promise.all([
+    countPreAdmissions(db, ["recibida"]),
+    countAdmissions(db, ["recibida"]),
+    countAdmissions(db, ["comision"]),
+  ]);
 
   const pending = [
     {
@@ -21,13 +27,13 @@ export default async function AdminHomePage() {
     {
       href: "/admin/admisiones",
       icon: ClipboardCheck,
-      count: admissions.filter((a) => a.status === "recibida").length,
+      count: toElevate,
       label: "solicitudes formales para elevar a Comisión",
     },
     {
-      href: "/admin/admisiones/adm-2026-0001",
+      href: "/admin/admisiones",
       icon: ClipboardCheck,
-      count: admissions.filter((a) => a.status === "comision").length,
+      count: inCommission,
       label: "decisiones de Comisión para registrar",
     },
     {

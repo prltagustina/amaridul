@@ -44,8 +44,8 @@ describe("memory rate limiter", () => {
 describe("email", () => {
   it("templates keep institutional text visibly pending", async () => {
     const sender = new MemoryEmailSender();
-    const { subject, text } = emailTemplates.admission_received({ reference: "ADM-2026-0001" });
-    await sender.send({ to: "x@example.com", subject, text, template: "admission_received" });
+    const { subject, text } = emailTemplates.admission_approved({ memberNumber: "AD-0001" });
+    await sender.send({ to: "x@example.com", subject, text, template: "admission_approved" });
     expect(sender.sent[0].text).toContain("PENDIENTE DE APROBACIÓN");
   });
 

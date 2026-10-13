@@ -30,7 +30,7 @@ export const emailTemplates = {
       "",
       "Revisamos tu solicitud de preadmisión y te invitamos a completar la solicitud formal para asociarte a Amarí Dul.",
       "",
-      "Abrí este link personal para empezar. Podés guardar y seguir más tarde desde el mismo link:",
+      "Abrí este link personal para empezar. Completarla lleva unos 10 minutos:",
       p.url,
       "",
       `El link vence el ${longDate.format(p.expiresAt)}. Es personal: no lo compartas.`,
@@ -40,9 +40,18 @@ export const emailTemplates = {
       "Amarí Dul · Asociación civil",
     ].join("\n"),
   }),
-  admission_received: (p: { reference: string }): Rendered => ({
+  // Provisional copy, consistent with the site; replace with the approved text.
+  admission_received: (p: { reference: string; name: string }): Rendered => ({
     subject: `Recibimos tu solicitud formal ${p.reference}`,
-    text: `${PENDING}\n\nReferencia: ${p.reference}`,
+    text: [
+      `Hola, ${p.name}:`,
+      "",
+      "Recibimos tu solicitud formal de admisión a Amarí Dul. La Comisión Directiva la va a evaluar y te vamos a avisar por email cuando haya una decisión.",
+      "",
+      `Referencia: ${p.reference}`,
+      "",
+      "Amarí Dul · Asociación civil",
+    ].join("\n"),
   }),
   admission_approved: (p: { memberNumber: string }): Rendered => ({
     subject: "Tu admisión fue aprobada",

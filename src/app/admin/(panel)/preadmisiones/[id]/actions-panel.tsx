@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { CheckCircle2, MailPlus, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, Card, StatusBadge } from "@/components/ui/display";
@@ -17,6 +18,7 @@ export default function PreAdmissionActions({
   id,
   reference,
   email,
+  formal,
   status,
   invitation,
   closedReason,
@@ -26,6 +28,7 @@ export default function PreAdmissionActions({
   id: string;
   reference: string;
   email: string;
+  formal: { id: string; reference: string } | null;
   status: PreAdmissionStatus;
   invitation: { sentAt: string; expiresAt: string; expired: boolean } | null;
   closedReason: string | null;
@@ -73,7 +76,16 @@ export default function PreAdmissionActions({
               <MailPlus aria-hidden className="size-4" strokeWidth={1.5} /> Invitar al alta formal
             </Button>
           )}
-          {status === "invitada" && (
+          {status === "invitada" && formal && (
+            <p className="text-small text-text-muted">
+              Solicitud formal recibida:{" "}
+              <Link href={`/admin/admisiones/${formal.id}`} className="font-medium !text-forest underline underline-offset-2">
+                {formal.reference}
+              </Link>
+              .
+            </p>
+          )}
+          {status === "invitada" && !formal && (
             <>
               {invitation && (
                 <p className="text-small text-text-muted">

@@ -19,7 +19,7 @@ function DemoInvitation() {
           Corresponde a la solicitud <strong className="font-medium">PRE-2026-0004</strong> y vence el <strong className="font-medium">17/10/2026</strong>.
         </p>
       </div>
-      <p className="text-body text-text-muted">Podés guardar y continuar más tarde, desde este u otro dispositivo, abriendo el mismo link del email.</p>
+      <p className="text-body text-text-muted">Completarla lleva unos 10 minutos. Lo que cargues se conserva en este navegador mientras no cierres la pestaña.</p>
       <DevTag>Demo · sin link de invitación</DevTag>
       <LinkButton href="/admision/solicitud" editorial size="lg" full>
         Continuar <ArrowRight aria-hidden className="size-5" strokeWidth={1.5} />
@@ -41,7 +41,7 @@ function Process() {
           { title: "Comisión Directiva", meta: "Después", value: "Decisión", detail: "Te avisamos por email el resultado." },
         ]}
       />
-      <RuleList items={["Si abrís la invitación en otro navegador, seguís con la misma solicitud."]} />
+      <RuleList items={["El link sirve hasta que envíes la solicitud o hasta que venza. Si te enviamos uno nuevo, el anterior deja de funcionar."]} />
     </section>
   );
 }

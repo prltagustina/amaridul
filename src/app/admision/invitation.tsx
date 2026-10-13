@@ -70,7 +70,7 @@ export function Invitation({ demo, children }: { demo: ReactNode | null; childre
             <strong className="font-medium">{longDate.format(new Date(view.expiresAt))}</strong>.
           </p>
         </div>
-        <p className="text-body text-text-muted">Podés guardar y continuar más tarde, desde este u otro dispositivo, abriendo el mismo link del email.</p>
+        <p className="text-body text-text-muted">Completarla lleva unos 10 minutos. Lo que cargues se conserva en este navegador mientras no cierres la pestaña.</p>
         <LinkButton href={`/admision/solicitud#t=${token}`} editorial size="lg" full>
           Continuar <ArrowRight aria-hidden className="size-5" strokeWidth={1.5} />
         </LinkButton>

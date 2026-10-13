@@ -15,6 +15,13 @@
       "when": 1791860485762,
       "tag": "0001_fase1_preadmisiones",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791862995215,
+      "tag": "0002_fase1_admisiones",
+      "breakpoints": true
     }
   ]
 }

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { and, count, desc, eq, inArray, isNull } from "drizzle-orm";
 import * as z from "zod";
 import type { Database } from "@/server/db/client";
-import { oneTimeTokens, preAdmissionNotes, preAdmissions, user } from "@/server/db/schema";
+import { admissions, oneTimeTokens, preAdmissionNotes, preAdmissions, user } from "@/server/db/schema";
 import { audit } from "@/server/audit/log";
 import { decryptField, encryptField } from "@/server/crypto/field-encryption";
 import { hashToken } from "@/server/crypto/tokens";
@@ -213,6 +213,7 @@ export async function inviteToAdmission(
     .from(preAdmissions)
     .where(eq(preAdmissions.id, id));
   if (!row || !TRANSITIONS[row.status].includes("invitada")) throw new InvalidTransitionError("Esta solicitud no se puede invitar");
+  if (await formalAdmissionOf(db, id)) throw new InvalidTransitionError("La solicitud formal ya fue enviada");
   const resend = row.status === "invitada";
 
   const { token, expiresAt } = await issueToken(db, { kind: INVITATION_KIND, ttlMs: INVITATION_TTL_MS, subjectId: id, createdBy: actorUserId, revokePrevious: true }, now);
@@ -240,7 +241,7 @@ export async function inviteToAdmission(
 }
 
 export type InvitationCheck =
-  | { status: "ok"; reference: string; firstName: string; expiresAt: Date }
+  | { status: "ok"; reference: string; firstName: string; email: string; expiresAt: Date }
   | { status: "expired" }
   | { status: "invalid" };
 
@@ -253,9 +254,12 @@ export async function checkInvitation(db: Database, token: string, now = new Dat
     .where(and(eq(oneTimeTokens.tokenHash, hashToken(token)), eq(oneTimeTokens.kind, INVITATION_KIND)));
   if (!t || t.usedAt || t.revokedAt || !t.subjectId) return { status: "invalid" };
   if (t.expiresAt <= now) return { status: "expired" };
-  const [pre] = await db.select({ reference: preAdmissions.reference, fullName: preAdmissions.fullName, status: preAdmissions.status }).from(preAdmissions).where(eq(preAdmissions.id, t.subjectId));
+  const [pre] = await db
+    .select({ reference: preAdmissions.reference, fullName: preAdmissions.fullName, email: preAdmissions.email, status: preAdmissions.status })
+    .from(preAdmissions)
+    .where(eq(preAdmissions.id, t.subjectId));
   if (!pre || pre.status !== "invitada") return { status: "invalid" };
-  return { status: "ok", reference: pre.reference, firstName: pre.fullName.split(/\s+/)[0], expiresAt: t.expiresAt };
+  return { status: "ok", reference: pre.reference, firstName: pre.fullName.split(/\s+/)[0], email: pre.email, expiresAt: t.expiresAt };
 }
 
 /** Latest invitation link sent for a preadmission, for the admin panel. */
@@ -267,4 +271,10 @@ export async function latestInvitation(db: Database, id: string) {
     .orderBy(desc(oneTimeTokens.createdAt))
     .limit(1);
   return t ?? null;
+}
+
+/** The formal request sent from this preadmission's invitation, if any. */
+export async function formalAdmissionOf(db: Database, preAdmissionId: string) {
+  const [a] = await db.select({ id: admissions.id, reference: admissions.reference }).from(admissions).where(eq(admissions.preAdmissionId, preAdmissionId));
+  return a ?? null;
 }

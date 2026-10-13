@@ -153,7 +153,7 @@ describe("invitation to the formal admission", () => {
 
     const token = tokenFrom(email.sent[0].text);
     const check = await checkInvitation(db, token, now);
-    expect(check).toEqual({ status: "ok", reference, firstName: "Persona", expiresAt });
+    expect(check).toEqual({ status: "ok", reference, firstName: "Persona", email: "persona.ficticia@example.com", expiresAt });
     expect((await latestInvitation(db, id))?.expiresAt.toISOString()).toBe(expiresAt.toISOString());
 
     const logs = await db.select().from(auditLogs).where(eq(auditLogs.entityId, id));

@@ -1,7 +1,7 @@
 // Fase 1: preadmissions sent from the public Sumate form.
 import { boolean, index, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
-import { retentionColumns } from "./core";
+import { persons, retentionColumns } from "./core";
 
 const tz = { withTimezone: true } as const;
 
@@ -51,4 +51,51 @@ export const preAdmissionNotes = pgTable(
     createdAt: timestamp("created_at", tz).notNull().defaultNow(),
   },
   (t) => [index("pre_admission_notes_pre_admission_idx").on(t.preAdmissionId)],
+);
+
+export const admissionStatus = pgEnum("admission_status", ["recibida", "comision", "aprobada", "rechazada"]);
+export const admissionCategory = pgEnum("admission_category", ["activo", "adherente", "paciente"]);
+
+/**
+ * Formal admission request, sent from the invitation link. The person (name, contact) lives in
+ * `persons` and the DNI in `person_identities`; free text and the patient-category answers may hold
+ * health data, so they live encrypted in `healthEncrypted` (see `src/server/admissions.ts`).
+ * Every acceptance keeps its timestamp; the statute keeps the exact version accepted.
+ */
+export const admissions = pgTable(
+  "admissions",
+  {
+    id: uuid("id").primaryKey(),
+    reference: text("reference").notNull().unique(),
+    preAdmissionId: uuid("pre_admission_id")
+      .notNull()
+      .unique()
+      .references(() => preAdmissions.id, { onDelete: "restrict" }),
+    personId: uuid("person_id")
+      .notNull()
+      .references(() => persons.id, { onDelete: "restrict" }),
+    status: admissionStatus("status").notNull().default("recibida"),
+    firstNames: text("first_names").notNull(),
+    lastNames: text("last_names").notNull(),
+    address: text("address").notNull(),
+    postalCode: text("postal_code").notNull(),
+    notificationEmail: text("notification_email"),
+    category: admissionCategory("category").notNull(),
+    healthEncrypted: text("health_encrypted").notNull(),
+    statuteVersion: text("statute_version").notNull(),
+    obligationsAcceptedAt: timestamp("obligations_accepted_at", tz).notNull(),
+    statuteAcceptedAt: timestamp("statute_accepted_at", tz).notNull(),
+    feeAcknowledgedAt: timestamp("fee_acknowledged_at", tz).notNull(),
+    truthfulnessDeclaredAt: timestamp("truthfulness_declared_at", tz).notNull(),
+    changesCommitmentAt: timestamp("changes_commitment_at", tz).notNull(),
+    privacyAcceptedAt: timestamp("privacy_accepted_at", tz).notNull(),
+    newsOptIn: boolean("news_opt_in").notNull().default(false),
+    submittedAt: timestamp("submitted_at", tz).notNull(),
+    statusChangedAt: timestamp("status_changed_at", tz),
+    statusChangedBy: uuid("status_changed_by").references(() => user.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at", tz).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", tz).notNull().defaultNow(),
+    ...retentionColumns,
+  },
+  (t) => [index("admissions_status_idx").on(t.status), index("admissions_submitted_at_idx").on(t.submittedAt)],
 );

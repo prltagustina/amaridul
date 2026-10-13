@@ -1,15 +1,18 @@
 "use client";
 
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, CircleCheck, FileText, IdCard, Pencil, Stamp } from "lucide-react";
 import { Button, LinkButton } from "@/components/ui/button";
 import { Checkbox, RadioGroup } from "@/components/ui/choice";
-import { Alert, Card, DevTag } from "@/components/ui/display";
+import { Alert, Card, DevTag, LoadingBlock } from "@/components/ui/display";
 import { Dialog } from "@/components/ui/dialog";
 import { Select, TextField, Textarea } from "@/components/ui/field";
 import { StepIndicator, type StepStatus } from "@/components/ui/steps";
 import { categoryOptions, documents, membershipFee, privacySummary, provinces, reprocannOptions } from "@/demo/content";
 import { STEP_IDS, type StepId } from "./steps";
+import { openInvitation } from "../actions";
+import { ExpiredInvitation, InvalidInvitation } from "../invitation";
+import { submitFormalAdmission } from "./actions";
 
 
 const STEP_LABELS: Record<StepId, string> = {
@@ -62,7 +65,7 @@ const EMPTY: Data = {
   localidad: "",
   provincia: "",
   cp: "",
-  email: "persona.ficticia04@example.com",
+  email: "",
   telefono: "",
   emailNotificaciones: "",
   categoria: "",
@@ -83,6 +86,7 @@ const EMPTY: Data = {
 // Fictitious values used when the demo opens directly on a later step.
 const FILLED: Data = {
   ...EMPTY,
+  email: "persona.ficticia04@example.com",
   nombres: "Persona",
   apellidos: "Ficticia 04",
   dni: "99000004",
@@ -113,7 +117,7 @@ function validateStep(step: StepId, d: Data): Errors {
   if (step === "A") {
     req("nombres", "Escribí tu nombre o nombres.");
     req("apellidos", "Escribí tu apellido o apellidos.");
-    if (!/^\d{7,8}$/.test(d.dni.replace(/\D/g, ""))) e.dni = "El DNI tiene 7 u 8 números, sin puntos.";
+    if (!/^\d{7,8}$/.test(d.dni.replace(/\D/g, "").replace(/^0+/, ""))) e.dni = "Revisá el DNI: tiene 7 u 8 números.";
     req("nacimiento", "Indicá tu fecha de nacimiento.");
     req("nacionalidad", "Indicá tu nacionalidad.");
     req("domicilio", "Escribí tu domicilio real.");
@@ -147,7 +151,10 @@ function validateStep(step: StepId, d: Data): Errors {
 
 type View = StepId | "resumen" | "enviada";
 
-export default function AdmissionWizard({ initialStep, demoState }: { initialStep: View; demoState: "default" | "error" | "loading" }) {
+type Link = "checking" | "demo" | "invalid" | "expired" | { token: string; reference: string };
+const draftKey = (token: string) => `amaridul.admision.${token.slice(0, 16)}`;
+
+export default function AdmissionWizard({ initialStep, demoState, demo }: { initialStep: View; demoState: "default" | "error" | "loading"; demo: boolean }) {
   const startIndex = initialStep === "resumen" || initialStep === "enviada" ? STEP_IDS.length : STEP_IDS.indexOf(initialStep);
   const [data, setData] = useState<Data>(startIndex > 0 ? { ...FILLED, confirmacion: initialStep === "resumen" || initialStep === "enviada" } : EMPTY);
   const [view, setView] = useState<View>(initialStep);
@@ -158,6 +165,76 @@ export default function AdmissionWizard({ initialStep, demoState }: { initialSte
   const [docOpen, setDocOpen] = useState<string | null>(null);
   const [editingFromSummary, setEditingFromSummary] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const [link, setLink] = useState<Link>("checking");
+  const [reference, setReference] = useState(demo ? "ADM-2026-0003" : "");
+  const [submitError, setSubmitError] = useState("");
+  const real = typeof link === "object";
+
+  // The invitation token travels in the URL fragment. Without one, the local demo runs as before.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const token = new URLSearchParams(window.location.hash.slice(1)).get("t") ?? "";
+      if (!token) {
+        if (cancelled) return;
+        // Demo without a link: start with the fictitious invitee's email, as before.
+        if (demo) setData((d) => (d.email ? d : { ...d, email: "persona.ficticia04@example.com" }));
+        setLink(demo ? "demo" : "invalid");
+        return;
+      }
+      const v = await openInvitation(token);
+      if (cancelled) return;
+      if (v.status !== "ok") return setLink(v.status);
+      // Restore what was typed in this tab; otherwise start with the preadmission email.
+      let draft: Partial<Data> | null = null;
+      try {
+        draft = JSON.parse(sessionStorage.getItem(draftKey(token)) ?? "null");
+      } catch {}
+      setData({ ...EMPTY, email: v.email, ...(draft ?? {}) });
+      setView("A");
+      setVisited(new Set(["A"]));
+      setLink({ token, reference: v.reference });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [demo]);
+
+  function saveDraft(d: Data) {
+    if (!real) return;
+    try {
+      sessionStorage.setItem(draftKey(link.token), JSON.stringify(d));
+    } catch {}
+  }
+
+  async function submit() {
+    setSubmitError("");
+    setSaving(true);
+    if (!real) {
+      window.setTimeout(() => go("enviada"), 800);
+      return;
+    }
+    const r = await submitFormalAdmission(link.token, data).catch(() => ({ ok: false as const, error: "server" as const }));
+    setSaving(false);
+    if (r.ok) {
+      try {
+        sessionStorage.removeItem(draftKey(link.token));
+      } catch {}
+      setReference(r.reference);
+      go("enviada");
+    } else if (r.error === "dni_registered") {
+      go("A");
+      requestAnimationFrame(() => setErrors({ dni: "Ya hay una solicitud o un socio con este DNI. Revisalo o escribinos." }));
+    } else {
+      setSubmitError(
+        r.error === "invalid_link"
+          ? "Este link ya no es válido: puede que la solicitud ya se haya enviado o que te hayan mandado uno nuevo. Abrí el link del último email."
+          : r.error === "validation"
+            ? "Hay datos incompletos o con formato incorrecto. Revisá cada paso."
+            : "No pudimos enviar la solicitud. Probá de nuevo en unos minutos.",
+      );
+    }
+  }
 
   const set = <K extends keyof Data>(k: K, v: Data[K]) => setData((s) => ({ ...s, [k]: v }));
 
@@ -190,17 +267,13 @@ export default function AdmissionWizard({ initialStep, demoState }: { initialSte
       requestAnimationFrame(() => document.getElementById("step-errors")?.focus());
       return;
     }
-    setSaving(true);
-    // Demo only: the draft lives in memory and is lost on refresh.
-    window.setTimeout(() => {
-      setSaving(false);
-      setSaved(true);
-      const i = STEP_IDS.indexOf(view);
-      if (editingFromSummary || i === STEP_IDS.length - 1) {
-        setEditingFromSummary(false);
-        go("resumen");
-      } else go(STEP_IDS[i + 1]);
-    }, 450);
+    saveDraft(data);
+    const i = STEP_IDS.indexOf(view);
+    if (editingFromSummary || i === STEP_IDS.length - 1) {
+      setEditingFromSummary(false);
+      go("resumen");
+    } else go(STEP_IDS[i + 1]);
+    setSaved(true);
   }
 
   function back() {
@@ -210,18 +283,22 @@ export default function AdmissionWizard({ initialStep, demoState }: { initialSte
     if (i > 0) go(STEP_IDS[i - 1]);
   }
 
+  if (link === "checking") return <LoadingBlock label="Abriendo tu solicitud…" lines={5} />;
+  if (link === "invalid") return <InvalidInvitation />;
+  if (link === "expired") return <ExpiredInvitation />;
+
   if (view === "enviada") {
     return (
       <Card className="space-y-5 py-8 text-center sm:py-9" role="status" aria-live="polite">
         <CircleCheck aria-hidden className="mx-auto size-10 text-forest" strokeWidth={1.25} />
         <div className="space-y-3">
           <h2 className="text-h2 text-forest">Recibimos tu solicitud formal</h2>
-          <p className="text-eyebrow text-accent">Referencia ADM-2026-0003</p>
+          {reference && <p className="text-eyebrow text-accent">Referencia {reference}</p>}
           <p className="mx-auto max-w-md text-body text-text-muted">
             La Comisión Directiva va a evaluar tu solicitud. Te vamos a avisar por email cuando haya una decisión.
           </p>
         </div>
-        <DevTag>Demo · no se guardó ni envió nada</DevTag>
+        {!real && <DevTag>Demo · no se guardó ni envió nada</DevTag>}
         <div>
           <LinkButton href="/qr" variant="secondary">
             Volver
@@ -252,8 +329,14 @@ export default function AdmissionWizard({ initialStep, demoState }: { initialSte
 
       {saved && (
         <p role="status" className="text-small text-success-fg">
-          Guardado. <DevTag>Demo · en memoria</DevTag>
+          Guardado. {real ? "Se conserva en este navegador mientras no cierres la pestaña." : <DevTag>Demo · en memoria</DevTag>}
         </p>
+      )}
+
+      {submitError && (
+        <Alert tone="error" title="No se envió la solicitud" live>
+          {submitError}
+        </Alert>
       )}
 
       {errorCount > 0 && (
@@ -273,7 +356,7 @@ export default function AdmissionWizard({ initialStep, demoState }: { initialSte
               id="dni"
               label="DNI"
               inputMode="numeric"
-              hint="Sin puntos. En esta demo usá un número ficticio (por ejemplo 99000004)."
+              hint={real ? undefined : "En esta demo usá un número ficticio (por ejemplo 99000004)."}
               value={data.dni}
               onChange={(e) => set("dni", e.target.value)}
               error={errors.dni}
@@ -460,8 +543,8 @@ export default function AdmissionWizard({ initialStep, demoState }: { initialSte
           <Card className="space-y-4">
             <dl className="grid gap-4 sm:grid-cols-2">
               <div>
-                <dt className="text-eyebrow text-text-muted">Solicitud</dt>
-                <dd className="mt-1 text-base">ADM-2026-0003</dd>
+                <dt className="text-eyebrow text-text-muted">{real ? "Invitación" : "Solicitud"}</dt>
+                <dd className="mt-1 text-base">{real ? link.reference : reference}</dd>
               </div>
               <div>
                 <dt className="text-eyebrow text-text-muted">Fecha</dt>
@@ -515,10 +598,7 @@ export default function AdmissionWizard({ initialStep, demoState }: { initialSte
             editorial
             loading={saving}
             loadingLabel="Enviando…"
-            onClick={() => {
-              setSaving(true);
-              window.setTimeout(() => go("enviada"), 800);
-            }}
+            onClick={submit}
           >
             Enviar solicitud <ArrowRight aria-hidden className="size-5" strokeWidth={1.5} />
           </Button>
