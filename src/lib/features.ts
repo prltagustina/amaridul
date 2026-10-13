@@ -6,11 +6,6 @@ import { isDemoEnabled } from "./demo";
 // What the public site may show. Locally everything is visible (with DEV notes as a guide);
 // in production only finished, working content is rendered.
 
-/** Member access, joining flow and admin: local demo only until Fase 1 is deployed. */
-export function portalAvailable(): boolean {
-  return isDemoEnabled();
-}
-
 /** The FAQ is published once every answer is approved. */
 export function faqAvailable(): boolean {
   return isDemoEnabled() || faqQuestions.every((q) => Boolean(faqAnswers[q.id]));

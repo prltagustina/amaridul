@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { BRAND } from "@/lib/constants";
-import { faqAvailable, portalAvailable } from "@/lib/features";
+import { faqAvailable } from "@/lib/features";
 import { BrandLockup } from "./headers";
 
-/** Footer links: only to pages that are live in the current environment. */
+/** Footer links. The FAQ link appears once the FAQ is published. */
 function FooterLinks({ link, className }: { link: string; className?: string }) {
   return (
     <nav aria-label="Pie de página" className={className}>
@@ -18,11 +18,9 @@ function FooterLinks({ link, className }: { link: string; className?: string }) 
           Preguntas frecuentes
         </Link>
       )}
-      {portalAvailable() && (
-        <Link href="/qr/login" className={`inline-flex min-h-11 items-center ${link}`}>
-          Acceso socios
-        </Link>
-      )}
+      <Link href="/qr/login" className={`inline-flex min-h-11 items-center ${link}`}>
+        Acceso socios
+      </Link>
     </nav>
   );
 }

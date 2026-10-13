@@ -12,7 +12,7 @@ import { Accordion } from "@/components/ui/accordion";
 import { DevTag } from "@/components/ui/display";
 import { faqAnswers, faqClosingPhrase, faqPlaceholderAnswer, faqQuestions, institutionalPhrase } from "@/demo/content";
 import { isDemoEnabled } from "@/lib/demo";
-import { faqAvailable, portalAvailable } from "@/lib/features";
+import { faqAvailable } from "@/lib/features";
 
 const title = BRAND.name;
 const description = "Información del producto y contacto.";
@@ -60,9 +60,9 @@ const JOURNEY = [
 
 export default function QRPage() {
   // Locally everything shows, with DEV notes as a guide. In production only finished content does:
-  // no notes, no links to flows that are not live yet, no FAQ until its answers are approved.
+  // no notes and no FAQ until its answers are approved. Member access and Sumate open a
+  // "Próximamente" notice there until those flows go live.
   const demo = isDemoEnabled();
-  const portal = portalAvailable();
   const showFaq = faqAvailable();
   return (
     <>
@@ -79,7 +79,7 @@ export default function QRPage() {
         </div>
         <div aria-hidden className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(29_52_30/0.45)_0%,rgb(29_52_30/0.05)_45%,rgba(26,44,31,0.7)_100%)]" />
         {demo && <DevTag className="absolute right-3 bottom-3 z-10">Foto provisoria del mockup</DevTag>}
-        <MinimalHeader tone="over-photo" right={portal ? <MemberAccessLink tone="over-photo" /> : undefined} />
+        <MinimalHeader tone="over-photo" right={<MemberAccessLink tone="over-photo" />} />
         <h1 className="sr-only">Amarí Dul, asociación civil</h1>
         <div className="page-gutter flex flex-1 flex-col items-center justify-center gap-6 pt-18 pb-20 text-center sm:gap-8 sm:pt-20 sm:pb-24">
           <CircleLogo className="w-[min(86vw,54svh,26rem)] lg:w-[min(56svh,30rem)]" />
@@ -101,7 +101,7 @@ export default function QRPage() {
         <EditorialSection
           id="comunidad"
           eyebrow="Comunidad"
-          title={portal ? "Sumate a Amarí Dul" : "Conocé Amarí Dul"}
+          title="Sumate a Amarí Dul"
           intro={
             <>
               {faqClosingPhrase} {demo && <DevTag className="mt-2">Frase pendiente</DevTag>}
@@ -109,7 +109,6 @@ export default function QRPage() {
           }
           className="scroll-mt-0"
         >
-          {portal && (
           <ul className="divide-y divide-mist-line border-y border-mist-line">
             {PATHS.map((path) => (
               <li key={path.href} className={path.theme}>
@@ -126,14 +125,12 @@ export default function QRPage() {
               </li>
             ))}
           </ul>
-          )}
           <Link href="/" className="font-ui mt-6 inline-flex min-h-11 items-center gap-2 text-[0.8125rem] tracking-[0.18em] !text-arena-700 uppercase hover:!text-forest">
             Conocé más sobre Amarí Dul <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
           </Link>
         </EditorialSection>
 
         {/* Joining: its own violet ground. */}
-        {portal && (
         <EditorialSection
           id="sumarte"
           eyebrow="Asociarse"
@@ -171,7 +168,6 @@ export default function QRPage() {
             </span>
           </p>
         </EditorialSection>
-        )}
 
         {showFaq && (
         <EditorialSection id="preguntas" eyebrow="Información" title="Preguntas frecuentes" className="scroll-mt-0 bg-arena-100">

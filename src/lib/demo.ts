@@ -3,11 +3,12 @@ import { notFound } from "next/navigation";
 
 /**
  * Visual demo (fase UI): fixture-driven screens, dev state switcher, /dev pages.
- * Enabled only with an explicit local/test APP_ENV and never on Vercel (VERCEL is always set there),
- * so a missing variable can never expose it in production.
+ * Enabled locally with an explicit local/test APP_ENV, and on Vercel only for preview deployments
+ * (private review URLs). VERCEL_ENV is set by Vercel itself and is "production" on the live site,
+ * so the demo can never reach production; if it is missing, the demo stays off.
  */
 export function isDemoEnabled(): boolean {
-  if (process.env.VERCEL) return false;
+  if (process.env.VERCEL) return process.env.VERCEL_ENV === "preview";
   return process.env.APP_ENV === "local" || process.env.APP_ENV === "test";
 }
 
