@@ -49,7 +49,7 @@ export default function RecoverFlow({ initial, demo }: { initial: Step; demo: bo
         <EmptyState
           icon={<MailCheck aria-hidden className="size-10" strokeWidth={1.25} />}
           title="Te enviamos un link"
-          description="Si el DNI corresponde a una cuenta activa, vas a recibir un link para crear una contraseña nueva. Vence en 30 minutos."
+          description="Si el DNI corresponde a una cuenta de socio, vas a recibir un email: para crear una contraseña nueva o, si todavía no activaste tu cuenta, para activarla. Revisá también Spam."
           action={
             demo ? (
               <div className="flex flex-col items-center gap-3">

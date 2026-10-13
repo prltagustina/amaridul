@@ -8,7 +8,9 @@ import { getAuth } from "@/server/auth";
 import { getDb } from "@/server/db";
 import { getKeyrings } from "@/server/crypto";
 import { MemoryRateLimiter } from "@/server/rate-limit/limiter";
-import { activateAccount, activeMemberAccountByDni, checkActivation, type ActivationCheck } from "@/server/members";
+import { activateAccount, checkActivation, memberAccountByDni, resendActivation, type ActivationCheck } from "@/server/members";
+import { getEmailSender } from "@/server/email";
+import { getEnv } from "@/server/env";
 
 // Private previews have no database: the member screens keep working as a demo there.
 const preview = () => process.env.VERCEL_ENV === "preview";
@@ -71,10 +73,19 @@ export async function requestReset(dni: string): Promise<{ ok: true } | { ok: fa
   const key = `reset:${createHash("sha256").update(ip).digest("hex").slice(0, 32)}`;
   if (!(await resetLimiter.limit(key, { max: 3, windowMs: 5 * 60 * 1000 })).ok) return { ok: false, error: "rate" };
   try {
-    const found = await activeMemberAccountByDni(await getDb(), getKeyrings(), String(dni));
-    if (found) {
+    const db = await getDb();
+    const found = await memberAccountByDni(db, getKeyrings(), String(dni));
+    // The answer on screen is always the same; the log says what happened, without personal data.
+    if (found?.status === "active") {
       const auth = await getAuth();
       await auth.api.requestPasswordReset({ body: { email: found.email } });
+      console.info("Password reset request: reset link sent");
+    } else if (found?.status === "pending_activation") {
+      // Never activated, so there is no password to recover: send the activation link again.
+      const r = await resendActivation(db, { email: getEmailSender(), baseURL: getEnv().BETTER_AUTH_URL }, null, found.memberId);
+      console.info(`Password reset request: account pending activation, activation ${r.emailed ? "resent" : "email failed"}`);
+    } else {
+      console.info(`Password reset request: ${found ? `account ${found.status}` : "no member account for that DNI"}`);
     }
   } catch (e) {
     console.error("Password reset request failed:", e instanceof Error ? e.message : e);

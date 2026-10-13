@@ -163,11 +163,11 @@ const STEP_STATUS: Record<StepStatus, { label: string; eyebrow: string; title: s
 
 /**
  * Where a person stands in a process: a quiet vertical timeline. Done steps carry a green check,
- * the current one is a filled circle, the next ones are outlined and muted.
+ * the current one is a filled circle on a slightly raised card, the next ones are outlined and muted.
  */
 export function ProcessTimeline({ steps, className }: { steps: { title: string; status: StepStatus; detail?: ReactNode; meta?: string }[]; className?: string }) {
   return (
-    // Equal rows keep the circles evenly spaced and the texts share one left edge, at any width.
+    // Equal rows keep the circles evenly spaced, and every step sits in the same card, at any width.
     <ol className={cn("grid auto-rows-fr gap-3", className)}>
       {steps.map((s, i) => {
         const st = STEP_STATUS[s.status];
@@ -176,12 +176,12 @@ export function ProcessTimeline({ steps, className }: { steps: { title: string; 
           <li key={s.title} aria-current={s.status === "current" ? "step" : undefined} className="relative grid grid-cols-[2.25rem_minmax(0,1fr)] items-start gap-x-3 sm:gap-x-4">
             {!last && (
               // From under this circle to just above the next one, across the gap between rows.
-              <span aria-hidden className={cn("absolute top-11 -bottom-2 left-[1.125rem] w-px -translate-x-1/2", s.status === "done" ? "bg-[var(--hoja-300)]" : "bg-mist-line")} />
+              <span aria-hidden className={cn("absolute top-[3.125rem] -bottom-2 left-[1.125rem] w-px -translate-x-1/2", s.status === "done" ? "bg-[var(--hoja-300)]" : "bg-mist-line")} />
             )}
             <span
               aria-hidden
               className={cn(
-                "relative z-10 flex size-9 items-center justify-center !rounded-full text-sm font-medium tabular-nums",
+                "relative z-10 mt-2.5 flex size-9 items-center justify-center !rounded-full text-sm font-medium tabular-nums",
                 s.status === "done" && "bg-[var(--hoja-700)] text-white",
                 s.status === "current" && "bg-forest text-white ring-4 ring-forest-soft",
                 s.status === "upcoming" && "border border-mist-line bg-white text-text-muted",
@@ -189,7 +189,14 @@ export function ProcessTimeline({ steps, className }: { steps: { title: string; 
             >
               {s.status === "done" ? <Check className="size-4" strokeWidth={2.25} /> : i + 1}
             </span>
-            <div className="pt-1 pb-2">
+            <div
+              className={cn(
+                "h-full !rounded-card border px-4 py-3.5 sm:px-5",
+                s.status === "current" ? "border-forest/25 bg-white shadow-[0_8px_24px_-18px_rgb(40_36_28/0.35)]" : "border-mist-line",
+                s.status === "done" && "bg-white",
+                s.status === "upcoming" && "bg-white/55",
+              )}
+            >
               <p className={cn("text-[11px] font-medium tracking-[0.14em] uppercase", st.eyebrow)}>
                 <span className="sr-only">Paso {i + 1}, </span>
                 {st.label}

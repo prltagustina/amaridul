@@ -152,7 +152,8 @@ export async function recordDecision(db: Database, deps: Deps, actorUserId: stri
 }
 
 /** Sends a new activation link (the previous one stops working) while the account is not active yet. */
-export async function resendActivation(db: Database, deps: Deps, actorUserId: string, memberId: string, now = new Date()) {
+/** `actorUserId` is the admin who resends it, or null when the person asks for it (password recovery). */
+export async function resendActivation(db: Database, deps: Deps, actorUserId: string | null, memberId: string, now = new Date()) {
   const [m] = await db
     .select({ memberId: members.id, userId: members.userId, memberNumber: members.memberNumber, userStatus: user.status, fullName: user.name, notificationEmail: admissions.notificationEmail, email: persons.email })
     .from(members)
@@ -287,7 +288,8 @@ export async function memberOfAdmission(db: Database, admissionId: string) {
 }
 
 /** Active member account for a DNI, for password recovery. Null for unknown, inactive or malformed. */
-export async function activeMemberAccountByDni(db: Database, rings: Keyrings, rawDni: string) {
+/** The member account behind a DNI, whatever its state (active, pending activation…). */
+export async function memberAccountByDni(db: Database, rings: Keyrings, rawDni: string) {
   let lookups: string[];
   try {
     lookups = dniLookupCandidates(rings.lookup, rawDni).map((c) => c.value);
@@ -295,9 +297,15 @@ export async function activeMemberAccountByDni(db: Database, rings: Keyrings, ra
     return null;
   }
   const [r] = await db
-    .select({ userId: user.id, email: user.email, status: user.status })
+    .select({ userId: user.id, email: user.email, status: user.status, memberId: members.id })
     .from(personIdentities)
     .innerJoin(user, and(eq(user.personId, personIdentities.personId), eq(user.role, "MEMBER")))
+    .innerJoin(members, eq(members.userId, user.id))
     .where(inArray(personIdentities.dniLookup, lookups));
+  return r ?? null;
+}
+
+export async function activeMemberAccountByDni(db: Database, rings: Keyrings, rawDni: string) {
+  const r = await memberAccountByDni(db, rings, rawDni);
   return r && r.status === "active" ? r : null;
 }

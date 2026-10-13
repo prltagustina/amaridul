@@ -7,6 +7,7 @@ import { createPreAdmission, inviteToAdmission, preAdmissionInput } from "@/serv
 import {
   activateAccount,
   activeMemberAccountByDni,
+  memberAccountByDni,
   checkActivation,
   decisionInput,
   InvalidDecisionError,
@@ -145,6 +146,20 @@ describe("from approval to the member portal", () => {
     expect(ctx.email.sent.length).toBe(before + 1);
     expect(await activeMemberAccountByDni(ctx.db, ctx.rings, "99000399")).toBeNull();
     expect(await activeMemberAccountByDni(ctx.db, ctx.rings, "abc")).toBeNull();
+  });
+
+  it("a not yet activated account is found by DNI and can get its activation link again", async () => {
+    const admissionId = await inCommission("99000310", "pendiente@example.com");
+    const mail = new MemoryEmailSender();
+    await recordDecision(ctx.db, { email: mail, baseURL }, adminId, admissionId, approve());
+
+    expect(await activeMemberAccountByDni(ctx.db, ctx.rings, "99000310")).toBeNull();
+    const found = await memberAccountByDni(ctx.db, ctx.rings, "99.000.310");
+    expect(found?.status).toBe("pending_activation");
+    const again = new MemoryEmailSender();
+    await resendActivation(ctx.db, { email: again, baseURL }, null, found!.memberId);
+    expect(again.sent[0].to).toBe("pendiente@example.com");
+    expect(again.sent[0].text).toContain("/qr/activar#t=");
   });
 
   it("a resend revokes the previous activation link; an active account cannot be resent", async () => {
