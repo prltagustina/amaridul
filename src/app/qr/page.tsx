@@ -123,23 +123,23 @@ export default function QRPage() {
           </Link>
         </EditorialSection>
 
-        {/* Joining: its own violet ground. */}
+        {/* How to join: a soft green ground from the Amarí Dul scale. */}
         <EditorialSection
           id="sumarte"
           eyebrow="Asociarse"
           title="Cómo sumarte"
           intro="Tres pasos, con el acompañamiento del equipo de la asociación."
-          className="flujo-sumate border-y border-lila-100 bg-[linear-gradient(180deg,var(--lila-50)_0%,var(--lila-100)_100%)]"
-          decor={<span aria-hidden className="pointer-events-none absolute -bottom-40 -left-32 -z-10 size-96 !rounded-full bg-lila-200/60 blur-3xl" />}
+          className="border-y border-hoja-100 bg-[linear-gradient(180deg,var(--hoja-50)_0%,var(--hoja-100)_100%)]"
+          decor={<span aria-hidden className="pointer-events-none absolute -bottom-40 -left-32 -z-10 size-96 !rounded-full bg-hoja-200/60 blur-3xl" />}
         >
           <ol>
             {JOURNEY.map((step, i) => (
-              <li key={step.title} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-5 border-t border-lila-200 py-7 first:border-t-0 first:pt-0 sm:gap-x-8 sm:py-8">
-                <p aria-hidden className="font-display text-[clamp(2.75rem,2.2rem+2.4vw,4rem)] leading-[0.9] font-medium text-lila-600">
+              <li key={step.title} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-5 border-t border-hoja-200 py-7 first:border-t-0 first:pt-0 sm:gap-x-8 sm:py-8">
+                <p aria-hidden className="font-display text-[clamp(2.75rem,2.2rem+2.4vw,4rem)] leading-[0.9] font-medium text-hoja-600">
                   {String(i + 1).padStart(2, "0")}
                 </p>
                 <div>
-                  <p className="text-eyebrow text-lila-700">{step.meta}</p>
+                  <p className="text-eyebrow text-hoja-700">{step.meta}</p>
                   <h3 className="mt-1 font-title text-[clamp(1.25rem,1.1rem+0.6vw,1.5rem)] text-foreground">
                     <span className="sr-only">Paso {i + 1}: </span>
                     {step.title}
@@ -154,7 +154,7 @@ export default function QRPage() {
               </li>
             ))}
           </ol>
-          <p className="mt-4 flex items-start gap-3 border-t border-lila-200 pt-6 text-small text-lila-800">
+          <p className="mt-4 flex items-start gap-3 border-t border-hoja-200 pt-6 text-small text-forest">
             <Info aria-hidden className="mt-0.5 size-5 shrink-0" strokeWidth={1.5} />
             <span>
               <strong className="font-medium">Enviar la preadmisión no implica la admisión.</strong> La decide la Comisión Directiva y te avisamos por email.
