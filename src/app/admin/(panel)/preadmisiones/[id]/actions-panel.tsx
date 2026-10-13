@@ -2,16 +2,16 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { CheckCircle2, MailPlus, XCircle } from "lucide-react";
+import { CheckCircle2, MailPlus, Trash2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, Card, StatusBadge } from "@/components/ui/display";
 import { Dialog } from "@/components/ui/dialog";
-import { Select, Textarea } from "@/components/ui/field";
+import { Select, TextField, Textarea } from "@/components/ui/field";
 import type { PreAdmissionStatus } from "@/server/pre-admissions";
 import { preStatus } from "../../../status";
-import { addNote, closePreAdmission, invite, markReviewed, type ActionResult } from "../actions";
+import { addNote, closePreAdmission, deleteTestRequestAction, invite, markReviewed, type ActionResult } from "../actions";
 
-type DialogKind = "revisada" | "invitar" | "cerrar" | null;
+type DialogKind = "revisada" | "invitar" | "cerrar" | "eliminar" | null;
 type Note = { id: string; text: string; at: string; author: string };
 
 export default function PreAdmissionActions({
@@ -39,6 +39,8 @@ export default function PreAdmissionActions({
   const [notice, setNotice] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [draft, setDraft] = useState("");
   const [reason, setReason] = useState("");
+  const [confirmRef, setConfirmRef] = useState("");
+  const [deleteError, setDeleteError] = useState("");
   const [pending, startTransition] = useTransition();
 
   // The server re-renders this page after each action, so status and notes come back fresh as props.
@@ -131,6 +133,54 @@ export default function PreAdmissionActions({
           Agregar nota
         </Button>
       </Card>
+
+      {/* TEMPORARY (testing phase): remove before delivery together with src/server/test-data.ts. */}
+      <Card className="space-y-3 border-dashed border-error-fg/40">
+        <h2 className="text-h3">Solicitud de prueba</h2>
+        <p className="text-small text-text-muted">
+          Borra esta preadmisión y todo lo que vino de ella: la solicitud formal, el socio y su cuenta. No se puede deshacer. Disponible solo durante las pruebas.
+        </p>
+        <Button
+          shape="admin"
+          variant="danger"
+          full
+          onClick={() => {
+            setConfirmRef("");
+            setDeleteError("");
+            setDialog("eliminar");
+          }}
+          disabled={pending}
+        >
+          <Trash2 aria-hidden className="size-4" strokeWidth={1.5} /> Eliminar solicitud de prueba
+        </Button>
+      </Card>
+
+      <Dialog
+        open={dialog === "eliminar"}
+        onClose={() => setDialog(null)}
+        title="Eliminar solicitud de prueba"
+        description={reference}
+        confirmLabel="Eliminar todo"
+        confirmVariant="danger"
+        confirmDisabled={confirmRef.trim().toUpperCase() !== reference || pending}
+        onConfirm={() =>
+          startTransition(async () => {
+            const r = await deleteTestRequestAction(id, confirmRef);
+            // On success the action redirects to the list; only a failure comes back here.
+            if (r && !r.ok) setDeleteError(r.error);
+          })
+        }
+      >
+        <p className="text-body">
+          Se borran la preadmisión, sus notas e invitaciones, la solicitud formal con sus decisiones, los datos de la persona y su DNI, y el socio con su cuenta. No se puede deshacer.
+        </p>
+        {deleteError && (
+          <Alert tone="error" live>
+            {deleteError}
+          </Alert>
+        )}
+        <TextField id="confirmar-referencia" label={`Escribí ${reference} para confirmar`} autoComplete="off" value={confirmRef} onChange={(e) => setConfirmRef(e.target.value)} />
+      </Dialog>
 
       <Dialog
         open={dialog === "revisada"}
