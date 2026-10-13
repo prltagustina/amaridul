@@ -4,6 +4,8 @@ const PENDING = "[TEXTO PENDIENTE DE APROBACIÓN]";
 
 type Rendered = { subject: string; text: string };
 
+const longDate = new Intl.DateTimeFormat("es-AR", { dateStyle: "long", timeStyle: "short", hourCycle: "h23", timeZone: "America/Argentina/Buenos_Aires" });
+
 export const emailTemplates = {
   // Provisional copy, consistent with the site; replace with the approved text.
   pre_admission_received: (p: { reference: string; name: string }): Rendered => ({
@@ -20,9 +22,23 @@ export const emailTemplates = {
       "Amarí Dul · Asociación civil",
     ].join("\n"),
   }),
-  admission_invitation: (p: { url: string; expiresAt: Date }): Rendered => ({
+  // Provisional copy, consistent with the site; replace with the approved text.
+  admission_invitation: (p: { name: string; url: string; expiresAt: Date }): Rendered => ({
     subject: "Invitación a la solicitud formal de admisión",
-    text: `${PENDING}\n\n${p.url}\n\nVence: ${p.expiresAt.toISOString()}`,
+    text: [
+      `Hola, ${p.name}:`,
+      "",
+      "Revisamos tu solicitud de preadmisión y te invitamos a completar la solicitud formal para asociarte a Amarí Dul.",
+      "",
+      "Abrí este link personal para empezar. Podés guardar y seguir más tarde desde el mismo link:",
+      p.url,
+      "",
+      `El link vence el ${longDate.format(p.expiresAt)}. Es personal: no lo compartas.`,
+      "",
+      "La admisión la decide la Comisión Directiva y te avisamos el resultado por email.",
+      "",
+      "Amarí Dul · Asociación civil",
+    ].join("\n"),
   }),
   admission_received: (p: { reference: string }): Rendered => ({
     subject: `Recibimos tu solicitud formal ${p.reference}`,

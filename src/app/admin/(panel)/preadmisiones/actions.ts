@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
-import { addPreAdmissionNote, changePreAdmissionStatus, InvalidTransitionError } from "@/server/pre-admissions";
+import { getEmailSender } from "@/server/email";
+import { getEnv } from "@/server/env";
+import { addPreAdmissionNote, changePreAdmissionStatus, InvalidTransitionError, inviteToAdmission } from "@/server/pre-admissions";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -22,6 +24,18 @@ export async function markReviewed(id: string): Promise<ActionResult> {
   }
   refresh(id);
   return { ok: true };
+}
+
+export async function invite(id: string): Promise<ActionResult> {
+  const { user } = await requireAdmin();
+  let emailed: boolean;
+  try {
+    ({ emailed } = await inviteToAdmission(await getDb(), { email: getEmailSender(), baseURL: getEnv().BETTER_AUTH_URL }, user.id, id));
+  } catch (e) {
+    return { ok: false, error: e instanceof InvalidTransitionError ? "Esta solicitud ya no se puede invitar. Recargá la página." : "No pudimos enviar la invitación." };
+  }
+  refresh(id);
+  return emailed ? { ok: true } : { ok: false, error: "La invitación quedó registrada, pero el email no se pudo enviar. Probá reenviarla." };
 }
 
 export async function closePreAdmission(id: string, reason: string): Promise<ActionResult> {

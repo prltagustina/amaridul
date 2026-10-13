@@ -6,6 +6,9 @@ import { MemoryEmailSender } from "@/server/email/sender";
 import {
   addPreAdmissionNote,
   changePreAdmissionStatus,
+  checkInvitation,
+  inviteToAdmission,
+  latestInvitation,
   countPreAdmissions,
   createPreAdmission,
   getPreAdmission,
@@ -125,5 +128,71 @@ describe("preadmission lifecycle", () => {
   it("returns null for unknown or malformed ids", async () => {
     expect(await getPreAdmission(db, freshRings().field, "no-es-un-uuid")).toBeNull();
     expect(await getPreAdmission(db, freshRings().field, "00000000-0000-4000-8000-000000000000")).toBeNull();
+  });
+});
+
+describe("invitation to the formal admission", () => {
+  const baseURL = "https://amaridul.test";
+  const tokenFrom = (text: string) => text.match(/#t=([A-Za-z0-9_-]+)/)?.[1] ?? "";
+
+  async function received() {
+    return createPreAdmission(db, { field: freshRings().field, email: new MemoryEmailSender() }, preAdmissionInput.parse(valid));
+  }
+
+  it("emails a personal link in the fragment and marks it invited", async () => {
+    const { id, reference } = await received();
+    const email = new MemoryEmailSender();
+    const now = new Date("2026-10-13T12:00:00Z");
+    const { expiresAt, emailed } = await inviteToAdmission(db, { email, baseURL }, adminId, id, now);
+
+    expect(emailed).toBe(true);
+    expect(expiresAt.toISOString()).toBe("2026-10-20T12:00:00.000Z");
+    expect(email.sent[0].to).toBe("persona.ficticia@example.com");
+    expect(email.sent[0].text).toContain(`${baseURL}/admision#t=`);
+    expect(email.sent[0].text).toContain("Hola, Persona Ficticia");
+
+    const token = tokenFrom(email.sent[0].text);
+    const check = await checkInvitation(db, token, now);
+    expect(check).toEqual({ status: "ok", reference, firstName: "Persona", expiresAt });
+    expect((await latestInvitation(db, id))?.expiresAt.toISOString()).toBe(expiresAt.toISOString());
+
+    const logs = await db.select().from(auditLogs).where(eq(auditLogs.entityId, id));
+    expect(logs.map((l) => l.action)).toContain("pre_admission.invited");
+    expect(JSON.stringify(logs)).not.toContain(token);
+  });
+
+  it("a resend revokes the previous link", async () => {
+    const { id } = await received();
+    const first = new MemoryEmailSender();
+    const second = new MemoryEmailSender();
+    await inviteToAdmission(db, { email: first, baseURL }, adminId, id);
+    await inviteToAdmission(db, { email: second, baseURL }, adminId, id);
+    expect(await checkInvitation(db, tokenFrom(first.sent[0].text))).toEqual({ status: "invalid" });
+    expect((await checkInvitation(db, tokenFrom(second.sent[0].text))).status).toBe("ok");
+  });
+
+  it("expired and made-up links are rejected", async () => {
+    const { id } = await received();
+    const email = new MemoryEmailSender();
+    const now = new Date("2026-10-13T12:00:00Z");
+    await inviteToAdmission(db, { email, baseURL }, adminId, id, now);
+    expect(await checkInvitation(db, tokenFrom(email.sent[0].text), new Date("2026-10-21T00:00:00Z"))).toEqual({ status: "expired" });
+    expect(await checkInvitation(db, "x".repeat(43))).toEqual({ status: "invalid" });
+    expect(await checkInvitation(db, "<script>")).toEqual({ status: "invalid" });
+  });
+
+  it("a closed request cannot be invited, nor invited through the generic status change", async () => {
+    const { id } = await received();
+    await expect(changePreAdmissionStatus(db, adminId, id, "invitada")).rejects.toBeInstanceOf(InvalidTransitionError);
+    await changePreAdmissionStatus(db, adminId, id, "cerrada", { reason: "Duplicada" });
+    await expect(inviteToAdmission(db, { email: new MemoryEmailSender(), baseURL }, adminId, id)).rejects.toBeInstanceOf(InvalidTransitionError);
+  });
+
+  it("closing an invited request invalidates its link", async () => {
+    const { id } = await received();
+    const email = new MemoryEmailSender();
+    await inviteToAdmission(db, { email, baseURL }, adminId, id);
+    await changePreAdmissionStatus(db, adminId, id, "cerrada", { reason: "No continúa con el proceso" });
+    expect(await checkInvitation(db, tokenFrom(email.sent[0].text))).toEqual({ status: "invalid" });
   });
 });

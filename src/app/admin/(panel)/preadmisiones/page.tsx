@@ -14,7 +14,7 @@ import { AdminPageHeader } from "../../ui";
 type Search = Promise<Record<string, string | string[] | undefined>>;
 const FILTERS = ["todas", "recibida", "en-revision", "invitada", "cerrada"] as const;
 
-const dateFormat = new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" });
+const dateFormat = new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short", hourCycle: "h23", timeZone: "America/Argentina/Buenos_Aires" });
 
 export default async function PreadmisionesPage({ searchParams }: { searchParams: Search }) {
   await requireAdmin();

@@ -2,20 +2,22 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
 import { getKeyrings } from "@/server/crypto";
-import { CLOSE_REASONS, getPreAdmission } from "@/server/pre-admissions";
+import { CLOSE_REASONS, getPreAdmission, latestInvitation } from "@/server/pre-admissions";
 import { DetailList } from "@/components/ui/data-list";
 import { Card } from "@/components/ui/display";
 import { AdminPageHeader } from "../../../ui";
 import PreAdmissionActions from "./actions-panel";
 
-const dateFormat = new Intl.DateTimeFormat("es-AR", { dateStyle: "long", timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" });
-const noteFormat = new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" });
+const dateFormat = new Intl.DateTimeFormat("es-AR", { dateStyle: "long", timeStyle: "short", hourCycle: "h23", timeZone: "America/Argentina/Buenos_Aires" });
+const noteFormat = new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short", hourCycle: "h23", timeZone: "America/Argentina/Buenos_Aires" });
 
 export default async function PreadmisionPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
-  const pre = await getPreAdmission(await getDb(), getKeyrings().field, id);
+  const db = await getDb();
+  const pre = await getPreAdmission(db, getKeyrings().field, id);
   if (!pre) notFound();
+  const invitation = await latestInvitation(db, pre.id);
 
   return (
     <>
@@ -51,7 +53,9 @@ export default async function PreadmisionPage({ params }: { params: Promise<{ id
         <PreAdmissionActions
           id={pre.id}
           reference={pre.reference}
+          email={pre.email}
           status={pre.status}
+          invitation={invitation && { sentAt: noteFormat.format(invitation.createdAt), expiresAt: noteFormat.format(invitation.expiresAt), expired: invitation.expiresAt <= new Date() }}
           closedReason={pre.closedReason}
           closeReasons={[...CLOSE_REASONS]}
           notes={pre.notes.map((n) => ({ id: n.id, text: n.body, at: noteFormat.format(n.createdAt), author: n.author }))}

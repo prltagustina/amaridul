@@ -8,22 +8,26 @@ import { Dialog } from "@/components/ui/dialog";
 import { Select, Textarea } from "@/components/ui/field";
 import type { PreAdmissionStatus } from "@/server/pre-admissions";
 import { preStatus } from "../../../status";
-import { addNote, closePreAdmission, markReviewed, type ActionResult } from "../actions";
+import { addNote, closePreAdmission, invite, markReviewed, type ActionResult } from "../actions";
 
-type DialogKind = "revisada" | "cerrar" | null;
+type DialogKind = "revisada" | "invitar" | "cerrar" | null;
 type Note = { id: string; text: string; at: string; author: string };
 
 export default function PreAdmissionActions({
   id,
   reference,
+  email,
   status,
+  invitation,
   closedReason,
   closeReasons,
   notes,
 }: {
   id: string;
   reference: string;
+  email: string;
   status: PreAdmissionStatus;
+  invitation: { sentAt: string; expiresAt: string; expired: boolean } | null;
   closedReason: string | null;
   closeReasons: string[];
   notes: Note[];
@@ -65,13 +69,20 @@ export default function PreAdmissionActions({
             </Button>
           )}
           {(status === "recibida" || status === "en-revision") && (
+            <Button shape="admin" onClick={() => setDialog("invitar")} disabled={pending}>
+              <MailPlus aria-hidden className="size-4" strokeWidth={1.5} /> Invitar al alta formal
+            </Button>
+          )}
+          {status === "invitada" && (
             <>
-              <Button shape="admin" disabled aria-describedby="invitar-pronto">
-                <MailPlus aria-hidden className="size-4" strokeWidth={1.5} /> Invitar al alta formal
+              {invitation && (
+                <p className="text-small text-text-muted">
+                  Invitación enviada el {invitation.sentAt}. {invitation.expired ? `Venció el ${invitation.expiresAt}.` : `Vence el ${invitation.expiresAt}.`}
+                </p>
+              )}
+              <Button shape="admin" variant="secondary" onClick={() => setDialog("invitar")} disabled={pending}>
+                <MailPlus aria-hidden className="size-4" strokeWidth={1.5} /> Reenviar invitación
               </Button>
-              <p id="invitar-pronto" className="text-small text-text-muted">
-                Se habilita cuando conectemos la solicitud formal de admisión.
-              </p>
             </>
           )}
           {status !== "cerrada" && (
@@ -118,6 +129,22 @@ export default function PreAdmissionActions({
         onConfirm={() => run(() => markReviewed(id), "Preadmisión marcada como revisada.")}
       >
         <p className="text-body text-text-muted">La solicitud pasa a “En revisión”. No se notifica a la persona.</p>
+      </Dialog>
+      <Dialog
+        open={dialog === "invitar"}
+        onClose={() => setDialog(null)}
+        title={status === "invitada" ? "Reenviar invitación" : "Invitar al alta formal"}
+        description={reference}
+        confirmLabel={status === "invitada" ? "Reenviar" : "Enviar invitación"}
+        confirmDisabled={pending}
+        onConfirm={() => run(() => invite(id), `Invitación enviada a ${email}.`)}
+      >
+        <p className="text-body">
+          Vamos a enviar un link personal a <strong className="font-medium">{email}</strong> para completar la solicitud formal de admisión.
+        </p>
+        <Alert tone="info">
+          El link vence en 7 días.{status === "invitada" ? " El link anterior deja de funcionar." : ""} No implica la admisión: la decide la Comisión Directiva.
+        </Alert>
       </Dialog>
       <Dialog
         open={dialog === "cerrar"}
