@@ -22,6 +22,7 @@ export default async function SumatePage({ searchParams }: { searchParams: Promi
           </>
         }
         tab="Preadmisión"
+        back={{ href: "/qr", label: "Inicio" }}
       />
       <div className="page-gutter pt-8 pb-12 sm:pt-10">
         <div className="content-column">

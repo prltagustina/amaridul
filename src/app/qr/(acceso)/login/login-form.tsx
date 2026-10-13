@@ -46,7 +46,7 @@ export default function MemberLoginForm({ demoState }: { demoState: DemoState })
   }
 
   return (
-    <AccessShell eyebrow="Socios" title="Ingresá a tu espacio" description="Con tu DNI y la contraseña que creaste al activar tu cuenta." tab="Acceso">
+    <AccessShell eyebrow="Socios" title="Ingresá a tu espacio" description="Con tu DNI y la contraseña que creaste al activar tu cuenta." tab="Acceso" back={{ href: "/qr", label: "Inicio" }}>
 
       {demoState === "expired" && (
         <Alert tone="warning" title="Tu sesión terminó">

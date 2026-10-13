@@ -14,6 +14,8 @@ const TOO_MANY = "Demasiados intentos. Esperá unos minutos y volvé a probar.";
 
 function errorMessage(e: unknown): string {
   if (e instanceof APIError && e.statusCode === 429) return TOO_MANY;
+  // The user always gets the generic message; unexpected failures (not a rejected credential) are logged.
+  if (!(e instanceof APIError)) console.error("Admin auth error:", e instanceof Error ? e.message : e);
   return GENERIC;
 }
 

@@ -19,6 +19,7 @@ export default async function TrazabilidadPage({ searchParams }: { searchParams:
         title="Conocé tu producto"
         description="Lote, composición y análisis."
         tab="Consulta por lote"
+        back={{ href: "/qr/mi-espacio", label: "Mi espacio" }}
         width="wide"
       />
       {/* Same column and left edge as Mi espacio, so switching sections never shifts the layout;

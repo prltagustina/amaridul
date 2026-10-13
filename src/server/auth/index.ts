@@ -19,6 +19,10 @@ export function getAuth(): Promise<Auth> {
       email: getEmailSender(),
       replyTo: env.EMAIL_REPLY_TO,
     });
-  })();
+  })().catch((e) => {
+    // Do not keep a failed start-up for the life of the instance: retry on the next request.
+    g.__amaridulAuth = undefined;
+    throw e;
+  });
   return g.__amaridulAuth;
 }

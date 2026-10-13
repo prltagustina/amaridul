@@ -11,6 +11,8 @@ import { NewPasswordForm } from "../new-password-form";
 
 type Step = "default" | "enviado" | "nueva" | "expired" | "success";
 
+const BACK_TO_LOGIN = { href: "/qr/login", label: "Ingreso" };
+
 export default function RecoverFlow({ initial }: { initial: Step }) {
   const [step, setStep] = useState<Step>(initial);
   const [dni, setDni] = useState("");
@@ -27,7 +29,7 @@ export default function RecoverFlow({ initial }: { initial: Step }) {
 
   if (step === "enviado") {
     return (
-      <AccessShell eyebrow="Socios" title="Revisá tu email" tab="Recuperación">
+      <AccessShell eyebrow="Socios" title="Revisá tu email" tab="Recuperación" back={BACK_TO_LOGIN}>
         <EmptyState
           icon={<MailCheck aria-hidden className="size-10" strokeWidth={1.25} />}
           title="Te enviamos un link"
@@ -47,7 +49,7 @@ export default function RecoverFlow({ initial }: { initial: Step }) {
 
   if (step === "expired") {
     return (
-      <AccessShell eyebrow="Socios" title="Recuperá tu contraseña" tab="Recuperación">
+      <AccessShell eyebrow="Socios" title="Recuperá tu contraseña" tab="Recuperación" back={BACK_TO_LOGIN}>
         <EmptyState
           icon={<MailWarning aria-hidden className="size-10" strokeWidth={1.25} />}
           title="El link venció o ya se usó"
@@ -84,7 +86,7 @@ export default function RecoverFlow({ initial }: { initial: Step }) {
   }
 
   return (
-    <AccessShell eyebrow="Socios" title="Recuperá tu contraseña" description="Escribí tu DNI. Te enviamos un link al email registrado en la asociación." tab="Recuperación">
+    <AccessShell eyebrow="Socios" title="Recuperá tu contraseña" description="Escribí tu DNI. Te enviamos un link al email registrado en la asociación." back={BACK_TO_LOGIN} tab="Recuperación">
       <TabbedCard tab="Tu DNI">
         <form noValidate onSubmit={onSubmit} className="space-y-5" aria-busy={loading}>
           <TextField id="dni" label="DNI" inputMode="numeric" autoComplete="username" value={dni} onChange={(e) => setDni(e.target.value)} error={error} />
