@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { assertDemo, readState } from "@/lib/demo";
+import { readState } from "@/lib/demo";
 import { PageBand } from "@/components/brand/page-band";
 import { DevStateBar } from "@/components/ui/dev-state-bar";
 import LotLookup, { type LookupState } from "./lot-lookup";
@@ -9,7 +9,6 @@ export const metadata: Metadata = { title: "Trazabilidad | Amarí Dul" };
 const STATES: readonly LookupState[] = ["default", "lote", "invalido", "loading", "error", "sin-certificado", "certificado"];
 
 export default async function TrazabilidadPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  assertDemo();
   const state = await readState(searchParams, STATES);
   return (
     <main>

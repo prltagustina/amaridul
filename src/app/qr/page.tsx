@@ -59,9 +59,8 @@ const JOURNEY = [
 ];
 
 export default function QRPage() {
-  // Locally everything shows, with DEV notes as a guide. In production only finished content does:
-  // no notes and no FAQ until its answers are approved. Member access and Sumate open a
-  // "Próximamente" notice there until those flows go live.
+  // Locally and on previews everything shows, with DEV notes as a guide. In production: no notes
+  // and no FAQ until its answers are approved.
   const demo = isDemoEnabled();
   const showFaq = faqAvailable();
   return (

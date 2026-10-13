@@ -1,5 +1,5 @@
 import { ArrowRight, CalendarClock, Link2Off, MailWarning } from "lucide-react";
-import { assertDemo, readState } from "@/lib/demo";
+import { readState } from "@/lib/demo";
 import { PageBand } from "@/components/brand/page-band";
 import { LinkButton } from "@/components/ui/button";
 import { DevStateBar } from "@/components/ui/dev-state-bar";
@@ -9,7 +9,6 @@ import { RuleList, StepCards, TabbedCard } from "@/components/ui/technical";
 const STATES = ["default", "expired", "unauthorized"] as const;
 
 export default async function AdmisionPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  assertDemo();
   const state = await readState(searchParams, STATES);
   return (
     <main>

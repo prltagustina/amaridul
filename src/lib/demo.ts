@@ -2,10 +2,12 @@ import "server-only";
 import { notFound } from "next/navigation";
 
 /**
- * Visual demo (fase UI): fixture-driven screens, dev state switcher, /dev pages.
+ * Development aids of the visual phase: DEV notes, state switcher, /dev pages, placeholder copy and
+ * the admin demo sections. (The member and joining flows themselves are public, on fixtures, until
+ * Fase 1 connects them to the real backend.)
  * Enabled locally with an explicit local/test APP_ENV, and on Vercel only for preview deployments
  * (private review URLs). VERCEL_ENV is set by Vercel itself and is "production" on the live site,
- * so the demo can never reach production; if it is missing, the demo stays off.
+ * so these aids never reach production; if it is missing, they stay off.
  */
 export function isDemoEnabled(): boolean {
   if (process.env.VERCEL) return process.env.VERCEL_ENV === "preview";
@@ -16,7 +18,7 @@ export function assertDemo(): void {
   if (!isDemoEnabled()) notFound();
 }
 
-/** Spread onto a layout wrapper: reveals `.dev-only` markers in the demo environment. */
+/** Spread onto a layout wrapper: reveals `.dev-only` markers where development aids are enabled. */
 export function demoAttr(): { "data-demo"?: "" } {
   return isDemoEnabled() ? { "data-demo": "" } : {};
 }

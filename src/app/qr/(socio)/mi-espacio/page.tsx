@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { assertDemo, readState } from "@/lib/demo";
+import { readState } from "@/lib/demo";
 import { PageBand } from "@/components/brand/page-band";
 import { DetailList } from "@/components/ui/data-list";
 import { DevStateBar } from "@/components/ui/dev-state-bar";
@@ -19,7 +19,6 @@ function CardFoot({ children }: { children: React.ReactNode }) {
 }
 
 export default async function MiEspacioPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  assertDemo();
   const state = await readState(searchParams, STATES);
   const firstName = demoMember.name.split(" ")[0];
   const done = demoMember.procedures.filter((p) => p.tone === "success").length;
