@@ -43,6 +43,8 @@ export class ResendEmailSender implements EmailSender {
   constructor(
     private readonly apiKey: string,
     private readonly from: string,
+    /** Where replies go when a message does not set its own. */
+    private readonly replyTo?: string,
     private readonly fetchImpl: typeof fetch = fetch,
   ) {}
 
@@ -55,7 +57,7 @@ export class ResendEmailSender implements EmailSender {
         to: [message.to],
         subject: message.subject,
         text: message.text,
-        ...(message.replyTo ? { replyTo: message.replyTo } : {}),
+        ...(message.replyTo || this.replyTo ? { replyTo: message.replyTo || this.replyTo } : {}),
         tags: [{ name: "template", value: message.template }],
       }),
       signal: AbortSignal.timeout(10_000),

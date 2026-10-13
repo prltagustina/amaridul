@@ -45,7 +45,7 @@ describe("Resend", () => {
       calls.push({ url, init });
       return new Response(JSON.stringify({ id: "x" }), { status: 200 });
     }) as unknown as typeof fetch;
-    await new ResendEmailSender("re_ficticia", "Amarí Dul <notificaciones@amaridul.com>", fake).send({
+    await new ResendEmailSender("re_ficticia", "Amarí Dul <notificaciones@amaridul.com>", undefined, fake).send({
       to: "persona@example.com",
       subject: "Recibimos tu solicitud PRE-2026-0001",
       text: "Hola",
@@ -66,10 +66,20 @@ describe("Resend", () => {
 
   it("throws on a rejected send without leaking the key", async () => {
     const fake = (async () => new Response('{"message":"The amaridul.com domain is not verified"}', { status: 403 })) as unknown as typeof fetch;
-    const send = new ResendEmailSender("re_ficticia", "x@amaridul.com", fake).send({ to: "a@example.com", subject: "s", text: "t", template: "t" });
+    const send = new ResendEmailSender("re_ficticia", "x@amaridul.com", undefined, fake).send({ to: "a@example.com", subject: "s", text: "t", template: "t" });
     await expect(send).rejects.toBeInstanceOf(EmailDeliveryError);
     await expect(send).rejects.toThrow(/403.*not verified/);
     await expect(send).rejects.not.toThrow(/re_ficticia/);
+  });
+
+  it("applies the default reply-to when the message has none", async () => {
+    let body: Record<string, unknown> = {};
+    const fake = (async (_: string, init: RequestInit) => {
+      body = JSON.parse(String(init.body));
+      return new Response("{}", { status: 200 });
+    }) as unknown as typeof fetch;
+    await new ResendEmailSender("re_ficticia", "x@amaridul.com", "respuestas@example.com", fake).send({ to: "a@example.com", subject: "s", text: "t", template: "t" });
+    expect(body.replyTo).toBe("respuestas@example.com");
   });
 
   it("is used in production when the API key is configured", async () => {
