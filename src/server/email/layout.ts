@@ -1,6 +1,6 @@
-// HTML version of the emails, with the site's look: bone ground, a coloured band with the cream
-// lockup and the title, a folder tab resting on its edge, and a white card with label/value rows
-// and a pill button. Email clients ignore most CSS, so this is table-based with inline styles;
+// HTML version of the emails, with the site's look: bone ground, a slim coloured band with the
+// centered cream lockup and a folder tab resting on its edge, and a white card with the title,
+// label/value rows and a pill button. Email clients ignore most CSS, so this is table-based with inline styles;
 // web fonts and gradients are enhancements over solid fallbacks.
 
 /** Colour per flow, as on the site: lila while joining, green once a member. */
@@ -35,7 +35,6 @@ export type EmailLayout = {
   tone: EmailTone;
   /** Inbox preview line. */
   preheader: string;
-  eyebrow: string;
   title: string;
   tab: string;
   blocks: EmailBlock[];
@@ -73,15 +72,15 @@ export function renderEmail(l: EmailLayout): string {
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${esc(l.preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="${C.bone}" style="background:${C.bone}"><tr><td align="center" style="padding:28px 12px 40px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
-<tr><td bgcolor="${tone.band}" style="background:${tone.band};background-image:linear-gradient(118deg,${tone.band} 0%,${tone.bandTo} 100%);border-radius:18px 18px 0 0;padding:26px 28px 0">
+<tr><td bgcolor="${tone.band}" style="background:${tone.band};background-image:linear-gradient(118deg,${tone.band} 0%,${tone.bandTo} 100%);border-radius:18px 18px 0 0;padding:24px 28px 0">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
 <img src="cid:${LOCKUP_CID}" width="210" height="47" alt="Amarí Dul · Asociación civil" style="display:block;margin:0 auto;border:0;width:210px;height:auto;color:#ffffff;font:500 18px ${SERIF}">
 </td></tr></table>
-<p style="margin:26px 0 6px;font:500 11px/1.4 ${SANS};letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.82);text-align:center">${esc(l.eyebrow)}</p>
-<h1 style="margin:0 0 22px;font:500 32px/1.12 ${SERIF};color:#ffffff;text-align:center">${esc(l.title)}</h1>
+<div style="height:22px;line-height:22px;font-size:0">&nbsp;</div>
 <table role="presentation" cellpadding="0" cellspacing="0"><tr><td bgcolor="${C.card}" style="background:${C.card};border-radius:10px 10px 0 0;padding:9px 16px 7px;font:600 13px/1.2 ${SANS};color:${tone.ink}">${esc(l.tab)}</td></tr></table>
 </td></tr>
-<tr><td bgcolor="${C.card}" style="background:${C.card};border:1px solid ${C.line};border-top:0;border-radius:0 0 18px 18px;padding:28px 28px 26px">
+<tr><td bgcolor="${C.card}" style="background:${C.card};border:1px solid ${C.line};border-top:0;border-radius:0 0 18px 18px;padding:26px 28px 26px">
+<h1 style="margin:0 0 22px;font:500 30px/1.15 ${SERIF};color:${tone.ink};text-align:center">${esc(l.title)}</h1>
 ${l.blocks.map((b) => block(b, tone)).join("\n")}
 </td></tr>
 <tr><td style="padding:22px 8px 0;font:400 12px/1.6 ${SANS};color:${C.muted}" align="center">

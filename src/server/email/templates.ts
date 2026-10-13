@@ -34,7 +34,6 @@ export const emailTemplates = {
       {
         tone: "join",
         preheader: `Tu solicitud de preadmisión quedó registrada con la referencia ${p.reference}.`,
-        eyebrow: "Sumate a la comunidad",
         title: "Recibimos tu solicitud",
         tab: "Preadmisión",
         reason: "Recibís este email porque completaste la solicitud de preadmisión en amaridul.com.",
@@ -53,7 +52,6 @@ export const emailTemplates = {
       {
         tone: "join",
         preheader: "Revisamos tu preadmisión: ya podés completar la solicitud formal.",
-        eyebrow: "Invitación personal",
         title: "Te invitamos a la solicitud formal",
         tab: "Invitación",
         reason: "Recibís este email porque el equipo de Amarí Dul revisó tu preadmisión.",
@@ -73,7 +71,6 @@ export const emailTemplates = {
       {
         tone: "join",
         preheader: `Tu solicitud formal quedó registrada con la referencia ${p.reference}.`,
-        eyebrow: "Solicitud formal de admisión",
         title: "Recibimos tu solicitud formal",
         tab: "Solicitud formal",
         reason: "Recibís este email porque enviaste la solicitud formal de admisión en amaridul.com.",
@@ -91,7 +88,6 @@ export const emailTemplates = {
       {
         tone: "member",
         preheader: `Te damos la bienvenida a Amarí Dul. Tu número de socio es ${p.memberNumber}.`,
-        eyebrow: "Te damos la bienvenida",
         title: "Tu admisión fue aprobada",
         tab: "Socios",
         reason: "Recibís este email porque la Comisión Directiva aprobó tu solicitud de admisión.",
@@ -113,7 +109,6 @@ export const emailTemplates = {
       {
         tone: "join",
         preheader: "La Comisión Directiva evaluó tu solicitud formal de admisión.",
-        eyebrow: "Solicitud formal de admisión",
         title: "Sobre tu solicitud",
         tab: "Solicitud formal",
         reason: "Recibís este email porque enviaste una solicitud formal de admisión a Amarí Dul.",
@@ -137,7 +132,6 @@ export const emailTemplates = {
       {
         tone: "member",
         preheader: "Pediste crear una contraseña nueva para tu espacio de socio.",
-        eyebrow: "Socios",
         title: "Creá una contraseña nueva",
         tab: "Recuperación",
         reason: "Recibís este email porque se pidió recuperar la contraseña de tu cuenta en amaridul.com.",
