@@ -74,7 +74,9 @@ export function renderEmail(l: EmailLayout): string {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="${C.bone}" style="background:${C.bone}"><tr><td align="center" style="padding:28px 12px 40px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
 <tr><td bgcolor="${tone.band}" style="background:${tone.band};background-image:linear-gradient(118deg,${tone.band} 0%,${tone.bandTo} 100%);border-radius:18px 18px 0 0;padding:26px 28px 0">
-<img src="cid:${LOCKUP_CID}" width="210" height="47" alt="Amarí Dul · Asociación civil" style="display:block;border:0;width:210px;height:auto;color:#ffffff;font:500 18px ${SERIF}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+<img src="cid:${LOCKUP_CID}" width="210" height="47" alt="Amarí Dul · Asociación civil" style="display:block;margin:0 auto;border:0;width:210px;height:auto;color:#ffffff;font:500 18px ${SERIF}">
+</td></tr></table>
 <p style="margin:26px 0 6px;font:500 11px/1.4 ${SANS};letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.82)">${esc(l.eyebrow)}</p>
 <h1 style="margin:0 0 22px;font:500 32px/1.12 ${SERIF};color:#ffffff">${esc(l.title)}</h1>
 <table role="presentation" cellpadding="0" cellspacing="0"><tr><td bgcolor="${C.card}" style="background:${C.card};border-radius:10px 10px 0 0;padding:9px 16px 7px;font:600 13px/1.2 ${SANS};color:${tone.ink}">${esc(l.tab)}</td></tr></table>
