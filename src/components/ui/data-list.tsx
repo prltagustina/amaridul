@@ -105,9 +105,9 @@ export function DetailList({ items, columns = 2 }: { items: { label: string; val
   return (
     <dl className={cn("grid gap-x-8 gap-y-4", columns === 2 && "sm:grid-cols-2")}>
       {items.map((i) => (
-        <div key={i.label} className="space-y-0.5">
+        <div key={i.label} className="min-w-0 space-y-0.5">
           <dt className="text-eyebrow text-text-muted">{i.label}</dt>
-          <dd className="text-base text-foreground">{i.value}</dd>
+          <dd className="text-base text-foreground [overflow-wrap:anywhere]">{i.value}</dd>
         </div>
       ))}
     </dl>

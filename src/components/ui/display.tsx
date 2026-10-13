@@ -86,7 +86,7 @@ export function Alert({ tone = "info", title, children, live, className }: { ton
       className={cn("flex gap-3 !rounded-control px-4 py-3.5", toneClasses[tone], className)}
     >
       <span className="mt-0.5 shrink-0">{alertIcon[tone]}</span>
-      <div className="space-y-1 text-small">
+      <div className="min-w-0 space-y-1 text-small [overflow-wrap:anywhere]">
         {title && <p className="font-medium">{title}</p>}
         {children && <div>{children}</div>}
       </div>
