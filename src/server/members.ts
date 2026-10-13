@@ -58,7 +58,7 @@ async function sendActivation(db: Database, deps: Deps, m: { memberId: string; u
   const url = `${deps.baseURL.replace(/\/$/, "")}/qr/activar#t=${token}`;
   try {
     const { subject, text, html } = emailTemplates.admission_approved({ name: m.firstName, memberNumber: m.memberNumber, url, expiresAt });
-    await deps.email.send({ to: m.to, subject, text, html, template: "admission_approved" });
+    await deps.email.send({ to: m.to, subject, text, html, template: "admission_approved", idempotencyKey: `admission_approved:${m.memberNumber}:${hashToken(token).slice(0, 16)}` });
     return { expiresAt, emailed: true };
   } catch (e) {
     console.error("Activation email failed:", m.memberNumber, e instanceof Error ? e.message : e);
@@ -109,7 +109,7 @@ export async function recordDecision(db: Database, deps: Deps, actorUserId: stri
     });
     try {
       const { subject, text, html } = emailTemplates.admission_rejected({ name: firstName });
-      await deps.email.send({ to, subject, text, html, template: "admission_rejected" });
+      await deps.email.send({ to, subject, text, html, template: "admission_rejected", idempotencyKey: `admission_rejected:${adm.reference}` });
     } catch (e) {
       console.error("Rejection email failed:", adm.reference, e instanceof Error ? e.message : e);
     }

@@ -86,6 +86,7 @@ describe("preadmission lifecycle", () => {
     expect(email.sent).toHaveLength(1);
     expect(email.sent[0].to).toBe("persona.ficticia@example.com");
     expect(email.sent[0].subject).toContain(reference);
+    expect(email.sent[0].idempotencyKey).toBe(`pre_admission_received:${reference}`);
   });
 
   it("keeps the request when the email fails", async () => {

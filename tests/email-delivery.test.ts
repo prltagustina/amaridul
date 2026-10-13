@@ -82,6 +82,16 @@ describe("Resend", () => {
     expect(body.attachments).toEqual([{ filename: "amaridul.png", path: "https://amaridul.com/email/lockup-cream.png", content_id: "amaridul-lockup", content_type: "image/png" }]);
   });
 
+  it("sends the idempotency key so a repeated event is not delivered twice", async () => {
+    let headers: Record<string, string> = {};
+    const fake = (async (_: string, init: RequestInit) => {
+      headers = init.headers as Record<string, string>;
+      return new Response("{}", { status: 200 });
+    }) as unknown as typeof fetch;
+    await new ResendEmailSender("re_ficticia", "x@amaridul.com", undefined, fake).send({ to: "a@example.com", subject: "s", text: "t", template: "t", idempotencyKey: "pre_admission_received:PRE-2026-0001" });
+    expect(headers["Idempotency-Key"]).toBe("pre_admission_received:PRE-2026-0001");
+  });
+
   it("applies the default reply-to when the message has none", async () => {
     let body: Record<string, unknown> = {};
     const fake = (async (_: string, init: RequestInit) => {

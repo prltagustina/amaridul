@@ -11,6 +11,7 @@ import type { Keyring } from "@/server/crypto/keyring";
 import type { EmailSender } from "@/server/email/sender";
 import { emailTemplates } from "@/server/email/templates";
 import { memberEmailOf } from "@/server/members";
+import { hashToken } from "@/server/crypto/tokens";
 import { dniSignIn } from "./dni-sign-in";
 import { hashPassword, MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, verifyPassword } from "./password";
 
@@ -79,7 +80,7 @@ export function createAuth(deps: AuthDeps) {
         const { subject, text, html } = emailTemplates.password_reset({ url: `${deps.baseURL}/qr/recuperar#t=${token}` });
         // Member accounts carry an internal address; the person's real one is on their admission.
         const to = (await memberEmailOf(db, user.id)) ?? user.email;
-        await deps.email.send({ to, subject, text, html, template: "password_reset", replyTo: deps.replyTo });
+        await deps.email.send({ to, subject, text, html, template: "password_reset", replyTo: deps.replyTo, idempotencyKey: `password_reset:${hashToken(token).slice(0, 16)}` });
       },
     },
     rateLimit: {

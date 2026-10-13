@@ -6,6 +6,11 @@ export type EmailMessage = {
   html?: string;
   template: string;
   replyTo?: string;
+  /**
+   * One key per real-world event (a request, an invitation link, an approval…). A second send with
+   * the same key is dropped by the provider for 24 h, so a retry or a double submit never duplicates.
+   */
+  idempotencyKey?: string;
 };
 
 /** Provider-agnostic. Local: console. Production (pending approval): Resend or equivalent. */
@@ -55,7 +60,11 @@ export class ResendEmailSender implements EmailSender {
   async send(message: EmailMessage): Promise<void> {
     const res = await this.fetchImpl("https://api.resend.com/emails", {
       method: "POST",
-      headers: { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+        ...(message.idempotencyKey ? { "Idempotency-Key": message.idempotencyKey.slice(0, 256) } : {}),
+      },
       body: JSON.stringify({
         from: this.from,
         to: [message.to],

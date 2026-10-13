@@ -155,6 +155,9 @@ describe("from approval to the member portal", () => {
     const second = new MemoryEmailSender();
     await resendActivation(ctx.db, { email: second, baseURL }, adminId, m.id);
     expect(await checkActivation(ctx.db, ctx.rings, tokenIn(first.sent[0].text))).toEqual({ status: "invalid" });
+    // A deliberate resend is a new event: it carries its own key, so it is not dropped as a duplicate.
+    expect(first.sent[0].idempotencyKey).toMatch(/^admission_approved:AD-\d{4}:/);
+    expect(second.sent[0].idempotencyKey).not.toBe(first.sent[0].idempotencyKey);
     expect(await activateAccount(ctx.db, tokenIn(second.sent[0].text), "una frase larga y ficticia")).toEqual({ ok: true });
     await expect(resendActivation(ctx.db, { email: new MemoryEmailSender(), baseURL }, adminId, m.id)).rejects.toBeInstanceOf(InvalidDecisionError);
   });
