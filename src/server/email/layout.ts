@@ -72,15 +72,16 @@ export function renderEmail(l: EmailLayout): string {
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${esc(l.preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="${C.bone}" style="background:${C.bone}"><tr><td align="center" style="padding:28px 12px 40px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
-<tr><td bgcolor="${tone.band}" style="background:${tone.band};background-image:linear-gradient(118deg,${tone.band} 0%,${tone.bandTo} 100%);border-radius:18px 18px 0 0;padding:24px 28px 0">
+<tr><td bgcolor="${tone.band}" style="background:${tone.band};background-image:linear-gradient(118deg,${tone.band} 0%,${tone.bandTo} 100%);border-radius:18px 18px 0 0;padding:45px 28px 0">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
 <img src="cid:${LOCKUP_CID}" width="210" height="47" alt="Amarí Dul · Asociación civil" style="display:block;margin:0 auto;border:0;width:210px;height:auto;color:#ffffff;font:500 18px ${SERIF}">
 </td></tr></table>
-<div style="height:22px;line-height:22px;font-size:0">&nbsp;</div>
+<!-- Same room above the lockup as below it (gap + tab), so it sits in the middle of the band. -->
+<div style="height:14px;line-height:14px;font-size:0">&nbsp;</div>
 <table role="presentation" cellpadding="0" cellspacing="0"><tr><td bgcolor="${C.card}" style="background:${C.card};border-radius:10px 10px 0 0;padding:9px 16px 7px;font:600 13px/1.2 ${SANS};color:${tone.ink}">${esc(l.tab)}</td></tr></table>
 </td></tr>
 <tr><td bgcolor="${C.card}" style="background:${C.card};border:1px solid ${C.line};border-top:0;border-radius:0 0 18px 18px;padding:26px 28px 26px">
-<h1 style="margin:0 0 22px;font:500 30px/1.15 ${SERIF};color:${tone.ink};text-align:center">${esc(l.title)}</h1>
+<h1 style="margin:0 0 20px;font:500 30px/1.15 ${SERIF};color:${tone.ink}">${esc(l.title)}</h1>
 ${l.blocks.map((b) => block(b, tone)).join("\n")}
 </td></tr>
 <tr><td style="padding:22px 8px 0;font:400 12px/1.6 ${SANS};color:${C.muted}" align="center">
