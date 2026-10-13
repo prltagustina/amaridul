@@ -157,8 +157,8 @@ export async function submitAdmission(
   }
 
   try {
-    const { subject, text } = emailTemplates.admission_received({ reference, name: input.nombres });
-    await deps.email.send({ to: input.emailNotificaciones || input.email, subject, text, template: "admission_received" });
+    const { subject, text, html } = emailTemplates.admission_received({ reference, name: input.nombres });
+    await deps.email.send({ to: input.emailNotificaciones || input.email, subject, text, html, template: "admission_received" });
   } catch (e) {
     console.error("Admission email failed:", reference, e instanceof Error ? e.message : e);
   }

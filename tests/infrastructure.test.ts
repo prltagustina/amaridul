@@ -86,3 +86,26 @@ describe("postgres url", () => {
     expect(withStrictSsl(input)).toBe(expected);
   });
 });
+
+describe("designed emails", () => {
+  it("carry an HTML version with the same content as the plain text", () => {
+    const url = "https://amaridul.test/qr/activar#t=abc";
+    const m = emailTemplates.admission_approved({ name: "Persona", memberNumber: "AD-0001", url, expiresAt: new Date("2026-10-20T13:54:00Z") });
+    expect(m.html).toContain("AD-0001");
+    expect(m.html).toContain(`href="${url}"`);
+    expect(m.html).toContain("https://amaridul.com/email/lockup-cream.png");
+    expect(m.text).toContain(url);
+    expect(m.text).toContain("AD-0001");
+  });
+
+  it("escapes what people typed", () => {
+    const m = emailTemplates.pre_admission_received({ name: "<b>Ficticia</b>", reference: "PRE-2026-0001" });
+    expect(m.html).not.toContain("<b>Ficticia</b>");
+    expect(m.html).toContain("&lt;b&gt;Ficticia&lt;/b&gt;");
+  });
+
+  it("use lila while joining and green once a member", () => {
+    expect(emailTemplates.admission_invitation({ name: "P", url: "https://x.test", expiresAt: new Date() }).html).toContain("#493b5a");
+    expect(emailTemplates.password_reset({ url: "https://x.test" }).html).toContain("#2c4b2d");
+  });
+});

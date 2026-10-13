@@ -2,6 +2,8 @@ export type EmailMessage = {
   to: string;
   subject: string;
   text: string;
+  /** Designed version; `text` stays for clients that do not show HTML. */
+  html?: string;
   template: string;
   replyTo?: string;
 };
@@ -57,6 +59,7 @@ export class ResendEmailSender implements EmailSender {
         to: [message.to],
         subject: message.subject,
         text: message.text,
+        ...(message.html ? { html: message.html } : {}),
         ...(message.replyTo || this.replyTo ? { replyTo: message.replyTo || this.replyTo } : {}),
         tags: [{ name: "template", value: message.template }],
       }),

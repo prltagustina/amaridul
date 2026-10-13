@@ -76,10 +76,10 @@ export function createAuth(deps: AuthDeps) {
       revokeSessionsOnPasswordReset: true,
       sendResetPassword: async ({ user, token }) => {
         // Token goes in the fragment: never sent to the server, logs or Referer.
-        const { subject, text } = emailTemplates.password_reset({ url: `${deps.baseURL}/qr/recuperar#t=${token}` });
+        const { subject, text, html } = emailTemplates.password_reset({ url: `${deps.baseURL}/qr/recuperar#t=${token}` });
         // Member accounts carry an internal address; the person's real one is on their admission.
         const to = (await memberEmailOf(db, user.id)) ?? user.email;
-        await deps.email.send({ to, subject, text, template: "password_reset", replyTo: deps.replyTo });
+        await deps.email.send({ to, subject, text, html, template: "password_reset", replyTo: deps.replyTo });
       },
     },
     rateLimit: {

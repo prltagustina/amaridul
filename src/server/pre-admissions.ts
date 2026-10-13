@@ -78,8 +78,8 @@ export async function createPreAdmission(
 
   // The request is already stored: a failed email must not lose it. The team still sees it in the panel.
   try {
-    const { subject, text } = emailTemplates.pre_admission_received({ reference, name: input.nombre });
-    await deps.email.send({ to: input.email, subject, text, template: "pre_admission_received" });
+    const { subject, text, html } = emailTemplates.pre_admission_received({ reference, name: input.nombre });
+    await deps.email.send({ to: input.email, subject, text, html, template: "pre_admission_received" });
   } catch (e) {
     console.error("Pre-admission email failed:", reference, e instanceof Error ? e.message : e);
   }
@@ -231,8 +231,8 @@ export async function inviteToAdmission(
 
   const url = `${deps.baseURL.replace(/\/$/, "")}/admision#t=${token}`;
   try {
-    const { subject, text } = emailTemplates.admission_invitation({ name: row.fullName, url, expiresAt });
-    await deps.email.send({ to: row.email, subject, text, template: "admission_invitation" });
+    const { subject, text, html } = emailTemplates.admission_invitation({ name: row.fullName, url, expiresAt });
+    await deps.email.send({ to: row.email, subject, text, html, template: "admission_invitation" });
     return { expiresAt, emailed: true };
   } catch (e) {
     console.error("Invitation email failed:", row.reference, e instanceof Error ? e.message : e);

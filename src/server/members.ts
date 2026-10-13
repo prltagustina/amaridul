@@ -57,8 +57,8 @@ async function sendActivation(db: Database, deps: Deps, m: { memberId: string; u
   );
   const url = `${deps.baseURL.replace(/\/$/, "")}/qr/activar#t=${token}`;
   try {
-    const { subject, text } = emailTemplates.admission_approved({ name: m.firstName, memberNumber: m.memberNumber, url, expiresAt });
-    await deps.email.send({ to: m.to, subject, text, template: "admission_approved" });
+    const { subject, text, html } = emailTemplates.admission_approved({ name: m.firstName, memberNumber: m.memberNumber, url, expiresAt });
+    await deps.email.send({ to: m.to, subject, text, html, template: "admission_approved" });
     return { expiresAt, emailed: true };
   } catch (e) {
     console.error("Activation email failed:", m.memberNumber, e instanceof Error ? e.message : e);
@@ -108,8 +108,8 @@ export async function recordDecision(db: Database, deps: Deps, actorUserId: stri
       await audit(t, { actorUserId, action: "admission.rejected", entityType: "admission", entityId: admissionId, metadata: { reference: adm.reference } });
     });
     try {
-      const { subject, text } = emailTemplates.admission_rejected({ name: firstName });
-      await deps.email.send({ to, subject, text, template: "admission_rejected" });
+      const { subject, text, html } = emailTemplates.admission_rejected({ name: firstName });
+      await deps.email.send({ to, subject, text, html, template: "admission_rejected" });
     } catch (e) {
       console.error("Rejection email failed:", adm.reference, e instanceof Error ? e.message : e);
     }

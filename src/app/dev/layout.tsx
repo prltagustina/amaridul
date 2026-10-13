@@ -13,6 +13,7 @@ const LINKS = [
   { href: "/dev/estilo", label: "Estilo" },
   { href: "/dev/tipografia", label: "Tipografía" },
   { href: "/dev/estados", label: "Estados" },
+  { href: "/dev/emails", label: "Emails" },
 ];
 
 // Development-only tooling: 404 outside the local/test demo environment.
