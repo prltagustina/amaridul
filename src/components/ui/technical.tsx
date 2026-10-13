@@ -152,6 +152,57 @@ export function StepCards({ steps, tone = "green", className }: { steps: { title
   );
 }
 
+export type StepStatus = "done" | "current" | "upcoming";
+
+const STEP_STATUS: Record<StepStatus, { label: string; eyebrow: string; title: string }> = {
+  // Done is always the plant green, also inside the lilac joining flow: it reads as "resolved".
+  done: { label: "Completo", eyebrow: "text-[var(--hoja-700)]", title: "text-[var(--hoja-800)]" },
+  current: { label: "En curso", eyebrow: "text-forest", title: "text-forest" },
+  upcoming: { label: "Después", eyebrow: "text-text-muted", title: "text-foreground/70" },
+};
+
+/**
+ * Where a person stands in a process: a quiet vertical timeline. Done steps carry a green check,
+ * the current one is filled and set on a white card, the next ones are outlined and muted.
+ */
+export function ProcessTimeline({ steps, className }: { steps: { title: string; status: StepStatus; detail?: ReactNode; meta?: string }[]; className?: string }) {
+  return (
+    <ol className={cn("relative", className)}>
+      {steps.map((s, i) => {
+        const st = STEP_STATUS[s.status];
+        const last = i === steps.length - 1;
+        return (
+          <li key={s.title} aria-current={s.status === "current" ? "step" : undefined} className={cn("relative grid grid-cols-[2.25rem_1fr] gap-x-4", !last && "pb-5")}>
+            {!last && (
+              <span aria-hidden className={cn("absolute top-10 bottom-1 left-[1.125rem] w-px -translate-x-1/2", s.status === "done" ? "bg-[var(--hoja-300)]" : "bg-mist-line")} />
+            )}
+            <span
+              aria-hidden
+              className={cn(
+                "relative z-10 flex size-9 items-center justify-center !rounded-full text-sm font-medium tabular-nums",
+                s.status === "done" && "bg-[var(--hoja-700)] text-white",
+                s.status === "current" && "bg-forest text-white ring-4 ring-forest-soft",
+                s.status === "upcoming" && "border border-mist-line bg-white text-text-muted",
+              )}
+            >
+              {s.status === "done" ? <Check className="size-4" strokeWidth={2.25} /> : i + 1}
+            </span>
+            <div className={cn("min-w-0", s.status === "current" ? "!rounded-card border border-mist-line bg-white px-4 py-3.5 shadow-[0_8px_24px_-18px_rgb(40_36_28/0.35)] sm:px-5" : "pt-1")}>
+              <p className={cn("text-[11px] font-medium tracking-[0.14em] uppercase", st.eyebrow)}>
+                <span className="sr-only">Paso {i + 1}, </span>
+                {st.label}
+                {s.meta && <span className="text-text-muted"> · {s.meta}</span>}
+              </p>
+              <p className={cn("mt-1 font-title text-lg leading-snug", st.title)}>{s.title}</p>
+              {s.detail && <p className="mt-1 text-sm leading-relaxed text-text-muted">{s.detail}</p>}
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 /** Checked list, as the "indicaciones" of the variety cards. */
 export function CheckList({ items, tone = "green", className }: { items: ReactNode[]; tone?: InfoTone; className?: string }) {
   return (

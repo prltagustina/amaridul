@@ -4,7 +4,7 @@ import { PageBand } from "@/components/brand/page-band";
 import { LinkButton } from "@/components/ui/button";
 import { DevStateBar } from "@/components/ui/dev-state-bar";
 import { DevTag } from "@/components/ui/display";
-import { RuleList, StepCards, TabbedCard } from "@/components/ui/technical";
+import { ProcessTimeline, RuleList, TabbedCard } from "@/components/ui/technical";
 import { ExpiredInvitation, InvalidInvitation, Invitation } from "./invitation";
 
 const STATES = ["default", "expired", "unauthorized"] as const;
@@ -34,11 +34,11 @@ function Process() {
       <h2 id="circuito" className="text-xl font-title text-forest">
         Cómo sigue el proceso
       </h2>
-      <StepCards
+      <ProcessTimeline
         steps={[
-          { title: "Preadmisión", meta: "Completa", value: "Recibida", detail: "Ya revisamos tu solicitud inicial." },
-          { title: "Solicitud formal", meta: "Ahora", value: "9 pasos", detail: "Datos, categoría, estatuto y declaraciones." },
-          { title: "Comisión Directiva", meta: "Después", value: "Decisión", detail: "Te avisamos por email el resultado." },
+          { title: "Preadmisión", status: "done", detail: "Recibimos y revisamos tu solicitud inicial." },
+          { title: "Solicitud formal", status: "current", meta: "9 pasos", detail: "Datos, categoría, estatuto y declaraciones." },
+          { title: "Comisión Directiva", status: "upcoming", detail: "Evalúa tu solicitud y te avisamos el resultado por email." },
         ]}
       />
       <RuleList items={["El link sirve hasta que envíes la solicitud o hasta que venza. Si te enviamos uno nuevo, el anterior deja de funcionar."]} />
