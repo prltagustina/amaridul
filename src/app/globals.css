@@ -58,8 +58,9 @@
   @media (width >= 40rem) {
     max-width: var(--container-lg);
   }
+  /* Desktop: the lockup sits at the left edge of the page and the links at the right one. */
   @media (width >= 64rem) {
-    max-width: 56rem;
+    max-width: 80rem;
   }
 }
 

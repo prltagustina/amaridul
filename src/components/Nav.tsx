@@ -12,6 +12,7 @@ const LINKS = [
 ];
 
 // Over the hero photo the bar is transparent with cream marks; once the page scrolls it turns bone.
+// On phones the lockup only appears once scrolled: over the hero, the circular logo is already there.
 const linkBase = "font-ui data-[active=true]:underline underline-offset-[10px] decoration-1 transition-colors motion-reduce:transition-none";
 const linkTone = { photo: "!text-white/85 hover:!text-white data-[active=true]:!text-white focus-visible:!outline-background", solid: "!text-text-muted hover:!text-forest data-[active=true]:!text-forest" };
 
@@ -69,11 +70,11 @@ export default function Nav({ showContact = true }: { showContact?: boolean }) {
       <nav aria-label="Principal">
         <div className="page-gutter">
           <div className="nav-column flex items-center justify-between" style={{height: "var(--nav-h)"}}>
-            <Link href="/" aria-label="Amarí Dul, inicio" className="flex min-h-11 items-center gap-2" onClick={() => setOpen(false)}>
+            <Link href="/" aria-label="Amarí Dul, inicio" className={`flex min-h-11 items-center gap-2 ${solid ? "" : "max-md:invisible"}`} onClick={() => setOpen(false)}>
               <BrandLockup tone={solid ? "forest" : "cream"} onPhoto={!solid} />
             </Link>
 
-            <ul className="hidden md:flex items-center gap-8 -mr-[0.15em] lg:mr-[calc(0.875rem-0.15em)] text-[0.8125rem] uppercase tracking-[0.14em]">
+            <ul className="hidden md:flex items-center gap-8 -mr-[0.15em] text-[0.8125rem] uppercase tracking-[0.14em]">
               {links.map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} aria-current={current(l.href)} data-active={isActive(l)} className={linkClass}>

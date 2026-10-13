@@ -12,7 +12,7 @@ export function MinimalHeader({ tone = "light", right, homeHref = "/qr" }: { ton
   return (
     <header className={cn("page-gutter", overPhoto ? "absolute inset-x-0 top-0 z-20" : "border-b border-border/70 bg-background")}>
       <div className="nav-column flex h-[var(--nav-h)] items-center justify-between gap-4">
-        <Link href={homeHref} aria-label="Amarí Dul, inicio" className="flex min-h-11 items-center gap-2">
+        <Link href={homeHref} aria-label="Amarí Dul, inicio" className={cn("flex min-h-11 items-center gap-2", overPhoto && "max-md:invisible")}>
           <BrandLockup tone={overPhoto ? "cream" : "forest"} onPhoto={overPhoto} />
         </Link>
         {right}

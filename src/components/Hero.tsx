@@ -22,8 +22,8 @@ export default function Hero() {
       <h1 className="sr-only">Amarí Dul, asociación civil</h1>
 
       <div className="page-gutter flex flex-1 flex-col items-center justify-center gap-6 pt-20 pb-24 text-center sm:gap-8">
-        <CircleLogo className="w-[min(86vw,54svh,26rem)] lg:w-[min(56svh,30rem)]" />
-        <p className="mx-auto max-w-[17ch] font-display text-[clamp(2rem,1.45rem+2.6vw,3.25rem)] leading-[1.1] font-medium text-white [text-shadow:0_1px_16px_rgba(0,0,0,0.4)] sm:max-w-[22ch]">{institutionalPhrase}</p>
+        <CircleLogo className="w-[min(78vw,50svh,26rem)] lg:w-[min(56svh,30rem)]" />
+        <p className="mx-auto max-w-[24ch] font-display text-[clamp(1.5rem,1.2rem+1.3vw,2.25rem)] leading-[1.15] font-medium text-white [text-shadow:0_1px_16px_rgba(0,0,0,0.4)] sm:max-w-[26ch]">{institutionalPhrase}</p>
         <Link href="/qr" className="font-ui inline-flex min-h-11 items-center gap-2 border-b border-white/50 text-[0.8125rem] tracking-[0.18em] !text-white uppercase transition-colors hover:border-white motion-safe-only">
           Más información <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
         </Link>
