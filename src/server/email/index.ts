@@ -11,7 +11,7 @@ let sender: EmailSender | undefined;
 export function getEmailSender(): EmailSender {
   if (!sender) {
     const env = getEnv();
-    if (env.RESEND_API_KEY) sender = new ResendEmailSender(env.RESEND_API_KEY, env.EMAIL_FROM, env.EMAIL_REPLY_TO);
+    if (env.RESEND_API_KEY) sender = new ResendEmailSender(env.RESEND_API_KEY, env.EMAIL_FROM, env.EMAIL_REPLY_TO, fetch, env.EMAIL_BCC);
     else if (env.APP_ENV === "production" && env.EMAIL_DELIVERY !== "log") throw new Error("No hay proveedor de email configurado para producción");
     else sender = new ConsoleEmailSender(env.EMAIL_FROM);
   }

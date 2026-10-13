@@ -102,6 +102,21 @@ describe("Resend", () => {
     expect(body.replyTo).toBe("respuestas@example.com");
   });
 
+  it("copies the team on every email, except the recipient themself", async () => {
+    const bodies: Record<string, unknown>[] = [];
+    const fake = (async (_: string, init: RequestInit) => {
+      bodies.push(JSON.parse(String(init.body)));
+      return new Response("{}", { status: 200 });
+    }) as unknown as typeof fetch;
+    const s = new ResendEmailSender("re_ficticia", "x@amaridul.com", undefined, fake, ["equipo.a@example.com", "equipo.b@example.com"]);
+    await s.send({ to: "persona@example.com", subject: "s", text: "t", template: "t" });
+    await s.send({ to: "Equipo.A@example.com", subject: "s", text: "t", template: "t" });
+    await new ResendEmailSender("re_ficticia", "x@amaridul.com", undefined, fake).send({ to: "a@example.com", subject: "s", text: "t", template: "t" });
+    expect(bodies[0].bcc).toEqual(["equipo.a@example.com", "equipo.b@example.com"]);
+    expect(bodies[1].bcc).toEqual(["equipo.b@example.com"]);
+    expect(bodies[2]).not.toHaveProperty("bcc");
+  });
+
   it("is used in production when the API key is configured", async () => {
     const get = await senderFor({ APP_ENV: "production", EMAIL_DELIVERY: undefined, RESEND_API_KEY: "re_ficticia" });
     expect(get()).toBeInstanceOf((await import("@/server/email/sender")).ResendEmailSender);

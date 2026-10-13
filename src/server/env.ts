@@ -24,6 +24,13 @@ const schema = z
     // TEMPORARY (demo phase): "log" lets production run without an email provider, writing
     // messages to the server logs instead of sending them. Remove once Resend is connected.
     EMAIL_DELIVERY: z.enum(["log"]).optional(),
+    // TEMPORARY (demo phase): comma-separated addresses that get a blind copy of every email, so
+    // the team sees what the site sends. Copies include activation and reset links: remove before delivery.
+    EMAIL_BCC: z
+      .string()
+      .optional()
+      .transform((v) => (v ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean))
+      .pipe(z.array(z.string().email())),
   })
   .superRefine((env, ctx) => {
     if (env.APP_ENV === "production" && !env.DATABASE_URL) {

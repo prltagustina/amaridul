@@ -55,9 +55,13 @@ export class ResendEmailSender implements EmailSender {
     /** Where replies go when a message does not set its own. */
     private readonly replyTo?: string,
     private readonly fetchImpl: typeof fetch = fetch,
+    /** TEMPORARY (demo phase): blind copy of every email to the team. */
+    private readonly bcc: string[] = [],
   ) {}
 
   async send(message: EmailMessage): Promise<void> {
+    // Never copy someone on their own email: they would get it twice.
+    const bcc = this.bcc.filter((a) => a !== message.to.toLowerCase());
     const res = await this.fetchImpl("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -68,6 +72,7 @@ export class ResendEmailSender implements EmailSender {
       body: JSON.stringify({
         from: this.from,
         to: [message.to],
+        ...(bcc.length ? { bcc } : {}),
         subject: message.subject,
         text: message.text,
         ...(message.html ? { html: message.html } : {}),
