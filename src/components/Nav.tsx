@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { BrandButterfly } from "@/components/brand/headers";
+import { BrandLockup } from "@/components/brand/headers";
 
 const LINKS = [
   { href: "/#sobre", label: "Sobre Amarí Dul", section: "sobre" },
@@ -15,7 +15,8 @@ const LINKS = [
 const linkBase = "font-ui data-[active=true]:underline underline-offset-[10px] decoration-1 transition-colors motion-reduce:transition-none";
 const linkTone = { photo: "!text-white/85 hover:!text-white data-[active=true]:!text-white focus-visible:!outline-background", solid: "!text-text-muted hover:!text-forest data-[active=true]:!text-forest" };
 
-export default function Nav() {
+export default function Nav({ showContact = true }: { showContact?: boolean }) {
+  const links = showContact ? LINKS : LINKS.filter((l) => l.section !== "contacto");
   const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false);
@@ -69,12 +70,11 @@ export default function Nav() {
         <div className="page-gutter">
           <div className="nav-column flex items-center justify-between" style={{height: "var(--nav-h)"}}>
             <Link href="/" aria-label="Amarí Dul, inicio" className="flex min-h-11 items-center gap-2" onClick={() => setOpen(false)}>
-              <BrandButterfly onPhoto={!solid} className="!h-7 sm:!h-8" />
-              <img src={solid ? "/brand/wordmark-bold.svg" : "/brand/wordmark-bold-cream.svg"} alt="" className={`!h-[1.375rem] sm:!h-6 !w-auto ${solid ? "" : "drop-shadow-[0_1px_6px_rgba(0,0,0,0.35)]"}`} />
+              <BrandLockup tone={solid ? "forest" : "cream"} onPhoto={!solid} />
             </Link>
 
             <ul className="hidden md:flex items-center gap-8 -mr-[0.15em] lg:mr-[calc(0.875rem-0.15em)] text-[0.8125rem] uppercase tracking-[0.14em]">
-              {LINKS.map((l) => (
+              {links.map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} aria-current={current(l.href)} data-active={isActive(l)} className={linkClass}>
                     {l.label}
@@ -100,7 +100,7 @@ export default function Nav() {
 
         <div id="menu-movil" hidden={!open} className="md:hidden absolute inset-x-0 top-full page-gutter bg-background border-b border-mist-line shadow-[0_18px_30px_-24px_rgb(29_52_30/0.6)]">
           <ul className="nav-column py-2 text-base uppercase tracking-[0.15em]">
-            {LINKS.map((l) => (
+            {links.map((l) => (
               <li key={l.href}>
                 <Link href={l.href} aria-current={current(l.href)} data-active={isActive(l)} onClick={() => setOpen(false)} className="font-ui block py-3 text-[0.9375rem] !text-text-muted data-[active=true]:!text-forest data-[active=true]:!underline underline-offset-[6px] decoration-1">
                   {l.label}

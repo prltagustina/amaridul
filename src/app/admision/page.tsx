@@ -14,13 +14,14 @@ export default async function AdmisionPage({ searchParams }: { searchParams: Pro
   return (
     <main>
       <PageBand
+        compact
         tone="lilac"
         eyebrow="Invitación personal"
         title="Solicitud formal de admisión"
         description="Te invitamos a completar la solicitud formal para asociarte a Amarí Dul. La admisión la decide la Comisión Directiva."
         tab={state === "default" ? "PRE-2026-0004" : "Invitación"}
       />
-      <div className="page-gutter pt-8 pb-28 sm:pt-10">
+      <div className="page-gutter pt-8 pb-12 sm:pt-10">
         <div className="content-column space-y-8">
           {state === "default" && (
             <>

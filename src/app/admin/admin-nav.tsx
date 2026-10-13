@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { Boxes, ClipboardCheck, Home, Inbox, Menu, QrCode, ScrollText, ShieldCheck, Tag, UserRound, Users, X } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { BrandButterfly } from "@/components/brand/headers";
+import { BrandLockup } from "@/components/brand/headers";
 
 const SECTIONS = [
   { href: "/admin", label: "Inicio", icon: Home, demo: false },
@@ -50,13 +50,8 @@ export function AdminNav({ email, demo, signOut }: { email: string; demo: boolea
   );
 
   const brand = (
-    <Link href="/admin" className="flex flex-col gap-0.5 py-1" aria-label="Amarí Dul, administración">
-      <span className="flex items-center gap-2">
-        <BrandButterfly className="!h-7" />
-        {/* eslint-disable-next-line @next/next/no-img-element -- static brand SVG */}
-        <img src="/brand/wordmark-bold.svg" alt="" className="!h-[1.375rem] !w-auto" />
-      </span>
-      <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-accent">Administración</span>
+    <Link href="/admin" className="flex py-1" aria-label="Amarí Dul, administración">
+      <BrandLockup tagline="Administración" />
     </Link>
   );
 
@@ -64,7 +59,7 @@ export function AdminNav({ email, demo, signOut }: { email: string; demo: boolea
     <>
       {/* Mobile / tablet */}
       <header className="border-b border-border bg-surface page-gutter lg:hidden">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-[var(--nav-h)] items-center justify-between">
           {brand}
           <button
             type="button"

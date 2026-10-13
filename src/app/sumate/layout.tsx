@@ -16,7 +16,7 @@ export default function SumateLayout({ children }: { children: React.ReactNode }
       <div className="relative isolate flex-1 overflow-hidden">
         {children}
       </div>
-      <SiteFooter />
+      <SiteFooter compact />
     </div>
   );
 }

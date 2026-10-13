@@ -19,7 +19,7 @@ export default function RecoverFlow({ initial }: { initial: Step }) {
 
   function onSubmit(ev: FormEvent) {
     ev.preventDefault();
-    if (!/^\d{7,8}$/.test(dni.replace(/\D/g, ""))) return setError("Escribí tu DNI, sin puntos.");
+    if (!/^\d{7,8}$/.test(dni.replace(/\D/g, ""))) return setError("Revisá tu DNI: tiene 7 u 8 números.");
     setError("");
     setLoading(true);
     window.setTimeout(() => setStep("enviado"), 700);
@@ -87,13 +87,13 @@ export default function RecoverFlow({ initial }: { initial: Step }) {
     <AccessShell eyebrow="Socios" title="Recuperá tu contraseña" description="Escribí tu DNI. Te enviamos un link al email registrado en la asociación." tab="Recuperación">
       <TabbedCard tab="Tu DNI">
         <form noValidate onSubmit={onSubmit} className="space-y-5" aria-busy={loading}>
-          <TextField id="dni" label="DNI" inputMode="numeric" autoComplete="username" hint="Sin puntos." value={dni} onChange={(e) => setDni(e.target.value)} error={error} />
+          <TextField id="dni" label="DNI" inputMode="numeric" autoComplete="username" value={dni} onChange={(e) => setDni(e.target.value)} error={error} />
           <Button type="submit" full size="lg" loading={loading} loadingLabel="Enviando…">
             Enviar link
           </Button>
         </form>
       </TabbedCard>
-      <p className="text-center text-small text-text-muted">
+      <p className="text-small text-text-muted">
         ¿Cambiaste de email? Escribinos y lo actualizamos.{" "}
         <TextLink href="/qr/login" className="inline-flex min-h-11 items-center">
           Volver al ingreso

@@ -5,9 +5,9 @@ import { PageBand } from "@/components/brand/page-band";
 export function AccessShell({ eyebrow, title, description, tab, children }: { eyebrow: string; title: string; description?: ReactNode; tab: string; children: ReactNode }) {
   return (
     <main>
-      <PageBand eyebrow={eyebrow} title={title} description={description} tab={tab} width="narrow" align="center" />
-      <div className="page-gutter pt-8 pb-28 sm:pt-10">
-        <div className="mx-auto w-full max-w-md space-y-6">{children}</div>
+      <PageBand compact eyebrow={eyebrow} title={title} description={description} tab={tab} width="narrow" />
+      <div className="page-gutter pt-6 pb-8 sm:pt-8">
+        <div className="mx-auto w-full max-w-md space-y-4">{children}</div>
       </div>
     </main>
   );

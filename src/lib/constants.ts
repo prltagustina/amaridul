@@ -6,8 +6,9 @@ export const BRAND = {
   description: "Asociación civil",
 };
 
-export const CONTACT = {
-  instagram: "[Por confirmar]",
-  whatsapp: "[Por confirmar]",
-  email: "[Por confirmar]",
+/** Confirmed contact channels. Empty means pending: hidden in production, flagged locally. */
+export const CONTACT: { instagram: string; whatsapp: string; email: string } = {
+  instagram: "",
+  whatsapp: "",
+  email: "",
 };

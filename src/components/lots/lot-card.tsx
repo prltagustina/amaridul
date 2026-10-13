@@ -30,8 +30,8 @@ export function LotCard({ lot, onCertificate }: { lot: Lot; onCertificate: () =>
   const c = lot.composition;
   return (
     <article aria-labelledby="lot-title" className="@container overflow-hidden !rounded-card border border-mist-line bg-white shadow-[0_18px_40px_-28px_rgba(26,26,24,0.35)]">
-      <TechBand tone="lilac" className="relative overflow-hidden px-5 pt-4 pb-5 @md:px-6">
-        <span aria-hidden className="pointer-events-none absolute -top-16 -right-12 size-44 !rounded-full bg-lilac/25 blur-3xl" />
+      <TechBand tone="green" className="relative overflow-hidden px-5 pt-4 pb-5 @md:px-6">
+        <span aria-hidden className="pointer-events-none absolute -top-16 -right-12 size-44 !rounded-full bg-hoja-500/25 blur-3xl" />
         <p className="relative text-[11px] font-medium tracking-[0.18em] text-white/75 uppercase">Ficha del lote</p>
         <h2 id="lot-title" className="relative mt-1 font-mono text-xl tracking-wide break-all">
           {lot.code}
@@ -73,23 +73,23 @@ export function LotCard({ lot, onCertificate }: { lot: Lot; onCertificate: () =>
             {
               id: "composicion",
               label: "Composición",
-              tone: "lilac",
+              tone: "green",
               icon: <Droplet className="size-4" strokeWidth={1.75} />,
               content: c ? (
                 <div className="space-y-5">
                   <div className="flex flex-wrap items-center justify-between gap-4">
-                    <VarietyBadge tone="lilac">{lot.chemotype.split("(")[0].trim()}</VarietyBadge>
-                    <RatioBar tone="lilac" thc={c.thc} cbd={c.cbd} label="Proporción" className="w-full max-w-[13rem]" />
+                    <VarietyBadge tone="green">{lot.chemotype.split("(")[0].trim()}</VarietyBadge>
+                    <RatioBar tone="green" thc={c.thc} cbd={c.cbd} label="Proporción" className="w-full max-w-[13rem]" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-title text-lilac-ink">Ratio THC:CBD ≈ {ratioLabel(c.thc, c.cbd)}</h3>
+                    <h3 className="text-xl font-title text-forest">Ratio THC:CBD ≈ {ratioLabel(c.thc, c.cbd)}</h3>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      <Chip tone="lilac">THC ~{num(c.thc)} mg/ml</Chip>
-                      <Chip tone="lilac">CBD ~{num(c.cbd)} mg/ml</Chip>
+                      <Chip tone="green">THC ~{num(c.thc)} mg/ml</Chip>
+                      <Chip tone="green">CBD ~{num(c.cbd)} mg/ml</Chip>
                     </div>
                   </div>
                   <KeyFact
-                    tone="lilac"
+                    tone="green"
                     value={<>1 gota = {num(c.total / c.dropsPerMl)} mg</>}
                     caption="de cannabinoides totales"
                     rows={[
@@ -99,24 +99,24 @@ export function LotCard({ lot, onCertificate }: { lot: Lot; onCertificate: () =>
                   />
                 </div>
               ) : (
-                <p className="!rounded-control bg-lilac-soft px-4 py-5 text-center text-small text-lilac-ink">La composición se publica cuando el laboratorio entrega el análisis.</p>
+                <p className="!rounded-control bg-forest-soft px-4 py-5 text-center text-small text-forest">La composición se publica cuando el laboratorio entrega el análisis.</p>
               ),
             },
             {
               id: "analisis",
               label: "Análisis",
-              tone: "amber",
+              tone: "green",
               icon: <FlaskConical className="size-4" strokeWidth={1.75} />,
               content: (
                 <div className="space-y-4">
                   <div>
-                    <p className="text-[11px] font-medium tracking-[0.18em] text-amber-ink/85 uppercase">Cromatografía (HPLC)</p>
-                    <h3 className="mt-1 text-xl font-title text-amber-ink">Perfil de cannabinoides</h3>
+                    <p className="text-[11px] font-medium tracking-[0.18em] text-accent uppercase">Cromatografía (HPLC)</p>
+                    <h3 className="mt-1 text-xl font-title text-forest">Perfil de cannabinoides</h3>
                   </div>
                   <div className="overflow-hidden !rounded-[12px] border border-mist-line">
-                    <table className="w-full text-left text-amber-ink">
+                    <table className="w-full text-left text-forest">
                       <caption className="sr-only">Concentración de cannabinoides del lote {lot.code}</caption>
-                      <thead className="bg-amber-ink text-xs text-white">
+                      <thead className="bg-forest text-xs text-white">
                         <tr>
                           <th scope="col" className="px-4 py-2.5 font-medium">Compuesto</th>
                           <th scope="col" className="px-4 py-2.5 text-right font-medium">Concentración</th>
@@ -124,7 +124,7 @@ export function LotCard({ lot, onCertificate }: { lot: Lot; onCertificate: () =>
                       </thead>
                       <tbody>
                         {lot.cannabinoids.map((x) => (
-                          <tr key={x.compound} className="border-t border-mist-line odd:bg-amber-soft/50">
+                          <tr key={x.compound} className="border-t border-mist-line odd:bg-forest-soft/50">
                             <th scope="row" className="px-4 py-2.5 font-medium">{x.compound}</th>
                             <td className="px-4 py-2.5 text-right tabular-nums">{x.value}</td>
                           </tr>
@@ -132,7 +132,7 @@ export function LotCard({ lot, onCertificate }: { lot: Lot; onCertificate: () =>
                       </tbody>
                     </table>
                   </div>
-                  <p className="flex items-start gap-3 !rounded-[12px] bg-amber-soft px-4 py-3 text-sm text-amber-ink">
+                  <p className="flex items-start gap-3 !rounded-[12px] bg-forest-soft px-4 py-3 text-sm text-forest">
                     <Info aria-hidden className="mt-0.5 size-5 shrink-0" strokeWidth={1.5} />
                     {labNote}
                   </p>
@@ -140,12 +140,12 @@ export function LotCard({ lot, onCertificate }: { lot: Lot; onCertificate: () =>
                     <button
                       type="button"
                       onClick={onCertificate}
-                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 !rounded-full bg-[linear-gradient(135deg,var(--ambar-800),var(--ambar-700))] px-5 text-[15px] font-medium !text-white @md:w-auto @md:text-base"
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 !rounded-full bg-[linear-gradient(135deg,var(--hoja-800),var(--hoja-700))] px-5 text-[15px] font-medium !text-white @md:w-auto @md:text-base"
                     >
                       <FileBadge aria-hidden className="size-4" strokeWidth={1.5} /> Ver certificado de análisis
                     </button>
                   ) : (
-                    <p className="text-small text-amber-ink">El certificado de análisis de este lote todavía no está disponible.</p>
+                    <p className="text-small text-forest">El certificado de análisis de este lote todavía no está disponible.</p>
                   )}
                 </div>
               ),

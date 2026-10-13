@@ -1,6 +1,6 @@
 import { isDemoEnabled } from "@/lib/demo";
 import { Card, DevTag } from "@/components/ui/display";
-import { BrandButterfly } from "@/components/brand/headers";
+import { BrandLockup } from "@/components/brand/headers";
 import { EnvironmentNotice } from "../ui";
 import LoginForm from "./login-form";
 
@@ -14,12 +14,9 @@ export default async function AdminLoginPage({ searchParams }: { searchParams: P
       <main className="flex flex-1 items-start justify-center page-gutter pt-16 pb-16 sm:items-center sm:pt-10">
         <div className="w-full max-w-sm space-y-8">
           <header className="space-y-3 text-center">
-            <span className="flex items-center justify-center gap-2.5">
-              <BrandButterfly className="!h-9" />
-              {/* eslint-disable-next-line @next/next/no-img-element -- static brand SVG */}
-              <img src="/brand/wordmark-bold.svg" alt="Amarí Dul" className="!h-7 !w-auto" />
+            <span className="flex justify-center">
+              <BrandLockup size="footer" tagline="Administración" alt="Amarí Dul" />
             </span>
-            <p className="text-eyebrow text-accent">Administración</p>
             <h1 className="sr-only">Ingreso a la administración</h1>
           </header>
           <Card>

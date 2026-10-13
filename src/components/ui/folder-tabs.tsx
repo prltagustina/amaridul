@@ -10,21 +10,21 @@ export type FolderTab = { id: string; label: string; tone: InfoTone; icon?: Reac
 const STYLE: Record<InfoTone, { closed: string; open: string; edge: string; ring: string }> = {
   green: {
     closed: "bg-hoja-100 text-hoja-800 hover:bg-hoja-200",
-    open: "bg-[linear-gradient(135deg,var(--hoja-800),var(--hoja-700))] text-white",
+    open: "bg-[linear-gradient(135deg,var(--hoja-800),var(--hoja-600))] text-white",
     edge: "border-t-forest",
     ring: "focus-visible:outline-forest",
   },
   lilac: {
     closed: "bg-lila-100 text-lila-800 hover:bg-lila-200",
-    open: "bg-[linear-gradient(135deg,var(--lila-800),var(--lila-700))] text-white",
+    open: "bg-[linear-gradient(135deg,var(--lila-800),var(--lila-600))] text-white",
     edge: "border-t-lilac-ink",
     ring: "focus-visible:outline-lilac-ink",
   },
-  amber: {
-    closed: "bg-ambar-100 text-ambar-800 hover:bg-ambar-200",
-    open: "bg-[linear-gradient(135deg,var(--ambar-800),var(--ambar-700))] text-white",
-    edge: "border-t-amber-ink",
-    ring: "focus-visible:outline-amber-ink",
+  sand: {
+    closed: "bg-arena-100 text-arena-800 hover:bg-arena-200",
+    open: "bg-[linear-gradient(135deg,var(--arena-800),var(--arena-600))] text-white",
+    edge: "border-t-arena-700",
+    ring: "focus-visible:outline-arena-700",
   },
 };
 

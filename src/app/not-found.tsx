@@ -13,7 +13,7 @@ export default function NotFound() {
       <main className="flex-1 page-gutter">
         <NotFoundState />
       </main>
-      <SiteFooter />
+      <SiteFooter compact />
     </div>
   );
 }

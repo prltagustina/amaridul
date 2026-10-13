@@ -27,7 +27,7 @@ export function NewPasswordForm({ tab, submitLabel, loading: initialLoading = fa
 
   return (
     <TabbedCard tab={tab}>
-      <form noValidate onSubmit={onSubmit} className="space-y-5" aria-busy={loading}>
+      <form noValidate onSubmit={onSubmit} className="space-y-4" aria-busy={loading}>
         {children}
         <PasswordField id="new-password" label="Nueva contraseña" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} error={error.password} />
         <PasswordField id="confirm-password" label="Repetí la contraseña" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} error={error.confirm} />

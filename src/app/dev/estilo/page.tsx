@@ -10,10 +10,10 @@ import { FolderSwitcher } from "@/components/ui/folder-tabs";
 import { InteractiveSamples } from "./interactive";
 
 const SCALES: { name: string; token: string; role: string; steps: [number, string][] }[] = [
-  { name: "Hoja", token: "hoja", role: "Identidad y comunidad: asociación, admisión, acceso. 700 es el verde del logo.", steps: [[50, "#f3f9f2"], [100, "#e6f3e6"], [200, "#cfe5ce"], [300, "#b0d2b0"], [400, "#8cb88d"], [500, "#6a9a6b"], [600, "#517f53"], [700, "#3f6640"], [800, "#2c4b2d"], [900, "#1d341e"]] },
-  { name: "Lila", token: "lila", role: "Trazabilidad: producto, lote, composición y laboratorio.", steps: [[50, "#f8f5fc"], [100, "#f1ebf9"], [200, "#e3d8f2"], [300, "#cfbfe4"], [400, "#b5a0cf"], [500, "#9780b3"], [600, "#7c6695"], [700, "#64517a"], [800, "#493b5a"], [900, "#332840"]] },
-  { name: "Ámbar", token: "ambar", role: "Trámites y salud: documentación, dispensas, avisos.", steps: [[50, "#fef5ee"], [100, "#fcebdd"], [200, "#f7d7bd"], [300, "#ecbd95"], [400, "#d89d68"], [500, "#bb7c40"], [600, "#9d6226"], [700, "#804d18"], [800, "#5f370d"], [900, "#442606"]] },
-  { name: "Arena", token: "arena", role: "Neutros cálidos: bordes, superficies técnicas, texto secundario.", steps: [[50, "#f8f7f4"], [100, "#f0eeea"], [200, "#e1ded5"], [300, "#cdc7bb"], [400, "#b1aa9b"], [500, "#938b7b"], [600, "#787161"], [700, "#615a4d"], [800, "#474238"], [900, "#312d26"]] },
+  { name: "Hoja", token: "hoja", role: "Identidad, socios y trazabilidad: asociación, acceso, producto y lote. 700 es el verde del logo.", steps: [[50, "#f3f9f2"], [100, "#e6f3e6"], [200, "#cfe5ce"], [300, "#b0d2b0"], [400, "#8cb88d"], [500, "#6a9a6b"], [600, "#517f53"], [700, "#3f6640"], [800, "#2c4b2d"], [900, "#1d341e"]] },
+  { name: "Lila", token: "lila", role: "Asociarse: Sumate, invitación y solicitud formal.", steps: [[50, "#f8f5fc"], [100, "#f1ebf9"], [200, "#e3d8f2"], [300, "#cfbfe4"], [400, "#b5a0cf"], [500, "#9780b3"], [600, "#7c6695"], [700, "#64517a"], [800, "#493b5a"], [900, "#332840"]] },
+  { name: "Ámbar", token: "ambar", role: "Solo estados de aviso (pendiente, advertencia).", steps: [[50, "#fef5ee"], [100, "#fcebdd"], [200, "#f7d7bd"], [300, "#ecbd95"], [400, "#d89d68"], [500, "#bb7c40"], [600, "#9d6226"], [700, "#804d18"], [800, "#5f370d"], [900, "#442606"]] },
+  { name: "Arena", token: "arena", role: "Neutros cálidos: fondos editoriales, bordes, texto secundario y trámites.", steps: [[50, "#f8f7f4"], [100, "#f0eeea"], [200, "#e1ded5"], [300, "#cdc7bb"], [400, "#b1aa9b"], [500, "#938b7b"], [600, "#787161"], [700, "#615a4d"], [800, "#474238"], [900, "#312d26"]] },
 ];
 
 const ROLES: [string, string][] = [
@@ -190,9 +190,9 @@ export default function EstiloPage() {
           <FolderSwitcher
             label="Fichas de ejemplo"
             tabs={[
-              { id: "comunidad", label: "Comunidad", tone: "green", content: <p className="text-body">Verde: asociación, admisión, acceso y socios.</p> },
-              { id: "trazabilidad", label: "Trazabilidad", tone: "lilac", content: <p className="text-body">Lila: producto, lote, composición y laboratorio.</p> },
-              { id: "tramites", label: "Trámites", tone: "amber", content: <p className="text-body">Ámbar: trámites, documentación, salud y dispensas.</p> },
+              { id: "comunidad", label: "Socios", tone: "green", content: <p className="text-body">Verde: asociación, acceso, socios y trazabilidad.</p> },
+              { id: "trazabilidad", label: "Asociarse", tone: "lilac", content: <p className="text-body">Lila: Sumate, invitación y solicitud formal.</p> },
+              { id: "tramites", label: "Trámites", tone: "sand", content: <p className="text-body">Arena: trámites, documentación, salud y dispensas.</p> },
             ]}
           />
           <StepCards

@@ -28,7 +28,7 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
   return (
     <main>
       <PageBand compact eyebrow="Mi espacio" title={`Hola, ${firstName}`} description={`Socio ${demoMember.number} · categoría ${demoMember.category}`} tab="Resumen" width="wide" />
-      <div className="page-gutter pt-8 pb-20">
+      <div className="page-gutter pt-6 pb-8">
         <div className="admin-column">
           {state === "loading" && <LoadingBlock label="Cargando tu información…" lines={6} />}
           {state === "error" && (
@@ -57,15 +57,15 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
                 </CardFoot>
               </TabbedCard>
 
-              <TabbedCard tab="Trámites" tone="amber" fill bodyClassName="gap-5">
+              <TabbedCard tab="Trámites" tone="sand" fill bodyClassName="gap-5">
                 <div className="space-y-2">
                   <div className="flex items-baseline justify-between gap-3">
-                    <p className="text-xl font-title text-amber-ink">
+                    <p className="text-xl font-title text-arena-800">
                       {done} de {total} completos
                     </p>
                   </div>
-                  <div aria-hidden className="h-1.5 overflow-hidden !rounded-full bg-amber-soft">
-                    <div className="h-full !rounded-full bg-[linear-gradient(90deg,var(--amber-deep),var(--amber))]" style={{ width: `${(done / total) * 100}%` }} />
+                  <div aria-hidden className="h-1.5 overflow-hidden !rounded-full bg-arena-100">
+                    <div className="h-full !rounded-full bg-[linear-gradient(90deg,var(--arena-700),var(--arena-500))]" style={{ width: `${(done / total) * 100}%` }} />
                   </div>
                 </div>
                 <ul className="divide-y divide-mist-line">
@@ -79,7 +79,7 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
                 <CardFoot>
                   <dl className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 text-small">
                     <dt className="text-text-muted">Documentación</dt>
-                    <dd className="text-amber-ink">Sin documentos</dd>
+                    <dd className="text-arena-800">Sin documentos</dd>
                     <dt className="text-text-muted">Dispensas</dt>
                     <dd>
                       <StatusBadge tone="warning">Próximamente</StatusBadge>
@@ -88,13 +88,13 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
                 </CardFoot>
               </TabbedCard>
 
-              <TabbedCard tab="Trazabilidad" tone="lilac" fill className="md:col-span-2 lg:col-span-1" bodyClassName="gap-5">
-                <p className="text-xl font-title text-lilac-ink">Conocé tu producto</p>
+              <TabbedCard tab="Trazabilidad" fill className="md:col-span-2 lg:col-span-1" bodyClassName="gap-5">
+                <p className="text-xl font-title text-forest">Conocé tu producto</p>
                 <p className="text-[0.9375rem] leading-relaxed text-text-muted">Con el código del envase ves el lote, su composición y el análisis de laboratorio.</p>
-                <ol className="space-y-2.5 text-[0.9375rem] text-lilac-ink">
+                <ol className="space-y-2.5 text-[0.9375rem] text-forest">
                   {["Elegí el producto", "Escribí el código del envase", "Mirá el análisis y el certificado"].map((t, i) => (
                     <li key={t} className="flex items-center gap-3">
-                      <span aria-hidden className="flex size-7 shrink-0 items-center justify-center !rounded-[8px] bg-lilac-soft text-sm font-medium">
+                      <span aria-hidden className="flex size-7 shrink-0 items-center justify-center !rounded-[8px] bg-forest-soft text-sm font-medium">
                         {i + 1}
                       </span>
                       {t}
@@ -104,7 +104,7 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
                 <CardFoot>
                   <Link
                     href="/qr/trazabilidad"
-                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 !rounded-full bg-[linear-gradient(135deg,var(--lila-800),var(--lila-700))] px-6 text-base font-medium !text-white shadow-[0_10px_24px_-14px_rgb(51_40_64/0.8)]"
+                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 !rounded-full bg-[linear-gradient(135deg,var(--hoja-800),var(--hoja-600))] px-6 text-base font-medium !text-white shadow-[0_10px_24px_-14px_rgb(29_52_30/0.7)]"
                   >
                     Consultar lote <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
                   </Link>

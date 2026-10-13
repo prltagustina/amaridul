@@ -15,15 +15,20 @@ export default async function TrazabilidadPage({ searchParams }: { searchParams:
     <main>
       <PageBand
         compact
-        tone="lilac"
+        tone="green"
         eyebrow="Trazabilidad"
         title="Conocé tu producto"
-        description="Lote, composición y análisis de laboratorio."
+        description="Lote, composición y análisis."
         tab="Consulta por lote"
+        width="wide"
       />
-      <div className="page-gutter pt-8 pb-20">
-        <div className="content-column">
-          <LotLookup key={state} initial={state} />
+      {/* Same column and left edge as Mi espacio, so switching sections never shifts the layout;
+          the lookup keeps its reading width inside it. */}
+      <div className="page-gutter pt-6 pb-8">
+        <div className="admin-column">
+          <div className="max-w-2xl">
+            <LotLookup key={state} initial={state} />
+          </div>
         </div>
         <DevStateBar path="/qr/trazabilidad" states={STATES} current={state} label="Trazabilidad" />
       </div>

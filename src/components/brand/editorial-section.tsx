@@ -3,7 +3,7 @@ import { cn } from "@/lib/cn";
 
 /**
  * Editorial section shared by the institutional home and /qr: a header column (eyebrow,
- * Cormorant title, hairline) beside the content. "dark" is for sections over a photo.
+ * Cormorant title, intro) beside the content. "dark" is for sections over a photo.
  */
 export function EditorialSection({
   id,
@@ -20,7 +20,7 @@ export function EditorialSection({
   title: ReactNode;
   intro?: ReactNode;
   tone?: "light" | "dark";
-  /** Absolutely positioned background layers (photo, parallax marks). */
+  /** Absolutely positioned background layers (glows, photos). */
   decor?: ReactNode;
   className?: string;
   children: ReactNode;
@@ -36,7 +36,6 @@ export function EditorialSection({
             {title}
           </h2>
           {intro && <p className={cn("mt-4 max-w-sm text-body", dark ? "text-white/80" : "text-text-muted")}>{intro}</p>}
-          <span aria-hidden className={cn("mt-6 block h-px w-16", dark ? "bg-white/40" : "bg-arena-400")} />
         </header>
         <div className="min-w-0">{children}</div>
       </div>

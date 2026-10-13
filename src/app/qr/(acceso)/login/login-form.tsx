@@ -27,7 +27,7 @@ export default function MemberLoginForm({ demoState }: { demoState: DemoState })
   function onSubmit(ev: FormEvent) {
     ev.preventDefault();
     const e: typeof fieldErrors = {};
-    if (!/^\d{7,8}$/.test(dni.replace(/\D/g, ""))) e.dni = "Escribí tu DNI, sin puntos.";
+    if (!/^\d{7,8}$/.test(dni.replace(/\D/g, ""))) e.dni = "Revisá tu DNI: tiene 7 u 8 números.";
     if (!password) e.password = "Escribí tu contraseña.";
     setFieldErrors(e);
     setFormError("");
@@ -67,13 +67,12 @@ export default function MemberLoginForm({ demoState }: { demoState: DemoState })
       )}
 
       <TabbedCard tab="Ingreso con DNI">
-        <form noValidate onSubmit={onSubmit} className="space-y-5" aria-busy={loading}>
+        <form noValidate onSubmit={onSubmit} className="space-y-4" aria-busy={loading}>
           <TextField
             id="dni"
             label="DNI"
             inputMode="numeric"
             autoComplete="username"
-            hint="Sin puntos."
             value={dni}
             onChange={(e) => setDni(e.target.value)}
             error={fieldErrors.dni}
@@ -100,7 +99,7 @@ export default function MemberLoginForm({ demoState }: { demoState: DemoState })
       <p className="text-center text-small text-text-muted">
         ¿Todavía no sos socio? <TextLink href="/sumate" className="inline-flex min-h-11 items-center">Sumate a la comunidad</TextLink>
       </p>
-      <p className="text-center">
+      <p>
         <DevTag>Demo · cualquier DNI entra · 99000099 muestra error</DevTag>
       </p>
     </AccessShell>

@@ -12,7 +12,7 @@ export default function AccesoLayout({ children }: { children: React.ReactNode }
     <>
       <MinimalHeader />
       <div className="flex-1">{children}</div>
-      <SiteFooter />
+      <SiteFooter compact />
     </>
   );
 }

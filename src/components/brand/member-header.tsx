@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { LogOut, Menu, X } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { BrandButterfly } from "./headers";
+import { BrandLockup } from "./headers";
 
 const LINKS = [
   { href: "/qr/mi-espacio", label: "Mi espacio" },
@@ -40,11 +40,9 @@ export function MemberHeader({ memberName }: { memberName: string }) {
 
   return (
     <header className="page-gutter border-b border-border/70 bg-background">
-      <div className="admin-column flex h-16 items-center justify-between gap-4">
+      <div className="admin-column flex h-[var(--nav-h)] items-center justify-between gap-4">
         <Link href="/qr/mi-espacio" aria-label="Amarí Dul, mi espacio" className="flex min-h-11 items-center gap-2">
-          <BrandButterfly className="!h-7 sm:!h-8" />
-          {/* eslint-disable-next-line @next/next/no-img-element -- static brand SVG */}
-          <img src="/brand/wordmark-bold.svg" alt="" className="!h-[1.375rem] !w-auto sm:!h-6" />
+          <BrandLockup />
         </Link>
         <nav aria-label="Portal de socios" className="hidden items-center gap-6 lg:flex">
           {LINKS.map((l) => link(l))}

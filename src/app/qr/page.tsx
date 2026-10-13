@@ -10,7 +10,9 @@ import { EditorialSection } from "@/components/brand/editorial-section";
 import { MemberAccessLink, MinimalHeader } from "@/components/brand/headers";
 import { Accordion } from "@/components/ui/accordion";
 import { DevTag } from "@/components/ui/display";
-import { faqClosingPhrase, faqPlaceholderAnswer, faqQuestions, institutionalPhrase } from "@/demo/content";
+import { faqAnswers, faqClosingPhrase, faqPlaceholderAnswer, faqQuestions, institutionalPhrase } from "@/demo/content";
+import { isDemoEnabled } from "@/lib/demo";
+import { faqAvailable, portalAvailable } from "@/lib/features";
 
 const title = BRAND.name;
 const description = "Información del producto y contacto.";
@@ -57,6 +59,11 @@ const JOURNEY = [
 ];
 
 export default function QRPage() {
+  // Locally everything shows, with DEV notes as a guide. In production only finished content does:
+  // no notes, no links to flows that are not live yet, no FAQ until its answers are approved.
+  const demo = isDemoEnabled();
+  const portal = portalAvailable();
+  const showFaq = faqAvailable();
   return (
     <>
       {/* Portada: photograph first, circular lockup, institutional phrase. */}
@@ -71,14 +78,14 @@ export default function QRPage() {
           <Image src={heroPhoto} alt="" fill quality={85} sizes="40vw" className="object-cover object-top" />
         </div>
         <div aria-hidden className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(29_52_30/0.45)_0%,rgb(29_52_30/0.05)_45%,rgba(26,44,31,0.7)_100%)]" />
-        <DevTag className="absolute right-3 bottom-3 z-10">Foto provisoria del mockup</DevTag>
-        <MinimalHeader tone="over-photo" right={<MemberAccessLink tone="over-photo" />} />
+        {demo && <DevTag className="absolute right-3 bottom-3 z-10">Foto provisoria del mockup</DevTag>}
+        <MinimalHeader tone="over-photo" right={portal ? <MemberAccessLink tone="over-photo" /> : undefined} />
         <h1 className="sr-only">Amarí Dul, asociación civil</h1>
         <div className="page-gutter flex flex-1 flex-col items-center justify-center gap-6 pt-18 pb-20 text-center sm:gap-8 sm:pt-20 sm:pb-24">
           <CircleLogo className="w-[min(86vw,54svh,26rem)] lg:w-[min(56svh,30rem)]" />
           <div className="space-y-2">
             <p className="mx-auto max-w-[17ch] font-display text-[clamp(2rem,1.45rem+2.6vw,3.25rem)] leading-[1.1] font-medium text-white [text-shadow:0_1px_16px_rgba(0,0,0,0.4)] sm:max-w-[22ch]">{institutionalPhrase}</p>
-            <DevTag>Frase pendiente</DevTag>
+            {demo && <DevTag>Frase pendiente</DevTag>}
           </div>
         </div>
         <a
@@ -94,14 +101,15 @@ export default function QRPage() {
         <EditorialSection
           id="comunidad"
           eyebrow="Comunidad"
-          title="Sumate a Amarí Dul"
+          title={portal ? "Sumate a Amarí Dul" : "Conocé Amarí Dul"}
           intro={
             <>
-              {faqClosingPhrase} <DevTag className="mt-2">Frase pendiente</DevTag>
+              {faqClosingPhrase} {demo && <DevTag className="mt-2">Frase pendiente</DevTag>}
             </>
           }
           className="scroll-mt-0"
         >
+          {portal && (
           <ul className="divide-y divide-mist-line border-y border-mist-line">
             {PATHS.map((path) => (
               <li key={path.href} className={path.theme}>
@@ -118,27 +126,21 @@ export default function QRPage() {
               </li>
             ))}
           </ul>
+          )}
           <Link href="/" className="font-ui mt-6 inline-flex min-h-11 items-center gap-2 text-[0.8125rem] tracking-[0.18em] !text-arena-700 uppercase hover:!text-forest">
             Conocé más sobre Amarí Dul <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
           </Link>
         </EditorialSection>
 
-        {/* Joining: its own violet ground, with the butterfly drifting behind. */}
+        {/* Joining: its own violet ground. */}
+        {portal && (
         <EditorialSection
           id="sumarte"
           eyebrow="Asociarse"
           title="Cómo sumarte"
           intro="Tres pasos, con el acompañamiento del equipo de la asociación."
           className="flujo-sumate border-y border-lila-100 bg-[linear-gradient(180deg,var(--lila-50)_0%,var(--lila-100)_100%)]"
-          decor={
-            <>
-              <div aria-hidden className="pointer-events-none absolute top-1/3 -right-28 -z-10 w-72 rotate-[16deg] sm:-top-16 sm:-right-24 sm:w-[28rem]">
-                {/* eslint-disable-next-line @next/next/no-img-element -- static brand SVG */}
-                <img src="/brand/logo.svg" alt="" className="parallax !h-auto w-full opacity-[0.12] [filter:brightness(0)_saturate(100%)_invert(27%)_sepia(14%)_saturate(1200%)_hue-rotate(225deg)]" style={{ "--parallax-from": "-15%", "--parallax-to": "35%" } as React.CSSProperties} />
-              </div>
-              <span aria-hidden className="pointer-events-none absolute -bottom-40 -left-32 -z-10 size-96 !rounded-full bg-lila-200/60 blur-3xl" />
-            </>
-          }
+          decor={<span aria-hidden className="pointer-events-none absolute -bottom-40 -left-32 -z-10 size-96 !rounded-full bg-lila-200/60 blur-3xl" />}
         >
           <ol>
             {JOURNEY.map((step, i) => (
@@ -169,29 +171,18 @@ export default function QRPage() {
             </span>
           </p>
         </EditorialSection>
+        )}
 
-        {/* FAQ: warm dark sand over the plant photo, which drifts slower than the page. */}
-        <EditorialSection
-          id="preguntas"
-          eyebrow="Información"
-          title="Preguntas frecuentes"
-          tone="dark"
-          className="scroll-mt-0"
-          decor={
-            <>
-              <div aria-hidden className="absolute inset-x-0 -inset-y-[20%] -z-20">
-                <Image src={heroPhoto} alt="" fill quality={75} sizes="100vw" className="parallax object-cover" style={{ "--parallax-from": "-12%", "--parallax-to": "12%" } as React.CSSProperties} />
-              </div>
-              <div aria-hidden className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(49_45_38/0.9)_0%,rgb(49_45_38/0.66)_45%,rgb(49_45_38/0.92)_100%)]" />
-            </>
-          }
-        >
+        {showFaq && (
+        <EditorialSection id="preguntas" eyebrow="Información" title="Preguntas frecuentes" className="scroll-mt-0 bg-arena-100">
           <Accordion
-            variant="lines-dark"
+            variant="lines"
             items={faqQuestions.map((q) => ({
               id: q.id,
               title: q.title,
-              content: (
+              content: faqAnswers[q.id] ? (
+                <p>{faqAnswers[q.id]}</p>
+              ) : (
                 <div className="space-y-3">
                   <DevTag>Respuesta pendiente</DevTag>
                   <p>{faqPlaceholderAnswer}</p>
@@ -200,6 +191,7 @@ export default function QRPage() {
             }))}
           />
         </EditorialSection>
+        )}
       </main>
 
       <SiteFooter tone="neutral" />

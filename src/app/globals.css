@@ -85,12 +85,12 @@ body {
 
 html {
   scroll-behavior: smooth;
-  --nav-h: 3.5rem;
+  --nav-h: 4.5rem;
 }
 
 @media (width >= 40rem) {
   html {
-    --nav-h: 4rem;
+    --nav-h: 5rem;
   }
 }
 
@@ -460,6 +460,10 @@ img {
 body:has(.theme-hueso) {
   background-color: #f6f3ec;
 }
+/* Reserve the scrollbar's room so pages with and without scroll keep the same layout. */
+html:has(.theme-hueso) {
+  scrollbar-gutter: stable;
+}
 
 /* Development-only markers: hidden unless the layout flags the demo environment. */
 .dev-only {
@@ -473,26 +477,5 @@ body:has(.theme-hueso) {
   .motion-safe-only {
     animation: none !important;
     transition: none !important;
-  }
-}
-
-/* Parallax: a decorative layer drifts against the scroll while its section crosses the viewport.
-   Pure CSS (scroll-driven animations); static where unsupported or with reduced motion. */
-@keyframes parallax-drift {
-  from {
-    transform: translate3d(0, var(--parallax-from, -10%), 0);
-  }
-  to {
-    transform: translate3d(0, var(--parallax-to, 10%), 0);
-  }
-}
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .parallax {
-      animation: parallax-drift linear both;
-      animation-timeline: view();
-      animation-range: cover;
-      will-change: transform;
-    }
   }
 }

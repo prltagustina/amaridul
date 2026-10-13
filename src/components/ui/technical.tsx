@@ -6,14 +6,14 @@ import { cn } from "@/lib/cn";
  * Information components in the manner of the Dambar fichas técnicas (folder tabs, gradient
  * bands, data blocks, THC:CBD ratio bars, outlined chips, rule rows, numbered steps), drawn
  * with the Amarí Dul plant palette. Three tones tell the kind of information apart:
- * green = comunidad, lilac = trazabilidad, amber = trámites y salud.
+ * green = comunidad y trazabilidad, lilac = asociarse, sand = trámites y salud.
  */
 
-export type InfoTone = "green" | "lilac" | "amber";
+export type InfoTone = "green" | "lilac" | "sand";
 
 export const TONE = {
   green: {
-    band: "bg-[linear-gradient(118deg,var(--hoja-900)_0%,var(--hoja-800)_50%,var(--hoja-700)_100%)]",
+    band: "bg-[linear-gradient(118deg,var(--hoja-800)_0%,var(--hoja-700)_50%,var(--hoja-600)_100%)]",
     tab: "border-accent",
     ink: "text-forest",
     fill: "bg-forest",
@@ -21,30 +21,30 @@ export const TONE = {
     line: "border-forest/70",
   },
   lilac: {
-    band: "bg-[linear-gradient(118deg,var(--lila-900)_0%,var(--lila-800)_50%,var(--lila-700)_100%)]",
+    band: "bg-[linear-gradient(118deg,var(--lila-800)_0%,var(--lila-700)_50%,var(--lila-600)_100%)]",
     tab: "border-lilac",
     ink: "text-lilac-ink",
     fill: "bg-lilac-ink",
     soft: "bg-lilac-soft",
     line: "border-lilac-ink/70",
   },
-  amber: {
-    band: "bg-[linear-gradient(118deg,var(--ambar-900)_0%,var(--ambar-800)_50%,var(--ambar-700)_100%)]",
-    tab: "border-amber",
-    ink: "text-amber-ink",
-    fill: "bg-amber-ink",
-    soft: "bg-amber-soft",
-    line: "border-amber-ink/70",
+  sand: {
+    band: "bg-[linear-gradient(118deg,var(--arena-800)_0%,var(--arena-700)_50%,var(--arena-600)_100%)]",
+    tab: "border-arena-500",
+    ink: "text-arena-800",
+    fill: "bg-arena-700",
+    soft: "bg-arena-100",
+    line: "border-arena-700/70",
   },
 } as const satisfies Record<InfoTone, Record<string, string>>;
 
-/** Three folder tabs, one per information tone (lilac · green · amber), to sit on top of a card. */
+/** Three folder tabs, one per information tone (lilac · green · sand), to sit on top of a card. */
 export function FolderTabs({ className }: { className?: string }) {
   return (
     <div aria-hidden className={cn("flex gap-1 px-5", className)}>
       <span className="h-3 flex-1 !rounded-t-[10px] bg-lilac" />
       <span className="h-3 flex-1 !rounded-t-[10px] bg-accent" />
-      <span className="h-3 flex-1 !rounded-t-[10px] bg-amber" />
+      <span className="h-3 flex-1 !rounded-t-[10px] bg-arena-400" />
     </div>
   );
 }

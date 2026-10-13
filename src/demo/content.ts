@@ -18,6 +18,11 @@ export const faqQuestions = [
   { id: "ingreso", title: "¿Cómo es el proceso de ingreso?" },
 ] as const;
 
+export type FaqId = (typeof faqQuestions)[number]["id"];
+
+/** Approved answers. The FAQ stays off the public site until every question has one. */
+export const faqAnswers: Partial<Record<FaqId, string>> = {};
+
 export const faqPlaceholderAnswer =
   "Acá va la respuesta aprobada por la asociación. Este texto de ejemplo ocupa su lugar para evaluar la lectura y el ritmo del acordeón.";
 

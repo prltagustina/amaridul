@@ -17,7 +17,7 @@ export default function AdmisionLayout({ children }: { children: React.ReactNode
       <div className="relative isolate flex-1 overflow-hidden">
         {children}
       </div>
-      <SiteFooter />
+      <SiteFooter compact />
     </div>
   );
 }

@@ -57,7 +57,7 @@ export default function LotLookup({ initial }: { initial: LookupState }) {
 
   return (
     <div className="space-y-8">
-      <TabbedCard tab="Tu envase" tone="lilac">
+      <TabbedCard tab="Tu envase">
         <form noValidate onSubmit={onSubmit} className="grid gap-5 sm:grid-cols-[1fr_1fr_auto] sm:items-start" aria-busy={result.kind === "loading"}>
           <Select
             id="producto"

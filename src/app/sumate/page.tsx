@@ -13,6 +13,7 @@ export default async function SumatePage({ searchParams }: { searchParams: Promi
   return (
     <main>
       <PageBand
+        compact
         tone="lilac"
         eyebrow="Sumate a la comunidad"
         title="Solicitud de preadmisión"
@@ -23,7 +24,7 @@ export default async function SumatePage({ searchParams }: { searchParams: Promi
         }
         tab="Preadmisión"
       />
-      <div className="page-gutter pt-8 pb-28 sm:pt-10">
+      <div className="page-gutter pt-8 pb-12 sm:pt-10">
         <div className="content-column">
           <SumateForm key={state} demoState={state} />
         </div>

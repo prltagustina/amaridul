@@ -31,15 +31,15 @@ export function PageBand({
   children?: ReactNode;
 }) {
   return (
-    <section className={cn("page-gutter relative overflow-hidden text-white", compact ? "pt-8 sm:pt-10" : "pt-10 sm:pt-14", TONE[tone].band)}>
+    <section className={cn("page-gutter relative overflow-hidden text-white", compact ? "pt-6 sm:pt-8" : "pt-10 sm:pt-14", TONE[tone].band)}>
       <span aria-hidden className="pointer-events-none absolute -top-24 -right-24 size-72 !rounded-full bg-white/10 blur-3xl" />
       <span aria-hidden className="pointer-events-none absolute -bottom-32 left-1/4 size-72 !rounded-full bg-white/5 blur-3xl" />
       <div className={cn("relative", columns[width], align === "center" && "text-center")}>
         {eyebrow && <p className="text-[11px] font-medium tracking-[0.2em] text-white/80 uppercase">{eyebrow}</p>}
-        <h1 className={cn("mt-2 font-display leading-[1.08] font-medium text-balance", compact ? "truncate text-[clamp(1.9rem,1.6rem+1.4vw,2.5rem)]" : "text-[clamp(2.1rem,1.6rem+2.4vw,3rem)]")}>{title}</h1>
-        {description && <p className={cn("max-w-xl text-[1.0625rem] leading-relaxed font-light text-white/85", compact ? "mt-1.5 truncate" : "mt-3", align === "center" && "mx-auto")}>{description}</p>}
+        <h1 className={cn("mt-2 font-display leading-[1.08] font-medium text-balance", compact ? "text-[clamp(1.9rem,1.6rem+1.4vw,2.5rem)]" : "text-[clamp(2.1rem,1.6rem+2.4vw,3rem)]")}>{title}</h1>
+        {description && <p className={cn("max-w-xl text-[1.0625rem] leading-relaxed font-light text-white/85", compact ? "mt-1.5" : "mt-3", align === "center" && "mx-auto")}>{description}</p>}
         {children}
-        <div className={cn("flex", compact ? "mt-6" : "mt-8", align === "center" && "justify-center", !tab && "h-4")}>
+        <div className={cn("flex", compact ? "mt-5" : "mt-8", align === "center" && "justify-center", !tab && "h-4")}>
           {tab && <SectionTab tone={tone} className="!bg-background">{tab}</SectionTab>}
         </div>
       </div>

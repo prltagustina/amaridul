@@ -212,10 +212,10 @@ export default function AdmissionWizard({ initialStep, demoState }: { initialSte
 
   if (view === "enviada") {
     return (
-      <Card className="space-y-6 py-10 text-center sm:py-12" role="status" aria-live="polite">
-        <CircleCheck aria-hidden className="mx-auto size-12 text-forest" strokeWidth={1.25} />
+      <Card className="space-y-5 py-8 text-center sm:py-9" role="status" aria-live="polite">
+        <CircleCheck aria-hidden className="mx-auto size-10 text-forest" strokeWidth={1.25} />
         <div className="space-y-3">
-          <h2 className="text-h1 text-forest">Recibimos tu solicitud formal</h2>
+          <h2 className="text-h2 text-forest">Recibimos tu solicitud formal</h2>
           <p className="text-eyebrow text-accent">Referencia ADM-2026-0003</p>
           <p className="mx-auto max-w-md text-body text-text-muted">
             La Comisión Directiva va a evaluar tu solicitud. Te vamos a avisar por email cuando haya una decisión.

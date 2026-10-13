@@ -13,7 +13,7 @@ export default function SocioLayout({ children }: { children: React.ReactNode })
     <>
       <MemberHeader memberName={demoMember.name} />
       <div className="flex-1">{children}</div>
-      <SiteFooter wide />
+      <SiteFooter wide compact />
     </>
   );
 }

@@ -69,7 +69,7 @@ export default function ActivateFlow({ initial }: { initial: Step }) {
           </div>
         </dl>
       </NewPasswordForm>
-      <p className="text-center">
+      <p>
         <DevTag>Demo · link de activación simulado</DevTag>
       </p>
     </AccessShell>
