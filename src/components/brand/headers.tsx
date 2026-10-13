@@ -56,7 +56,7 @@ export function MemberAccessLink({ tone = "light" }: { tone?: "over-photo" | "li
 }
 
 const LOCKUP = {
-  header: { butterfly: "!h-10", column: "w-[8.75rem] gap-1", text: "text-[0.5rem] tracking-[0.22em]" },
+  header: { butterfly: "!h-9 min-[420px]:!h-10", column: "w-[7.75rem] gap-1 min-[420px]:w-[8.75rem]", text: "text-[0.4375rem] tracking-[0.2em] min-[420px]:text-[0.5rem] min-[420px]:tracking-[0.22em]" },
   footer: { butterfly: "!h-12", column: "w-[11.25rem] gap-1.5", text: "text-[0.5625rem] tracking-[0.28em]" },
 } as const;
 
