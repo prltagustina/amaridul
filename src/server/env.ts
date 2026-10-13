@@ -19,6 +19,8 @@ const schema = z
     LOOKUP_KEY_ACTIVE: z.string().regex(/^v\d+$/),
     EMAIL_FROM: z.string().default("Amarí Dul (local) <notificaciones@example.com>"),
     EMAIL_REPLY_TO: z.string().optional(),
+    // Resend API key (server-only secret). When set, emails are really sent.
+    RESEND_API_KEY: z.string().startsWith("re_").optional(),
     // TEMPORARY (demo phase): "log" lets production run without an email provider, writing
     // messages to the server logs instead of sending them. Remove once Resend is connected.
     EMAIL_DELIVERY: z.enum(["log"]).optional(),

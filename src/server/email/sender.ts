@@ -33,6 +33,41 @@ export class ConsoleEmailSender implements EmailSender {
   }
 }
 
+export class EmailDeliveryError extends Error {}
+
+/**
+ * Resend (https://resend.com) over its REST API: one POST per message, plain text. The API key is a
+ * server-only secret; failures throw so callers can log them (they never lose the stored request).
+ */
+export class ResendEmailSender implements EmailSender {
+  constructor(
+    private readonly apiKey: string,
+    private readonly from: string,
+    private readonly fetchImpl: typeof fetch = fetch,
+  ) {}
+
+  async send(message: EmailMessage): Promise<void> {
+    const res = await this.fetchImpl("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: this.from,
+        to: [message.to],
+        subject: message.subject,
+        text: message.text,
+        ...(message.replyTo ? { replyTo: message.replyTo } : {}),
+        tags: [{ name: "template", value: message.template }],
+      }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) {
+      // The body names the problem (unverified domain, invalid key…); never the key itself.
+      const detail = (await res.text().catch(() => "")).slice(0, 300);
+      throw new EmailDeliveryError(`Resend respondió ${res.status}: ${detail}`);
+    }
+  }
+}
+
 /** Collects messages in memory; used by tests. */
 export class MemoryEmailSender implements EmailSender {
   readonly sent: EmailMessage[] = [];
