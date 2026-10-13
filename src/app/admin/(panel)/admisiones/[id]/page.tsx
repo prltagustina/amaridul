@@ -1,12 +1,10 @@
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/server/auth/session";
-import { assertDemo } from "@/lib/demo";
 import { admissions } from "@/demo/fixtures";
 import { AdminPageHeader } from "../../../ui";
 import AdmissionReview from "./review";
 
 export default async function AdmisionPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  assertDemo();
   await requireAdmin();
   const { id } = await params;
   const adm = admissions.find((a) => a.id === id);

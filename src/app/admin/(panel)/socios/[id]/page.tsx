@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/server/auth/session";
-import { assertDemo } from "@/lib/demo";
 import { DetailList } from "@/components/ui/data-list";
 import { Card } from "@/components/ui/display";
 import { members } from "@/demo/fixtures";
@@ -8,7 +7,6 @@ import { AdminPageHeader } from "../../../ui";
 import MemberActions from "./member-actions";
 
 export default async function SocioPage({ params }: { params: Promise<{ id: string }> }) {
-  assertDemo();
   await requireAdmin();
   const { id } = await params;
   const m = members.find((x) => x.id === id);

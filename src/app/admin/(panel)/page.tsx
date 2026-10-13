@@ -1,22 +1,12 @@
 import Link from "next/link";
 import { ArrowRight, Boxes, ClipboardCheck, Inbox, Users } from "lucide-react";
 import { requireAdmin } from "@/server/auth/session";
-import { isDemoEnabled } from "@/lib/demo";
 import { Card, DevTag } from "@/components/ui/display";
 import { admissions, auditEntries, lots, members, preAdmissions } from "@/demo/fixtures";
 import { AdminPageHeader } from "../ui";
 
 export default async function AdminHomePage() {
   const { user } = await requireAdmin();
-
-  if (!isDemoEnabled()) {
-    return (
-      <>
-        <AdminPageHeader title="Panel" />
-        <p className="text-body text-text-muted">Las secciones de preadmisiones, admisiones y padrón se incorporan en la Fase 1.</p>
-      </>
-    );
-  }
 
   const pending = [
     {

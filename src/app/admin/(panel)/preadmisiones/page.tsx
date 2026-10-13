@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireAdmin } from "@/server/auth/session";
-import { assertDemo, readState } from "@/lib/demo";
+import { readState } from "@/lib/demo";
 import { DataList } from "@/components/ui/data-list";
 import { DevStateBar } from "@/components/ui/dev-state-bar";
 import { StatusBadge } from "@/components/ui/display";
@@ -14,7 +14,6 @@ type Search = Promise<Record<string, string | string[] | undefined>>;
 const FILTERS = ["todas", "recibida", "en-revision", "invitada", "cerrada"] as const;
 
 export default async function PreadmisionesPage({ searchParams }: { searchParams: Search }) {
-  assertDemo();
   await requireAdmin();
   const state = await readState(searchParams, LIST_STATES);
   const filter = await readState(searchParams, FILTERS, "filtro");

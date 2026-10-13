@@ -8,21 +8,21 @@ import { cn } from "@/lib/cn";
 import { BrandLockup } from "@/components/brand/headers";
 
 const SECTIONS = [
-  { href: "/admin", label: "Inicio", icon: Home, demo: false },
-  { href: "/admin/preadmisiones", label: "Preadmisiones", icon: Inbox, demo: true },
-  { href: "/admin/admisiones", label: "Admisiones", icon: ClipboardCheck, demo: true },
-  { href: "/admin/socios", label: "Socios", icon: Users, demo: true },
-  { href: "/admin/productos", label: "Productos", icon: Tag, demo: true },
-  { href: "/admin/lotes", label: "Lotes", icon: Boxes, demo: true },
-  { href: "/admin/codigos", label: "Códigos", icon: QrCode, demo: true },
-  { href: "/admin/auditoria", label: "Auditoría", icon: ScrollText, demo: true },
-  { href: "/admin/seguridad", label: "Seguridad", icon: ShieldCheck, demo: false },
+  { href: "/admin", label: "Inicio", icon: Home },
+  { href: "/admin/preadmisiones", label: "Preadmisiones", icon: Inbox },
+  { href: "/admin/admisiones", label: "Admisiones", icon: ClipboardCheck },
+  { href: "/admin/socios", label: "Socios", icon: Users },
+  { href: "/admin/productos", label: "Productos", icon: Tag },
+  { href: "/admin/lotes", label: "Lotes", icon: Boxes },
+  { href: "/admin/codigos", label: "Códigos", icon: QrCode },
+  { href: "/admin/auditoria", label: "Auditoría", icon: ScrollText },
+  { href: "/admin/seguridad", label: "Seguridad", icon: ShieldCheck },
 ];
 
-export function AdminNav({ email, demo, signOut }: { email: string; demo: boolean; signOut: ReactNode }) {
+export function AdminNav({ email, signOut }: { email: string; signOut: ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const sections = SECTIONS.filter((s) => demo || !s.demo);
+  const sections = SECTIONS;
   const isActive = (href: string) => (href === "/admin" ? pathname === href : pathname.startsWith(href));
 
   const list = (

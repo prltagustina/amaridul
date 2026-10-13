@@ -18,8 +18,13 @@ export const getCurrentSession = cache(async () => {
  * Second factor enrollment is mandatory everywhere except the local development machine
  * (explicit APP_ENV=local and never on Vercel, where VERCEL is always set). Tests run with
  * APP_ENV=test, so they keep exercising the real requirement.
+ *
+ * TEMPORARY (demo phase): ADMIN_SECOND_FACTOR=optional makes it optional on a deployment.
+ * Set on Vercel production for the pre-delivery demo; delete that variable before handing
+ * over to restore the requirement. Admins can still enrol voluntarily from /admin/seguridad.
  */
 export function isSecondFactorRequired(): boolean {
+  if (process.env.ADMIN_SECOND_FACTOR === "optional") return false;
   return !(process.env.APP_ENV === "local" && !process.env.VERCEL);
 }
 

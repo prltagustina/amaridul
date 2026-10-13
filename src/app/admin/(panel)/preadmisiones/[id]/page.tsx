@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/server/auth/session";
-import { assertDemo } from "@/lib/demo";
 import { DetailList } from "@/components/ui/data-list";
 import { Card } from "@/components/ui/display";
 import { preAdmissions } from "@/demo/fixtures";
@@ -8,7 +7,6 @@ import { AdminPageHeader } from "../../../ui";
 import PreAdmissionActions from "./actions-panel";
 
 export default async function PreadmisionPage({ params }: { params: Promise<{ id: string }> }) {
-  assertDemo();
   await requireAdmin();
   const { id } = await params;
   const pre = preAdmissions.find((p) => p.id === id);

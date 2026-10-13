@@ -1,6 +1,6 @@
 import { FileBadge, Plus } from "lucide-react";
 import { requireAdmin } from "@/server/auth/session";
-import { assertDemo, readState } from "@/lib/demo";
+import { readState } from "@/lib/demo";
 import { LinkButton } from "@/components/ui/button";
 import { DataList } from "@/components/ui/data-list";
 import { DevStateBar } from "@/components/ui/dev-state-bar";
@@ -11,7 +11,6 @@ import { lotStatus } from "../../status";
 import { AdminPageHeader } from "../../ui";
 
 export default async function LotesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  assertDemo();
   await requireAdmin();
   const state = await readState(searchParams, LIST_STATES);
   return (

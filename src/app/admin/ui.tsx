@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ArrowLeft, LogOut } from "lucide-react";
-import { isDemoEnabled } from "@/lib/demo";
 import { logout } from "./actions";
 import { AdminNav } from "./admin-nav";
 
@@ -14,7 +13,7 @@ export function EnvironmentNotice() {
   );
 }
 
-/** Sidebar on desktop, collapsible menu on mobile. Fixture-backed sections only appear in the demo environment. */
+/** Sidebar on desktop, collapsible menu on mobile. Sections still run on fixtures until Fase 1 connects them. */
 export function AdminShell({ email, children }: { email: string; children: ReactNode }) {
   const signOut = (
     <form action={logout}>
@@ -27,7 +26,7 @@ export function AdminShell({ email, children }: { email: string; children: React
     <>
       <EnvironmentNotice />
       <div className="flex flex-1 flex-col lg:flex-row">
-        <AdminNav email={email} demo={isDemoEnabled()} signOut={signOut} />
+        <AdminNav email={email} signOut={signOut} />
         <main id="contenido" className="min-w-0 flex-1 page-gutter pt-8 pb-24 lg:px-10 lg:pt-10">
           <div className="admin-column">{children}</div>
         </main>

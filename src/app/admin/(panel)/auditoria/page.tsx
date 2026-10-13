@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/server/auth/session";
-import { assertDemo, readState } from "@/lib/demo";
+import { readState } from "@/lib/demo";
 import { DataList } from "@/components/ui/data-list";
 import { DevStateBar } from "@/components/ui/dev-state-bar";
 import { auditEntries } from "@/demo/fixtures";
@@ -7,7 +7,6 @@ import { LIST_STATES, ListStateView } from "../../list-state";
 import { AdminPageHeader } from "../../ui";
 
 export default async function AuditoriaPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  assertDemo();
   await requireAdmin();
   const state = await readState(searchParams, LIST_STATES);
   return (
