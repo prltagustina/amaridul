@@ -12,7 +12,6 @@ import { Accordion } from "@/components/ui/accordion";
 import { DevTag } from "@/components/ui/display";
 import { faqAnswers, faqClosingPhrase, faqPlaceholderAnswer, faqQuestions, institutionalPhrase } from "@/demo/content";
 import { isDemoEnabled } from "@/lib/demo";
-import { faqAvailable } from "@/lib/features";
 
 const title = BRAND.name;
 const description = "Información del producto y contacto.";
@@ -59,10 +58,8 @@ const JOURNEY = [
 ];
 
 export default function QRPage() {
-  // Locally and on previews everything shows, with DEV notes as a guide. In production: no notes
-  // and no FAQ until its answers are approved.
+  // Locally and on previews DEV notes show as a guide; production renders the same page without them.
   const demo = isDemoEnabled();
-  const showFaq = faqAvailable();
   return (
     <>
       {/* Portada: photograph first, circular lockup, institutional phrase. */}
@@ -168,7 +165,6 @@ export default function QRPage() {
           </p>
         </EditorialSection>
 
-        {showFaq && (
         <EditorialSection id="preguntas" eyebrow="Información" title="Preguntas frecuentes" className="scroll-mt-0 bg-arena-100">
           <Accordion
             variant="lines"
@@ -186,7 +182,6 @@ export default function QRPage() {
             }))}
           />
         </EditorialSection>
-        )}
       </main>
 
       <SiteFooter tone="neutral" />

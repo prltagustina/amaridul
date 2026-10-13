@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { BRAND } from "@/lib/constants";
-import { faqAvailable } from "@/lib/features";
 import { BrandLockup } from "./headers";
 
-/** Footer links. The FAQ link appears once the FAQ is published. */
+/** Footer links. */
 function FooterLinks({ link, className }: { link: string; className?: string }) {
   return (
     <nav aria-label="Pie de página" className={className}>
@@ -13,11 +12,9 @@ function FooterLinks({ link, className }: { link: string; className?: string }) 
       <Link href="/qr" className={`inline-flex min-h-11 items-center ${link}`}>
         Producto
       </Link>
-      {faqAvailable() && (
-        <Link href="/qr#preguntas" className={`inline-flex min-h-11 items-center ${link}`}>
-          Preguntas frecuentes
-        </Link>
-      )}
+      <Link href="/qr#preguntas" className={`inline-flex min-h-11 items-center ${link}`}>
+        Preguntas frecuentes
+      </Link>
       <Link href="/qr/login" className={`inline-flex min-h-11 items-center ${link}`}>
         Acceso socios
       </Link>

@@ -20,7 +20,7 @@ export const faqQuestions = [
 
 export type FaqId = (typeof faqQuestions)[number]["id"];
 
-/** Approved answers. The FAQ stays off the public site until every question has one. */
+/** Approved answers; questions without one show the placeholder answer. */
 export const faqAnswers: Partial<Record<FaqId, string>> = {};
 
 export const faqPlaceholderAnswer =
