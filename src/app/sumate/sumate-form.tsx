@@ -8,6 +8,7 @@ import { Alert, Card, DevTag } from "@/components/ui/display";
 import { Select, TextField } from "@/components/ui/field";
 import { RuleList, TabbedCard } from "@/components/ui/technical";
 import { interestOptions, privacySummary, provinces, reprocannOptions } from "@/demo/content";
+import { submitPreAdmission } from "./actions";
 
 type Values = {
   nombre: string;
@@ -56,6 +57,9 @@ export default function SumateForm({ demoState }: { demoState: "default" | "load
     demoState === "default" ? "idle" : demoState === "loading" ? "loading" : demoState,
   );
   const summaryRef = useRef<HTMLDivElement>(null);
+  const trapRef = useRef<HTMLInputElement>(null);
+  const [result, setResult] = useState<{ reference: string | null; demo?: boolean }>({ reference: demoState === "success" ? "PRE-2026-0001" : null, demo: true });
+  const [failure, setFailure] = useState<"validation" | "rate" | "server">("server");
 
   const askReprocann = values.intereses.some((i) => interestOptions.find((o) => o.value === i)?.health);
   const set = <K extends keyof Values>(k: K, v: Values[K]) => setValues((s) => ({ ...s, [k]: v }));
@@ -70,8 +74,20 @@ export default function SumateForm({ demoState }: { demoState: "default" | "load
       return;
     }
     setStatus("loading");
-    // Demo only: nothing is stored or sent.
-    window.setTimeout(() => setStatus(demoState === "error" ? "error" : "success"), 900);
+    submitPreAdmission(values, trapRef.current?.value ?? "")
+      .then((r) => {
+        if (r.ok) {
+          setResult(r);
+          setStatus("success");
+        } else {
+          setFailure(r.error);
+          setStatus("error");
+        }
+      })
+      .catch(() => {
+        setFailure("server");
+        setStatus("error");
+      });
   }
 
   if (status === "success") {
@@ -80,7 +96,7 @@ export default function SumateForm({ demoState }: { demoState: "default" | "load
         <CircleCheck aria-hidden className="mx-auto size-10 text-forest" strokeWidth={1.25} />
         <div className="space-y-3">
           <h2 className="text-h2 text-forest">Recibimos tu solicitud</h2>
-          <p className="text-eyebrow text-accent">Referencia PRE-2026-0001</p>
+          {result.reference && <p className="text-eyebrow text-accent">Referencia {result.reference}</p>}
           <p className="mx-auto max-w-md text-body text-text-muted">
             El equipo de Amarí Dul va a revisarla y se va a poner en contacto con vos. Enviar la solicitud no implica la admisión como socio.
           </p>
@@ -89,7 +105,7 @@ export default function SumateForm({ demoState }: { demoState: "default" | "load
           <Mail aria-hidden className="size-4 shrink-0" strokeWidth={1.5} />
           Te enviamos un email de confirmación con la referencia.
         </p>
-        <DevTag>Demo · no se guardó ni envió nada</DevTag>
+        {result.demo && <DevTag>Demo · no se guardó ni envió nada</DevTag>}
         <div>
           <LinkButton href="/qr" variant="secondary">
             Volver
@@ -120,9 +136,18 @@ export default function SumateForm({ demoState }: { demoState: "default" | "load
       )}
       {status === "error" && (
         <Alert tone="error" title="No pudimos enviar la solicitud" live>
-          Probá de nuevo en unos minutos. Si el problema sigue, escribinos.
+          {failure === "rate"
+            ? "Recibimos varios envíos seguidos desde tu conexión. Esperá unos minutos y volvé a probar."
+            : failure === "validation"
+              ? "Revisá los datos del formulario y volvé a enviarlo."
+              : "Probá de nuevo en unos minutos. Si el problema sigue, escribinos."}
         </Alert>
       )}
+      {/* Honeypot: hidden from people and assistive tech; bots tend to fill every field. */}
+      <div aria-hidden className="absolute -left-[9999px] h-px w-px overflow-hidden">
+        <label htmlFor="website">Sitio web</label>
+        <input ref={trapRef} id="website" name="website" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
+      </div>
 
       <TabbedCard tab="1. Tus datos" bodyClassName="space-y-5">
         <TextField id="nombre" label="Nombre y apellido" autoComplete="name" value={values.nombre} onChange={(e) => set("nombre", e.target.value)} error={errors.nombre} />

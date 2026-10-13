@@ -1,20 +1,25 @@
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/server/auth/session";
+import { getDb } from "@/server/db";
+import { getKeyrings } from "@/server/crypto";
+import { CLOSE_REASONS, getPreAdmission } from "@/server/pre-admissions";
 import { DetailList } from "@/components/ui/data-list";
 import { Card } from "@/components/ui/display";
-import { preAdmissions } from "@/demo/fixtures";
 import { AdminPageHeader } from "../../../ui";
 import PreAdmissionActions from "./actions-panel";
+
+const dateFormat = new Intl.DateTimeFormat("es-AR", { dateStyle: "long", timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" });
+const noteFormat = new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" });
 
 export default async function PreadmisionPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
-  const pre = preAdmissions.find((p) => p.id === id);
+  const pre = await getPreAdmission(await getDb(), getKeyrings().field, id);
   if (!pre) notFound();
 
   return (
     <>
-      <AdminPageHeader back={{ href: "/admin/preadmisiones", label: "Preadmisiones" }} eyebrow={pre.reference} title={pre.name} description={`Recibida el ${pre.date}`} />
+      <AdminPageHeader back={{ href: "/admin/preadmisiones", label: "Preadmisiones" }} eyebrow={pre.reference} title={pre.fullName} description={`Recibida el ${dateFormat.format(pre.createdAt)}`} />
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-6">
           <Card className="space-y-5">
@@ -37,13 +42,20 @@ export default async function PreadmisionPage({ params }: { params: Promise<{ id
             </ul>
             <DetailList
               items={[
-                { label: "REPROCANN", value: pre.reprocann },
-                { label: "Participación", value: pre.participation },
+                { label: "REPROCANN", value: pre.reprocann ?? "—" },
+                { label: "Participación", value: pre.wantsToParticipate ? "Sí" : "No" },
               ]}
             />
           </Card>
         </div>
-        <PreAdmissionActions reference={pre.reference} email={pre.email} initialStatus={pre.status} />
+        <PreAdmissionActions
+          id={pre.id}
+          reference={pre.reference}
+          status={pre.status}
+          closedReason={pre.closedReason}
+          closeReasons={[...CLOSE_REASONS]}
+          notes={pre.notes.map((n) => ({ id: n.id, text: n.body, at: noteFormat.format(n.createdAt), author: n.author }))}
+        />
       </div>
     </>
   );

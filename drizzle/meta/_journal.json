@@ -8,6 +8,13 @@
       "when": 1791660364572,
       "tag": "0000_fase0_base",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791860485762,
+      "tag": "0001_fase1_preadmisiones",
+      "breakpoints": true
     }
   ]
 }

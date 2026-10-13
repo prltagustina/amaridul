@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { requireAdmin } from "@/server/auth/session";
+import { getDb } from "@/server/db";
+import { listPreAdmissions, type PreAdmissionStatus } from "@/server/pre-admissions";
 import { readState } from "@/lib/demo";
 import { DataList } from "@/components/ui/data-list";
 import { DevStateBar } from "@/components/ui/dev-state-bar";
 import { StatusBadge } from "@/components/ui/display";
 import { cn } from "@/lib/cn";
-import { preAdmissions, type PreAdmissionStatus } from "@/demo/fixtures";
 import { Filters, LIST_STATES, ListStateView } from "../../list-state";
 import { preStatus } from "../../status";
 import { AdminPageHeader } from "../../ui";
@@ -13,11 +14,13 @@ import { AdminPageHeader } from "../../ui";
 type Search = Promise<Record<string, string | string[] | undefined>>;
 const FILTERS = ["todas", "recibida", "en-revision", "invitada", "cerrada"] as const;
 
+const dateFormat = new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" });
+
 export default async function PreadmisionesPage({ searchParams }: { searchParams: Search }) {
   await requireAdmin();
   const state = await readState(searchParams, LIST_STATES);
   const filter = await readState(searchParams, FILTERS, "filtro");
-  const rows = filter === "todas" ? preAdmissions : preAdmissions.filter((p) => p.status === filter);
+  const rows = await listPreAdmissions(await getDb(), filter === "todas" ? undefined : (filter as PreAdmissionStatus));
 
   return (
     <>
@@ -33,7 +36,7 @@ export default async function PreadmisionesPage({ searchParams }: { searchParams
               f === filter ? "border-forest bg-forest !text-white" : "border-border-strong/50 !text-foreground hover:border-forest",
             )}
           >
-            {f === "todas" ? "Todas" : preStatus[f as PreAdmissionStatus].label}
+            {f === "todas" ? "Todas" : preStatus[f].label}
           </Link>
         ))}
       </Filters>
@@ -44,10 +47,10 @@ export default async function PreadmisionesPage({ searchParams }: { searchParams
           rowKey={(r) => r.id}
           rowHref={(r) => `/admin/preadmisiones/${r.id}`}
           columns={[
-            { key: "name", header: "Nombre", primary: true, render: (r) => r.name },
+            { key: "name", header: "Nombre", primary: true, render: (r) => r.fullName },
             { key: "ref", header: "Referencia", render: (r) => <span className="font-mono text-[13px]">{r.reference}</span> },
             { key: "loc", header: "Provincia", render: (r) => r.province },
-            { key: "date", header: "Fecha", render: (r) => r.date },
+            { key: "date", header: "Fecha", render: (r) => dateFormat.format(r.createdAt) },
             { key: "status", header: "Estado", render: (r) => <StatusBadge tone={preStatus[r.status].tone}>{preStatus[r.status].label}</StatusBadge> },
           ]}
         />

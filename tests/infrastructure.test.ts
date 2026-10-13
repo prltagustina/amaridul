@@ -44,9 +44,16 @@ describe("memory rate limiter", () => {
 describe("email", () => {
   it("templates keep institutional text visibly pending", async () => {
     const sender = new MemoryEmailSender();
-    const { subject, text } = emailTemplates.pre_admission_received({ reference: "PRE-2026-0001" });
-    await sender.send({ to: "x@example.com", subject, text, template: "pre_admission_received" });
+    const { subject, text } = emailTemplates.admission_received({ reference: "ADM-2026-0001" });
+    await sender.send({ to: "x@example.com", subject, text, template: "admission_received" });
     expect(sender.sent[0].text).toContain("PENDIENTE DE APROBACIÓN");
+  });
+
+  it("the preadmission acknowledgement greets by name and carries the reference", () => {
+    const { subject, text } = emailTemplates.pre_admission_received({ reference: "PRE-2026-0001", name: "Persona Ficticia" });
+    expect(subject).toContain("PRE-2026-0001");
+    expect(text).toContain("Hola, Persona Ficticia");
+    expect(text).toContain("no implica la admisión");
   });
 });
 

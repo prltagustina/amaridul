@@ -1,18 +1,21 @@
 import Link from "next/link";
 import { ArrowRight, Boxes, ClipboardCheck, Inbox, Users } from "lucide-react";
 import { requireAdmin } from "@/server/auth/session";
+import { getDb } from "@/server/db";
+import { countPreAdmissions } from "@/server/pre-admissions";
 import { Card, DevTag } from "@/components/ui/display";
-import { admissions, auditEntries, lots, members, preAdmissions } from "@/demo/fixtures";
+import { admissions, auditEntries, lots, members } from "@/demo/fixtures";
 import { AdminPageHeader } from "../ui";
 
 export default async function AdminHomePage() {
   const { user } = await requireAdmin();
+  const newPreAdmissions = await countPreAdmissions(await getDb(), ["recibida"]);
 
   const pending = [
     {
       href: "/admin/preadmisiones",
       icon: Inbox,
-      count: preAdmissions.filter((p) => p.status === "recibida").length,
+      count: newPreAdmissions,
       label: "preadmisiones nuevas para revisar",
     },
     {

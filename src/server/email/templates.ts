@@ -5,9 +5,20 @@ const PENDING = "[TEXTO PENDIENTE DE APROBACIÓN]";
 type Rendered = { subject: string; text: string };
 
 export const emailTemplates = {
-  pre_admission_received: (p: { reference: string }): Rendered => ({
+  // Provisional copy, consistent with the site; replace with the approved text.
+  pre_admission_received: (p: { reference: string; name: string }): Rendered => ({
     subject: `Recibimos tu solicitud ${p.reference}`,
-    text: `${PENDING}\n\nReferencia: ${p.reference}`,
+    text: [
+      `Hola, ${p.name}:`,
+      "",
+      "Recibimos tu solicitud de preadmisión a Amarí Dul. El equipo de la asociación la va a revisar y se va a poner en contacto con vos.",
+      "",
+      `Referencia: ${p.reference}`,
+      "",
+      "Enviar la solicitud no implica la admisión como socio: la decide la Comisión Directiva.",
+      "",
+      "Amarí Dul · Asociación civil",
+    ].join("\n"),
   }),
   admission_invitation: (p: { url: string; expiresAt: Date }): Rendered => ({
     subject: "Invitación a la solicitud formal de admisión",
