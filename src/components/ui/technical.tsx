@@ -163,18 +163,20 @@ const STEP_STATUS: Record<StepStatus, { label: string; eyebrow: string; title: s
 
 /**
  * Where a person stands in a process: a quiet vertical timeline. Done steps carry a green check,
- * the current one is filled and set on a white card, the next ones are outlined and muted.
+ * the current one is a filled circle, the next ones are outlined and muted.
  */
 export function ProcessTimeline({ steps, className }: { steps: { title: string; status: StepStatus; detail?: ReactNode; meta?: string }[]; className?: string }) {
   return (
-    <ol className={cn("relative", className)}>
+    // Equal rows keep the circles evenly spaced and the texts share one left edge, at any width.
+    <ol className={cn("grid auto-rows-fr gap-3", className)}>
       {steps.map((s, i) => {
         const st = STEP_STATUS[s.status];
         const last = i === steps.length - 1;
         return (
-          <li key={s.title} aria-current={s.status === "current" ? "step" : undefined} className={cn("relative grid grid-cols-[2.25rem_1fr] gap-x-4", !last && "pb-5")}>
+          <li key={s.title} aria-current={s.status === "current" ? "step" : undefined} className="relative grid grid-cols-[2.25rem_minmax(0,1fr)] items-start gap-x-3 sm:gap-x-4">
             {!last && (
-              <span aria-hidden className={cn("absolute top-10 bottom-1 left-[1.125rem] w-px -translate-x-1/2", s.status === "done" ? "bg-[var(--hoja-300)]" : "bg-mist-line")} />
+              // From under this circle to just above the next one, across the gap between rows.
+              <span aria-hidden className={cn("absolute top-11 -bottom-2 left-[1.125rem] w-px -translate-x-1/2", s.status === "done" ? "bg-[var(--hoja-300)]" : "bg-mist-line")} />
             )}
             <span
               aria-hidden
@@ -187,7 +189,7 @@ export function ProcessTimeline({ steps, className }: { steps: { title: string; 
             >
               {s.status === "done" ? <Check className="size-4" strokeWidth={2.25} /> : i + 1}
             </span>
-            <div className={cn("min-w-0", s.status === "current" ? "!rounded-card border border-mist-line bg-white px-4 py-3.5 shadow-[0_8px_24px_-18px_rgb(40_36_28/0.35)] sm:px-5" : "pt-1")}>
+            <div className="pt-1 pb-2">
               <p className={cn("text-[11px] font-medium tracking-[0.14em] uppercase", st.eyebrow)}>
                 <span className="sr-only">Paso {i + 1}, </span>
                 {st.label}
