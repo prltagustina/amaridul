@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { LOCKUP_CID, LOCKUP_URL } from "@/server/email/layout";
+import { LOCKUP_CID } from "@/server/email/layout";
 import { emailTemplates } from "@/server/email/templates";
 
 export const metadata: Metadata = { title: "Emails | Amarí Dul" };
 
-// Fictitious data, to review the designed emails as the person receives them.
+// Fictitious data, to review the designed emails as the person receives them. The lockup is
+// served from this site: the CSP only allows same-origin images (the real email embeds it).
 const expires = new Date("2026-10-20T13:54:00Z");
 const SAMPLES = [
   { flow: "Asociarse", email: emailTemplates.pre_admission_received({ name: "Persona Ficticia", reference: "PRE-2026-0007" }) },
@@ -27,7 +28,7 @@ export default function EmailsPage() {
           <section key={email.subject} className="space-y-2" aria-label={email.subject}>
             <p className="text-eyebrow text-accent">{flow}</p>
             <p className="font-title text-lg text-forest">{email.subject}</p>
-            <iframe title={email.subject} srcDoc={email.html?.replaceAll(`cid:${LOCKUP_CID}`, LOCKUP_URL)} className="h-[760px] w-full !rounded-card border border-mist-line bg-white" />
+            <iframe title={email.subject} srcDoc={email.html?.replaceAll(`cid:${LOCKUP_CID}`, "/email/lockup-cream.png")} className="h-[760px] w-full !rounded-card border border-mist-line bg-white" />
           </section>
         ))}
       </div>

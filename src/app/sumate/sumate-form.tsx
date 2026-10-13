@@ -27,7 +27,7 @@ const empty: Values = { nombre: "", email: "", telefono: "", provincia: "", loca
 const labels: Record<keyof Values, string> = {
   nombre: "Nombre y apellido",
   email: "Email",
-  telefono: "Teléfono o WhatsApp",
+  telefono: "Teléfono",
   provincia: "Provincia",
   localidad: "Localidad",
   intereses: "Qué te motiva a acercarte",
@@ -156,7 +156,7 @@ export default function SumateForm({ demoState }: { demoState: "default" | "load
           <TextField
             id="telefono"
             type="tel"
-            label="Teléfono o WhatsApp"
+            label="Teléfono"
             autoComplete="tel"
             inputMode="tel"
             hint="Con código de área."
@@ -244,7 +244,7 @@ export default function SumateForm({ demoState }: { demoState: "default" | "load
         <Button type="submit" variant="join" size="lg" editorial loading={status === "loading"} loadingLabel="Enviando…" className="w-full sm:w-auto">
           Enviar solicitud <ArrowRight aria-hidden className="size-5" strokeWidth={1.5} />
         </Button>
-        <p className="text-small text-text-muted">Te respondemos por email o WhatsApp.</p>
+        <p className="text-small text-text-muted">Te respondemos por email.</p>
       </div>
     </form>
   );
