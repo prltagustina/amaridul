@@ -35,6 +35,8 @@ export class ConsoleEmailSender implements EmailSender {
   }
 }
 
+import { LOCKUP_CID, LOCKUP_URL } from "./layout";
+
 export class EmailDeliveryError extends Error {}
 
 /**
@@ -60,6 +62,10 @@ export class ResendEmailSender implements EmailSender {
         subject: message.subject,
         text: message.text,
         ...(message.html ? { html: message.html } : {}),
+        // The designed emails reference the lockup by cid; Resend fetches it and embeds it.
+        ...(message.html?.includes(`cid:${LOCKUP_CID}`)
+          ? { attachments: [{ filename: "amaridul.png", path: LOCKUP_URL, content_id: LOCKUP_CID, content_type: "image/png" }] }
+          : {}),
         ...(message.replyTo || this.replyTo ? { replyTo: message.replyTo || this.replyTo } : {}),
         tags: [{ name: "template", value: message.template }],
       }),

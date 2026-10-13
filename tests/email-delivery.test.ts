@@ -72,6 +72,16 @@ describe("Resend", () => {
     await expect(send).rejects.not.toThrow(/re_ficticia/);
   });
 
+  it("embeds the lockup as an inline image when the HTML references it", async () => {
+    let body: Record<string, unknown> = {};
+    const fake = (async (_: string, init: RequestInit) => {
+      body = JSON.parse(String(init.body));
+      return new Response("{}", { status: 200 });
+    }) as unknown as typeof fetch;
+    await new ResendEmailSender("re_ficticia", "x@amaridul.com", undefined, fake).send({ to: "a@example.com", subject: "s", text: "t", html: '<img src="cid:amaridul-lockup">', template: "t" });
+    expect(body.attachments).toEqual([{ filename: "amaridul.png", path: "https://amaridul.com/email/lockup-cream.png", content_id: "amaridul-lockup", content_type: "image/png" }]);
+  });
+
   it("applies the default reply-to when the message has none", async () => {
     let body: Record<string, unknown> = {};
     const fake = (async (_: string, init: RequestInit) => {

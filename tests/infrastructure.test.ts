@@ -93,7 +93,7 @@ describe("designed emails", () => {
     const m = emailTemplates.admission_approved({ name: "Persona", memberNumber: "AD-0001", url, expiresAt: new Date("2026-10-20T13:54:00Z") });
     expect(m.html).toContain("AD-0001");
     expect(m.html).toContain(`href="${url}"`);
-    expect(m.html).toContain("https://amaridul.com/email/lockup-cream.png");
+    expect(m.html).toContain("cid:amaridul-lockup");
     expect(m.text).toContain(url);
     expect(m.text).toContain("AD-0001");
   });
