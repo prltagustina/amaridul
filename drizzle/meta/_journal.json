@@ -29,6 +29,13 @@
       "when": 1791864161938,
       "tag": "0003_fase1_socios",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791987157987,
+      "tag": "0004_productos",
+      "breakpoints": true
     }
   ]
 }
