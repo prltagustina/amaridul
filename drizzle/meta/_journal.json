@@ -36,6 +36,13 @@
       "when": 1791987157987,
       "tag": "0004_productos",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791988013961,
+      "tag": "0005_productos_atributos",
+      "breakpoints": true
     }
   ]
 }
