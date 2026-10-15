@@ -13,7 +13,6 @@ import { submitPreAdmission } from "./actions";
 type Values = {
   nombre: string;
   email: string;
-  telefono: string;
   provincia: string;
   localidad: string;
   intereses: string[];
@@ -22,12 +21,11 @@ type Values = {
   privacidad: boolean;
 };
 
-const empty: Values = { nombre: "", email: "", telefono: "", provincia: "", localidad: "", intereses: [], reprocann: "", participacion: "", privacidad: false };
+const empty: Values = { nombre: "", email: "", provincia: "", localidad: "", intereses: [], reprocann: "", participacion: "", privacidad: false };
 
 const labels: Record<keyof Values, string> = {
   nombre: "Nombre y apellido",
   email: "Email",
-  telefono: "Teléfono o WhatsApp",
   provincia: "Provincia",
   localidad: "Localidad",
   intereses: "Qué te motiva a acercarte",
@@ -40,7 +38,6 @@ function validate(v: Values, askReprocann: boolean) {
   const e: Partial<Record<keyof Values, string>> = {};
   if (v.nombre.trim().length < 3) e.nombre = "Escribí tu nombre y apellido.";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email.trim())) e.email = "Revisá el email: tiene que tener el formato nombre@dominio.com.";
-  if (v.telefono.replace(/\D/g, "").length < 8) e.telefono = "Escribí un teléfono con código de área.";
   if (!v.provincia) e.provincia = "Elegí tu provincia.";
   if (!v.localidad.trim()) e.localidad = "Escribí tu localidad.";
   if (!v.intereses.length) e.intereses = "Elegí al menos una opción.";
@@ -150,20 +147,9 @@ export default function SumateForm({ demoState }: { demoState: "default" | "load
       </div>
 
       <TabbedCard tab="1. Tus datos" bodyClassName="space-y-5">
-        <TextField id="nombre" label="Nombre y apellido" autoComplete="name" value={values.nombre} onChange={(e) => set("nombre", e.target.value)} error={errors.nombre} />
         <div className="grid gap-5 sm:grid-cols-2">
+          <TextField id="nombre" label="Nombre y apellido" autoComplete="name" value={values.nombre} onChange={(e) => set("nombre", e.target.value)} error={errors.nombre} />
           <TextField id="email" type="email" label="Email" autoComplete="email" inputMode="email" value={values.email} onChange={(e) => set("email", e.target.value)} error={errors.email} />
-          <TextField
-            id="telefono"
-            type="tel"
-            label="Teléfono o WhatsApp"
-            autoComplete="tel"
-            inputMode="tel"
-            hint="Con código de área."
-            value={values.telefono}
-            onChange={(e) => set("telefono", e.target.value)}
-            error={errors.telefono}
-          />
           <Select
             id="provincia"
             label="Provincia"

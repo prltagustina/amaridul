@@ -29,7 +29,7 @@ export default async function PreadmisionPage({ params }: { params: Promise<{ id
             <DetailList
               items={[
                 { label: "Email", value: pre.email },
-                { label: "Teléfono", value: pre.phone },
+                ...(pre.phone ? [{ label: "Teléfono", value: pre.phone }] : []),
                 { label: "Provincia", value: pre.province },
                 { label: "Localidad", value: pre.locality },
               ]}

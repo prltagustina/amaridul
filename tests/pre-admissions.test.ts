@@ -21,7 +21,6 @@ import { freshRings } from "./helpers/context";
 const valid = {
   nombre: "Persona Ficticia",
   email: "Persona.Ficticia@Example.com",
-  telefono: "+54 9 000 000-0001",
   provincia: "Santa Fe",
   localidad: "Localidad Ficticia",
   intereses: ["orientacion", "comunidad"],
@@ -50,11 +49,16 @@ describe("preadmission input", () => {
     ["unknown province", { provincia: "Atlántida" }],
     ["unknown interest", { intereses: ["otra-cosa"] }],
     ["no interest", { intereses: [] }],
-    ["short phone", { telefono: "123" }],
     ["bad email", { email: "sin-arroba" }],
     ["health interest without REPROCANN status", { intereses: ["orientacion"], reprocann: "" }],
   ])("rejects %s", (_, patch) => {
     expect(preAdmissionInput.safeParse({ ...valid, ...patch }).success).toBe(false);
+  });
+
+  it("does not ask for a phone, and ignores one if sent", () => {
+    const r = preAdmissionInput.safeParse({ ...valid, telefono: "+54 9 000 000-0001" });
+    expect(r.success).toBe(true);
+    expect(r.data).not.toHaveProperty("telefono");
   });
 
   it("does not ask REPROCANN for non-health interests", () => {

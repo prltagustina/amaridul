@@ -35,7 +35,7 @@ async function inCommission(dni: string, email = `persona.${dni}@example.com`) {
   const { id: preId } = await createPreAdmission(
     ctx.db,
     { field: ctx.rings.field, email: new MemoryEmailSender() },
-    preAdmissionInput.parse({ nombre: "Persona Ficticia", email, telefono: "+54 9 000 000-0001", provincia: "Santa Fe", localidad: "Localidad", intereses: ["comunidad"], reprocann: "", participacion: "si", privacidad: true }),
+    preAdmissionInput.parse({ nombre: "Persona Ficticia", email, provincia: "Santa Fe", localidad: "Localidad", intereses: ["comunidad"], reprocann: "", participacion: "si", privacidad: true }),
   );
   const invite = new MemoryEmailSender();
   await inviteToAdmission(ctx.db, { email: invite, baseURL }, adminId, preId);

@@ -1,0 +1,1 @@
+ALTER TABLE "pre_admissions" ALTER COLUMN "phone" DROP NOT NULL;

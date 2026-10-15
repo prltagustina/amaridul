@@ -10,7 +10,6 @@ import { freshRings } from "./helpers/context";
 const pre = {
   nombre: "Persona Ficticia",
   email: "persona.ficticia@example.com",
-  telefono: "+54 9 000 000-0001",
   provincia: "Santa Fe",
   localidad: "Localidad Ficticia",
   intereses: ["comunidad"],

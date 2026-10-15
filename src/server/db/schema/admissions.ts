@@ -20,7 +20,8 @@ export const preAdmissions = pgTable(
     status: preAdmissionStatus("status").notNull().default("recibida"),
     fullName: text("full_name").notNull(),
     email: text("email").notNull(),
-    phone: text("phone").notNull(),
+    // No longer asked in the form; kept for requests that came with it.
+    phone: text("phone"),
     province: text("province").notNull(),
     locality: text("locality").notNull(),
     wantsToParticipate: boolean("wants_to_participate").notNull(),

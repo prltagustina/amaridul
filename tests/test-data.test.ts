@@ -23,7 +23,7 @@ async function preadmission() {
   return createPreAdmission(
     ctx.db,
     { field: ctx.rings.field, email: new MemoryEmailSender() },
-    preAdmissionInput.parse({ nombre: "Persona Ficticia", email: "persona.borrado@example.com", telefono: "+54 9 000 000-0001", provincia: "Santa Fe", localidad: "Localidad", intereses: ["comunidad"], reprocann: "", participacion: "si", privacidad: true }),
+    preAdmissionInput.parse({ nombre: "Persona Ficticia", email: "persona.borrado@example.com", provincia: "Santa Fe", localidad: "Localidad", intereses: ["comunidad"], reprocann: "", participacion: "si", privacidad: true }),
   );
 }
 

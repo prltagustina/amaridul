@@ -26,11 +26,6 @@ export const preAdmissionInput = z
   .object({
     nombre: z.string().trim().min(3).max(120),
     email: z.string().trim().toLowerCase().max(200).regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
-    telefono: z
-      .string()
-      .trim()
-      .max(40)
-      .refine((v) => v.replace(/\D/g, "").length >= 8),
     provincia: z.enum(provinces),
     localidad: z.string().trim().min(1).max(120),
     intereses: z.array(z.enum(INTERESTS)).min(1).max(INTERESTS.length),
@@ -65,7 +60,6 @@ export async function createPreAdmission(
     reference,
     fullName: input.nombre,
     email: input.email,
-    phone: input.telefono,
     province: input.provincia,
     locality: input.localidad,
     wantsToParticipate: input.participacion === "si",
