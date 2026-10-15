@@ -31,12 +31,18 @@ export const chemotypeLabel = (v: string | null) => labelOf(CHEMOTYPES, v);
 /** "G1" until the definitive name is set, then "G1 · Name". */
 export const varietyLabel = (v: Pick<Variety, "code" | "name">) => (v.name ? `${v.code} · ${v.name}` : v.code);
 
+const todayInArgentina = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires" }).format(new Date());
+
 export const productInput = z.object({
   name: z.string().trim().min(2, "Escribí el nombre del producto.").max(80, "El nombre puede tener hasta 80 caracteres."),
   type: z.enum(["aceite", "crema", "inflorescencia"], { error: "Elegí el tipo de producto." }),
   varietyId: z.uuid({ error: "Elegí la variedad." }),
   cultivation: z.enum(["exterior", "controladas"], { error: "Elegí la modalidad de cultivo." }),
   chemotype: z.enum(["1", "2", "3"], { error: "Elegí el quimiotipo." }),
+  // Compared as YYYY-MM-DD strings, in Argentina's calendar day.
+  cultivatedOn: z.iso
+    .date({ error: "Indicá la fecha de cultivo." })
+    .refine((d) => d <= todayInArgentina(), "La fecha de cultivo no puede ser posterior a hoy."),
   description: z
     .string()
     .trim()
@@ -99,7 +105,7 @@ export async function createProduct(db: Database, actorUserId: string, input: Pr
         action: "product.created",
         entityType: "product",
         entityId: p.id,
-        metadata: { name: input.name, type: input.type, cultivation: input.cultivation, chemotype: input.chemotype, status: input.status },
+        metadata: { name: input.name, type: input.type, cultivation: input.cultivation, chemotype: input.chemotype, cultivatedOn: input.cultivatedOn, status: input.status },
       });
       return p.id;
     });
@@ -109,7 +115,7 @@ export async function createProduct(db: Database, actorUserId: string, input: Pr
   }
 }
 
-const EDITABLE = ["name", "type", "varietyId", "cultivation", "chemotype", "description", "status"] as const;
+const EDITABLE = ["name", "type", "varietyId", "cultivation", "chemotype", "cultivatedOn", "description", "status"] as const;
 
 /** Saves the edit and records which fields changed, with their previous and new values. */
 export async function updateProduct(db: Database, actorUserId: string, id: string, input: ProductInput): Promise<void> {
@@ -142,5 +148,24 @@ export async function renameVariety(db: Database, actorUserId: string, id: strin
   await db.transaction(async (tx) => {
     await tx.update(varieties).set({ name, updatedBy: actorUserId, updatedAt: new Date() }).where(eq(varieties.id, id));
     await audit(tx as unknown as Database, { actorUserId, action: "variety.renamed", entityType: "variety", entityId: id, metadata: { variety: v.code, name_before: v.name, name_after: name } });
+  });
+}
+
+/**
+ * Deletes a product. The audit entry keeps what it was, so the history survives the row. Once lots
+ * exist, a product with lots will not be deletable (the foreign key refuses it): mark it inactive instead.
+ */
+export async function deleteProduct(db: Database, actorUserId: string, id: string): Promise<void> {
+  const before = await getProduct(db, id);
+  if (!before) throw new ProductNotFoundError("El producto no existe.");
+  await db.transaction(async (tx) => {
+    await tx.delete(products).where(eq(products.id, id));
+    await audit(tx as unknown as Database, {
+      actorUserId,
+      action: "product.deleted",
+      entityType: "product",
+      entityId: id,
+      metadata: { name: before.name, type: before.type, varietyId: before.varietyId, cultivation: before.cultivation, chemotype: before.chemotype, cultivatedOn: before.cultivatedOn, status: before.status },
+    });
   });
 }

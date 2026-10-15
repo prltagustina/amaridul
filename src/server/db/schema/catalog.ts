@@ -1,5 +1,5 @@
 // Catalogue of products the association makes. Lots (traceability) will hang from here in Etapa 2.
-import { index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { date, index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { user } from "./auth";
 
@@ -32,6 +32,7 @@ export const products = pgTable(
     varietyId: uuid("variety_id").references(() => varieties.id, { onDelete: "restrict" }),
     cultivation: cultivationMode("cultivation"),
     chemotype: chemotype("chemotype"),
+    cultivatedOn: date("cultivated_on"),
     description: text("description"),
     status: productStatus("status").notNull().default("activo"),
     createdBy: uuid("created_by").references(() => user.id, { onDelete: "restrict" }),

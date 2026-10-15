@@ -43,6 +43,13 @@
       "when": 1791988013961,
       "tag": "0005_productos_atributos",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791988512249,
+      "tag": "0006_productos_fecha_cultivo",
+      "breakpoints": true
     }
   ]
 }

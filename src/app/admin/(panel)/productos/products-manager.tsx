@@ -2,14 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Package, Pencil, Plus } from "lucide-react";
+import { Package, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataList } from "@/components/ui/data-list";
 import { Alert, Card, EmptyState, StatusBadge } from "@/components/ui/display";
 import { Dialog } from "@/components/ui/dialog";
 import { Select, TextField, Textarea } from "@/components/ui/field";
 import { AdminPageHeader } from "../../ui";
-import { createProductAction, renameVarietyAction, updateProductAction, type ProductFormValues } from "./actions";
+import { createProductAction, deleteProductAction, renameVarietyAction, updateProductAction, type ProductFormValues } from "./actions";
 
 type Option = { value: string; label: string };
 export type ProductRow = {
@@ -23,12 +23,18 @@ export type ProductRow = {
   cultivationLabel: string | null;
   chemotype: string;
   chemotypeLabel: string | null;
+  cultivatedOn: string;
   description: string | null;
   status: "activo" | "inactivo";
 };
 export type VarietyRow = { id: string; code: string; name: string | null; label: string };
 
-const EMPTY: ProductFormValues = { name: "", type: "", varietyId: "", cultivation: "", chemotype: "", description: "", status: "activo" };
+const EMPTY: ProductFormValues = { name: "", type: "", varietyId: "", cultivation: "", chemotype: "", cultivatedOn: "", description: "", status: "activo" };
+const formatDate = (iso: string) => {
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+};
+const todayInArgentina = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires" }).format(new Date());
 const STATUS_OPTIONS = [
   { value: "activo", label: "Activo" },
   { value: "inactivo", label: "Inactivo" },
@@ -45,6 +51,8 @@ export default function ProductsManager({ rows, varieties, options }: { rows: Pr
   const [varietyName, setVarietyName] = useState("");
   const [varietyError, setVarietyError] = useState("");
   const [notice, setNotice] = useState("");
+  const [deleting, setDeleting] = useState<ProductRow | null>(null);
+  const [deleteError, setDeleteError] = useState("");
   const [pending, startTransition] = useTransition();
 
   const open = (row: ProductRow | "new") => {
@@ -52,7 +60,7 @@ export default function ProductsManager({ rows, varieties, options }: { rows: Pr
     setValues(
       row === "new"
         ? EMPTY
-        : { name: row.name, type: row.type, varietyId: row.varietyId, cultivation: row.cultivation, chemotype: row.chemotype, description: row.description ?? "", status: row.status },
+        : { name: row.name, type: row.type, varietyId: row.varietyId, cultivation: row.cultivation, chemotype: row.chemotype, cultivatedOn: row.cultivatedOn, description: row.description ?? "", status: row.status },
     );
     setErrors({});
     setFormError("");
@@ -74,6 +82,19 @@ export default function ProductsManager({ rows, varieties, options }: { rows: Pr
       }
       setEditing(null);
       setNotice(isNew ? `Producto «${values.name.trim()}» creado.` : `Cambios en «${values.name.trim()}» guardados.`);
+      router.refresh();
+    });
+
+  const remove = () =>
+    startTransition(async () => {
+      const row = deleting!;
+      const r = await deleteProductAction(row.id);
+      if (!r.ok) {
+        setDeleteError(r.error);
+        return;
+      }
+      setDeleting(null);
+      setNotice(`Producto «${row.name}» eliminado.`);
       router.refresh();
     });
 
@@ -122,14 +143,29 @@ export default function ProductsManager({ rows, varieties, options }: { rows: Pr
             { key: "variety", header: "Variedad", render: (r) => r.varietyLabel ?? missing },
             { key: "cultivation", header: "Cultivo", render: (r) => r.cultivationLabel ?? missing },
             { key: "chemotype", header: "Quimiotipo", render: (r) => (r.chemotype ? <span className="tabular-nums">{r.chemotype}</span> : missing) },
+            { key: "cultivatedOn", header: "Fecha de cultivo", render: (r) => (r.cultivatedOn ? <span className="tabular-nums">{formatDate(r.cultivatedOn)}</span> : missing) },
             { key: "status", header: "Estado", render: (r) => <StatusBadge tone={r.status === "activo" ? "success" : "neutral"}>{r.status === "activo" ? "Activo" : "Inactivo"}</StatusBadge> },
             {
               key: "edit",
               header: "Acciones",
               render: (r) => (
-                <Button variant="secondary" shape="admin" className="min-h-10 px-4" onClick={() => open(r)} aria-label={`Editar ${r.name}`}>
-                  <Pencil aria-hidden className="size-4" strokeWidth={1.5} /> Editar
-                </Button>
+                <div className="flex gap-2 whitespace-nowrap">
+                  <Button variant="secondary" shape="admin" className="min-h-10 px-4" onClick={() => open(r)} aria-label={`Editar ${r.name}`}>
+                    <Pencil aria-hidden className="size-4" strokeWidth={1.5} /> Editar
+                  </Button>
+                  <Button
+                    variant="danger"
+                    shape="admin"
+                    className="min-h-10 px-3"
+                    onClick={() => {
+                      setDeleting(r);
+                      setDeleteError("");
+                    }}
+                    aria-label={`Eliminar ${r.name}`}
+                  >
+                    <Trash2 aria-hidden className="size-4" strokeWidth={1.5} />
+                  </Button>
+                </div>
               ),
             },
           ]}
@@ -181,9 +217,23 @@ export default function ProductsManager({ rows, varieties, options }: { rows: Pr
           <Select id="product-variety" label="Variedad" placeholder="Elegí una variedad" options={varieties.map((v) => ({ value: v.id, label: v.label }))} value={values.varietyId} onChange={set("varietyId")} error={errors.varietyId} />
           <Select id="product-cultivation" label="Modalidad de cultivo" placeholder="Elegí la modalidad" options={options.cultivation} value={values.cultivation} onChange={set("cultivation")} error={errors.cultivation} />
           <Select id="product-chemotype" label="Quimiotipo" placeholder="Elegí el quimiotipo" options={options.chemotypes} value={values.chemotype} onChange={set("chemotype")} error={errors.chemotype} />
+          <TextField id="product-cultivated-on" type="date" label="Fecha de cultivo" value={values.cultivatedOn} onChange={set("cultivatedOn")} error={errors.cultivatedOn} max={todayInArgentina()} />
         </div>
         <Textarea id="product-description" label="Descripción" optional value={values.description} onChange={set("description")} error={errors.description} maxLength={500} rows={3} />
         <Select id="product-status" label="Estado" options={STATUS_OPTIONS} value={values.status} onChange={set("status")} error={errors.status} hint="Un producto inactivo deja de ofrecerse, pero conserva su historial." />
+      </Dialog>
+
+      <Dialog
+        open={deleting !== null}
+        onClose={() => setDeleting(null)}
+        title="Eliminar producto"
+        description={deleting ? `«${deleting.name}» se borra del catálogo. Queda registrado quién lo eliminó y con qué datos.` : ""}
+        confirmLabel={pending ? "Eliminando…" : "Eliminar producto"}
+        confirmVariant="danger"
+        confirmDisabled={pending}
+        onConfirm={remove}
+      >
+        {deleteError ? <Alert tone="error" live>{deleteError}</Alert> : <p className="text-body">Si solo dejó de ofrecerse, conviene marcarlo «Inactivo»: así conserva su historial.</p>}
       </Dialog>
 
       <Dialog

@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
-import { createProduct, DuplicateProductError, productInput, ProductNotFoundError, renameVariety, UnknownVarietyError, updateProduct, varietyNameInput } from "@/server/products";
+import { createProduct, deleteProduct, DuplicateProductError, productInput, ProductNotFoundError, renameVariety, UnknownVarietyError, updateProduct, varietyNameInput } from "@/server/products";
 
-export type ProductFormValues = { name: string; type: string; varietyId: string; cultivation: string; chemotype: string; description: string; status: string };
+export type ProductFormValues = { name: string; type: string; varietyId: string; cultivation: string; chemotype: string; cultivatedOn: string; description: string; status: string };
 export type ProductActionResult = { ok: true } | { ok: false; error: string; fieldErrors?: Partial<Record<keyof ProductFormValues, string>> };
 
 function parse(values: ProductFormValues) {
@@ -63,6 +63,19 @@ export async function renameVarietyAction(id: string, name: string): Promise<{ o
     if (e instanceof UnknownVarietyError) return { ok: false, error: e.message };
     console.error("Variety rename failed:", e instanceof Error ? e.message : e);
     return { ok: false, error: "No pudimos guardar el nombre. Probá de nuevo." };
+  }
+  revalidatePath("/admin/productos");
+  return { ok: true };
+}
+
+export async function deleteProductAction(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { user } = await requireAdmin();
+  try {
+    await deleteProduct(await getDb(), user.id, String(id));
+  } catch (e) {
+    if (e instanceof ProductNotFoundError) return { ok: false, error: "El producto ya no existe. Recargá la página." };
+    console.error("Product delete failed:", e instanceof Error ? e.message : e);
+    return { ok: false, error: "No pudimos eliminar el producto. Probá de nuevo." };
   }
   revalidatePath("/admin/productos");
   return { ok: true };

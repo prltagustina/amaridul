@@ -4,6 +4,7 @@ import { openPglite, type Database } from "@/server/db/client";
 import { auditLogs, user } from "@/server/db/schema";
 import {
   createProduct,
+  deleteProduct,
   DuplicateProductError,
   getProduct,
   listProducts,
@@ -29,7 +30,7 @@ beforeAll(async () => {
   g2 = vs.find((v) => v.code === "G2")!.id;
 });
 
-const base = () => ({ name: "Aceite Ficticio", type: "aceite", varietyId: g1, cultivation: "exterior", chemotype: "2", description: "", status: "activo" });
+const base = () => ({ name: "Aceite Ficticio", type: "aceite", varietyId: g1, cultivation: "exterior", chemotype: "2", cultivatedOn: "2026-04-15", description: "", status: "activo" });
 const input = (patch: Record<string, unknown> = {}) => productInput.parse({ ...base(), ...patch });
 
 describe("varieties", () => {
@@ -63,6 +64,9 @@ describe("product input", () => {
     ["no variety", { varietyId: "" }],
     ["an unknown cultivation mode", { cultivation: "interior" }],
     ["a chemotype other than 1, 2 or 3", { chemotype: "4" }],
+    ["no cultivation date", { cultivatedOn: "" }],
+    ["an impossible cultivation date", { cultivatedOn: "2026-02-30" }],
+    ["a cultivation date in the future", { cultivatedOn: "2999-01-01" }],
     ["an unknown status", { status: "borrado" }],
     ["a too long description", { description: "x".repeat(501) }],
   ])("rejects %s", (_, patch) => {
@@ -73,7 +77,7 @@ describe("product input", () => {
 describe("products", () => {
   it("creates a product with its variety, cultivation and chemotype, and audits who did it", async () => {
     const id = await createProduct(db, adminId, input({ name: "Inflorescencia Uno", type: "inflorescencia", cultivation: "controladas", chemotype: "3" }));
-    expect(await getProduct(db, id)).toMatchObject({ type: "inflorescencia", varietyId: g1, cultivation: "controladas", chemotype: "3", createdBy: adminId });
+    expect(await getProduct(db, id)).toMatchObject({ type: "inflorescencia", varietyId: g1, cultivation: "controladas", chemotype: "3", cultivatedOn: "2026-04-15", createdBy: adminId });
     const listed = (await listProducts(db)).find((p) => p.id === id)!;
     expect(listed.variety).toEqual({ code: "G1", name: null });
     const logs = await db.select().from(auditLogs).where(eq(auditLogs.entityId, id));
@@ -91,11 +95,20 @@ describe("products", () => {
 
   it("edits a product and records the previous and new values", async () => {
     const id = await createProduct(db, adminId, input({ name: "Aceite Tres" }));
-    await updateProduct(db, adminId, id, input({ name: "Aceite Tres", varietyId: g2, chemotype: "1", status: "inactivo" }));
-    expect(await getProduct(db, id)).toMatchObject({ varietyId: g2, chemotype: "1", status: "inactivo", updatedBy: adminId });
+    await updateProduct(db, adminId, id, input({ name: "Aceite Tres", varietyId: g2, chemotype: "1", cultivatedOn: "2026-05-02", status: "inactivo" }));
+    expect(await getProduct(db, id)).toMatchObject({ varietyId: g2, chemotype: "1", cultivatedOn: "2026-05-02", status: "inactivo", updatedBy: adminId });
     const logs = await db.select().from(auditLogs).where(eq(auditLogs.entityId, id));
     const updated = logs.find((l) => l.action === "product.updated")!;
-    expect(updated.metadata).toEqual({ varietyId_before: g1, varietyId_after: g2, chemotype_before: "2", chemotype_after: "1", status_before: "activo", status_after: "inactivo" });
+    expect(updated.metadata).toEqual({
+      varietyId_before: g1,
+      varietyId_after: g2,
+      chemotype_before: "2",
+      chemotype_after: "1",
+      cultivatedOn_before: "2026-04-15",
+      cultivatedOn_after: "2026-05-02",
+      status_before: "activo",
+      status_after: "inactivo",
+    });
   });
 
   it("does not audit an edit that changes nothing", async () => {
@@ -110,6 +123,16 @@ describe("products", () => {
     await expect(updateProduct(db, adminId, id, input({ name: "INFLORESCENCIA UNO" }))).rejects.toBeInstanceOf(DuplicateProductError);
     await expect(updateProduct(db, adminId, "00000000-0000-4000-8000-000000000000", input())).rejects.toBeInstanceOf(ProductNotFoundError);
     expect(await getProduct(db, "no-es-un-id")).toBeNull();
+  });
+
+  it("deletes a product and keeps what it was in the audit log", async () => {
+    const id = await createProduct(db, adminId, input({ name: "Para Borrar", type: "crema" }));
+    await deleteProduct(db, adminId, id);
+    expect(await getProduct(db, id)).toBeNull();
+    const [log] = await db.select().from(auditLogs).where(eq(auditLogs.action, "product.deleted"));
+    expect(log).toMatchObject({ actorUserId: adminId, entityId: id });
+    expect(log.metadata).toMatchObject({ name: "Para Borrar", type: "crema", cultivatedOn: "2026-04-15" });
+    await expect(deleteProduct(db, adminId, id)).rejects.toBeInstanceOf(ProductNotFoundError);
   });
 
   it("lists active products first, then by name", async () => {

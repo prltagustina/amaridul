@@ -18,6 +18,7 @@ export default async function ProductosPage() {
     cultivationLabel: cultivationLabel(p.cultivation),
     chemotype: p.chemotype ?? "",
     chemotypeLabel: chemotypeLabel(p.chemotype),
+    cultivatedOn: p.cultivatedOn ?? "",
     description: p.description,
     status: p.status,
   }));
