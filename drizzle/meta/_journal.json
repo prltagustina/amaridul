@@ -64,6 +64,13 @@
       "when": 1792089570974,
       "tag": "0008_socios_existentes",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792091349618,
+      "tag": "0009_endurecimiento_socios_existentes",
+      "breakpoints": true
     }
   ]
 }

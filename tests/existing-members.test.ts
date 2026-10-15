@@ -56,8 +56,8 @@ const institutional = (patch: Record<string, unknown> = {}) =>
 async function submit(dni: string, patch: Record<string, unknown> = {}, mail = new MemoryEmailSender()) {
   const r = await submitExistingMemberRequest(ctx.db, { rings: ctx.rings, email: mail }, form(dni, patch), null);
   if (!r.ok) throw new Error("submit failed");
-  const [row] = await ctx.db.select().from(existingMemberRequests).where(eq(existingMemberRequests.reference, r.reference));
-  return { ...r, id: row.id, mail };
+  const [row] = await ctx.db.select().from(existingMemberRequests).where(eq(existingMemberRequests.reference, r.reference!));
+  return { ...r, reference: r.reference!, id: row.id, mail };
 }
 const deps = (mail = new MemoryEmailSender()) => ({ email: mail, baseURL, rings: ctx.rings });
 const countOf = async (table: typeof members | typeof user | typeof persons) => Number((await ctx.db.select({ n: count() }).from(table))[0].n);
@@ -161,21 +161,40 @@ describe("TEST B: an existing member not on file", () => {
 });
 
 describe("TEST C, D, G: a member already on file", () => {
-  it("TEST G: a second request with the same DNI is flagged and cannot create another member", async () => {
+  it("TEST G: a repeat while a request is open reuses it, silently; it never creates another member", async () => {
     const first = await submit("99000520");
-    const second = await submit("99000520", { email: "otra.direccion@example.com" });
-    const detail = await getExistingMemberRequest(ctx.db, ctx.rings, second.id);
-    expect(detail!.match.duplicates.map((d) => d.reference)).toContain(first.reference);
-    expect(detail!.request.dniMasked).not.toContain("99000520");
+    const openBefore = await countOf(members);
+    const mail = new MemoryEmailSender();
+    const repeat = await submitExistingMemberRequest(ctx.db, { rings: ctx.rings, email: mail }, form("99000520", { email: "otra.direccion@example.com" }), null);
+    expect(repeat).toEqual({ ok: true, reference: first.reference, duplicate: true });
+    expect(mail.sent).toHaveLength(0);
+    const rows = await ctx.db.select().from(existingMemberRequests).where(eq(existingMemberRequests.reference, first.reference));
+    expect(rows[0].email).toBe("historica.99000520@example.com"); // the open request was not overwritten
+    const [{ n }] = await ctx.db.select({ n: count() }).from(existingMemberRequests).where(eq(existingMemberRequests.email, "otra.direccion@example.com"));
+    expect(Number(n)).toBe(0);
 
     await registerExistingMember(ctx.db, deps(), adminId, first.id, institutional({ numberMode: "next" }));
+    // Once resolved, a new request is possible again, but it can only be linked.
+    const later = await submit("99000520", { email: "otra.direccion@example.com" });
+    const detail = await getExistingMemberRequest(ctx.db, ctx.rings, later.id);
+    expect(detail!.request.dniMasked).not.toContain("99000520");
     const before = { m: await memberCount(), u: await userCount() };
-    await expect(registerExistingMember(ctx.db, deps(), adminId, second.id, institutional({ numberMode: "next" }))).rejects.toThrow(/vincul/);
+    await expect(registerExistingMember(ctx.db, deps(), adminId, later.id, institutional({ numberMode: "next" }))).rejects.toThrow(/vincul/);
     expect({ m: await memberCount(), u: await userCount() }).toEqual(before);
+    expect(openBefore).toBeGreaterThan(0);
+  });
+
+  it("the database itself refuses two open requests for the same identity", async () => {
+    const r = await submit("99000521");
+    const [row] = await ctx.db.select().from(existingMemberRequests).where(eq(existingMemberRequests.id, r.id));
+    await expect(
+      ctx.db.insert(existingMemberRequests).values({ id: crypto.randomUUID(), reference: "SOC-TEST-0001", fullName: "Copia", email: "copia@example.com", dniLookup: row.dniLookup, status: "pending_verification" }),
+    ).rejects.toThrow();
   });
 
   it("TEST C: links to the member on file, reusing member, person and account", async () => {
-    const r = await submit("99000520", { email: "nueva.direccion@example.com" });
+    await registerExistingMember(ctx.db, deps(), adminId, (await submit("99000522")).id, institutional({ numberMode: "next" }));
+    const r = await submit("99000522", { email: "nueva.direccion@example.com" });
     const detail = await getExistingMemberRequest(ctx.db, ctx.rings, r.id);
     const member = detail!.match.member!;
     expect(member).not.toBeNull();
@@ -237,7 +256,7 @@ describe("TEST H: email shared with someone else", () => {
     await ctx.db.insert(persons).values({ fullName: "Otra Persona Ficticia", email: shared, isFixture: true });
     const mail = new MemoryEmailSender();
     const r = await submitExistingMemberRequest(ctx.db, { rings: ctx.rings, email: mail }, form("99000550", { email: shared }), null);
-    expect(r).toMatchObject({ ok: true });
+    expect(r).toMatchObject({ ok: true, duplicate: false });
     const [row] = await ctx.db.select().from(existingMemberRequests).where(eq(existingMemberRequests.reference, (r as { reference: string }).reference));
     const detail = await getExistingMemberRequest(ctx.db, ctx.rings, row.id);
     expect(detail!.match.emailConflicts.map((c) => c.name)).toContain("Otra Persona Ficticia");
@@ -276,7 +295,7 @@ describe("TEST E: an existing member who used the preadmission form", () => {
 
     // The person completes the legajo through the link: same request, now pending verification.
     const done = await submitExistingMemberRequest(ctx.db, { rings: ctx.rings, email: new MemoryEmailSender() }, form("99000560"), token);
-    expect(done).toEqual({ ok: true, reference: out.reference });
+    expect(done).toEqual({ ok: true, reference: out.reference, duplicate: false });
     const [completed] = await ctx.db.select().from(existingMemberRequests).where(eq(existingMemberRequests.id, out.id));
     expect(completed.status).toBe("pending_verification");
     // The link was single use.

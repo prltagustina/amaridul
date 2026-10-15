@@ -2,7 +2,7 @@
 // digital access through the same member/user/portal as anyone admitted here, without a new admission
 // and without a new Comisión decision. Submitting the update grants nothing: an admin verifies it and
 // then links it to the member already on file, or registers the member with their historical data.
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { and, count, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import * as z from "zod";
 import type { Database } from "@/server/db/client";
@@ -18,7 +18,7 @@ import { accountEmail, sendActivation, nextMemberNumber, type Deps } from "@/ser
 import { nextReference } from "@/server/references";
 import { consumeToken, findLiveToken, issueToken, revokeTokens } from "@/server/tokens/one-time";
 import { formalAdmissionOf, INVITATION_KIND } from "@/server/pre-admissions";
-import { categoryOptions, provinces } from "@/demo/content";
+import { categoryOptions, privacySummary, provinces } from "@/demo/content";
 
 export type ExistingMemberRequestStatus = (typeof existingMemberRequests.$inferSelect)["status"];
 
@@ -27,6 +27,23 @@ const UPDATE_LINK_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 
 const dniAad = (requestId: string) => `existing_member_requests.dni:${requestId}`;
 const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires" }).format(new Date());
+
+/** Closed requests keep their non-sensitive data this long, then they are due for manual purge (as preadmissions). */
+const RETENTION_AFTER_CLOSE_MONTHS = 3;
+const OPEN_STATUSES = ["pending_verification", "needs_review"] as const;
+/** Exactly what the form shows as privacy text; its hash is kept with each acceptance. */
+export const PRIVACY_NOTICE_SHA256 = createHash("sha256").update(privacySummary).digest("hex");
+
+/**
+ * Fields duplicated from the canonical identity: once the request is resolved, person_identities
+ * (or nothing, if rejected) is the only place the DNI lives.
+ */
+const purgeIdentity = { dniLookup: null, dniLookupKeyVersion: null, dniEncrypted: null, birthDate: null } as const;
+const retentionFrom = (now: Date) => {
+  const d = new Date(now);
+  d.setMonth(d.getMonth() + RETENTION_AFTER_CLOSE_MONTHS);
+  return d;
+};
 
 export class ExistingMemberError extends Error {}
 export class RequestStateError extends ExistingMemberError {}
@@ -114,17 +131,36 @@ export async function submitExistingMemberRequest(db: Database, deps: PublicDeps
     postalCode: input.cp,
     declaredMemberNumber: input.numeroSocio || null,
     privacyAcceptedAt: now,
+    privacyNoticeSha256: PRIVACY_NOTICE_SHA256,
     dataConfirmedAt: now,
     submittedAt: now,
     status: "pending_verification" as const,
     updatedAt: now,
   };
 
-  const result = await db.transaction(async (tx) => {
+  const lookups = dniLookupCandidates(deps.rings.lookup, dni).map((c) => c.value);
+  const run = () => db.transaction(async (tx) => {
     const t = tx as unknown as Database;
+    // One open request per identity: a repeat does not open another one (nor tells anything new).
+    const [open] = await t
+      .select({ id: existingMemberRequests.id, reference: existingMemberRequests.reference })
+      .from(existingMemberRequests)
+      .where(and(inArray(existingMemberRequests.dniLookup, lookups), inArray(existingMemberRequests.status, [...OPEN_STATUSES])));
     if (token) {
       const used = await consumeToken(t, UPDATE_LINK_KIND, token, now);
       if (!used?.subjectId) return null;
+      if (open) {
+        // Completed through a personal link while another request for the same person is open: this one
+        // closes as a duplicate, without storing the identity again.
+        const [row] = await t
+          .update(existingMemberRequests)
+          .set({ status: "rejected", adminNotes: `Duplicada: la misma persona ya tiene la solicitud ${open.reference}.`, closedAt: now, retentionUntil: retentionFrom(now), updatedAt: now })
+          .where(and(eq(existingMemberRequests.id, used.subjectId), eq(existingMemberRequests.status, "awaiting_data")))
+          .returning({ id: existingMemberRequests.id, reference: existingMemberRequests.reference });
+        if (!row) return null;
+        await audit(t, { action: "existing_member.duplicate_closed", entityType: "existing_member_request", entityId: row.id, metadata: { reference: row.reference, openRequest: open.reference } });
+        return { ...row, duplicate: true };
+      }
       const [row] = await t
         .update(existingMemberRequests)
         .set({ ...data, dniEncrypted: encryptField(deps.rings.field, dni, dniAad(used.subjectId)) })
@@ -132,15 +168,30 @@ export async function submitExistingMemberRequest(db: Database, deps: PublicDeps
         .returning({ id: existingMemberRequests.id, reference: existingMemberRequests.reference });
       if (!row) return null;
       await audit(t, { action: "existing_member.request_received", entityType: "existing_member_request", entityId: row.id, metadata: { reference: row.reference, source: "preadmission" } });
-      return row;
+      return { ...row, duplicate: false };
+    }
+    if (open) {
+      await audit(t, { action: "existing_member.repeat_submission", entityType: "existing_member_request", entityId: open.id, metadata: { reference: open.reference } });
+      return { ...open, duplicate: true };
     }
     const id = randomUUID();
     const reference = await nextReference(t, "existing_member", "SOC", now);
     await t.insert(existingMemberRequests).values({ id, reference, source: "sumate", ...data, dniEncrypted: encryptField(deps.rings.field, dni, dniAad(id)), createdAt: now });
     await audit(t, { action: "existing_member.request_received", entityType: "existing_member_request", entityId: id, metadata: { reference, source: "sumate" } });
-    return { id, reference };
+    return { id, reference, duplicate: false };
   });
+  let result: Awaited<ReturnType<typeof run>>;
+  try {
+    result = await run();
+  } catch (e) {
+    // Two sends for the same person at the same instant: the unique index stops the second one.
+    const text = (x: unknown) => (x instanceof Error ? `${x.message} ${(x as { constraint?: string }).constraint ?? ""}` : "");
+    if (!/existing_member_requests_open_dni_uq/.test(text(e) + text((e as { cause?: unknown })?.cause))) throw e;
+    return { ok: true as const, reference: null, duplicate: true };
+  }
   if (!result) return { ok: false as const, error: "invalid_link" as const };
+  // A repeat sends nothing: the first request already has its confirmation.
+  if (result.duplicate) return { ok: true as const, reference: result.reference, duplicate: true };
 
   try {
     const { subject, text, html } = emailTemplates.existing_member_received({ reference: result.reference, name: input.nombres.split(/\s+/)[0] });
@@ -148,7 +199,7 @@ export async function submitExistingMemberRequest(db: Database, deps: PublicDeps
   } catch (e) {
     console.error("Existing member receipt email failed:", result.reference, e instanceof Error ? e.message : e);
   }
-  return { ok: true as const, reference: result.reference };
+  return { ok: true as const, reference: result.reference, duplicate: false };
 }
 
 export type UpdateLinkCheck = { status: "ok"; firstName: string; email: string } | { status: "expired" } | { status: "invalid" };
@@ -326,7 +377,7 @@ export async function registerExistingMember(db: Database, deps: Deps & { rings:
     } else {
       memberNumber = await nextMemberNumber(t);
     }
-    await claim(t, id, "matched", actorUserId, now);
+    await claim(t, id, "matched", actorUserId, now, { ...purgeIdentity, closedAt: now });
 
     let personId = match.personId;
     if (!personId) {
@@ -398,7 +449,7 @@ export async function linkExistingMember(db: Database, deps: Deps & { rings: Key
 
   await db.transaction(async (tx) => {
     const t = tx as unknown as Database;
-    await claim(t, id, accountActive ? "completed" : "matched", actorUserId, now, { linkedMemberId: member.id, linkedPersonId: member.personId });
+    await claim(t, id, accountActive ? "completed" : "matched", actorUserId, now, { linkedMemberId: member.id, linkedPersonId: member.personId, ...purgeIdentity, closedAt: now });
     // The contact data sent replaces the one on file only when the admin confirmed it.
     if (updateContact) {
       await t.update(persons).set({ email: r.email, province: r.province, locality: r.locality, updatedAt: now }).where(eq(persons.id, member.personId));
@@ -446,7 +497,7 @@ export async function rejectExistingMemberRequest(db: Database, actorUserId: str
   const note = notes.trim().slice(0, 1000);
   const [row] = await db
     .update(existingMemberRequests)
-    .set({ status: "rejected", adminNotes: note || null, verifiedAt: now, verifiedBy: actorUserId, closedAt: now, updatedAt: now })
+    .set({ status: "rejected", adminNotes: note || null, verifiedAt: now, verifiedBy: actorUserId, closedAt: now, retentionUntil: retentionFrom(now), ...purgeIdentity, address: null, postalCode: null, updatedAt: now })
     .where(and(eq(existingMemberRequests.id, id), inArray(existingMemberRequests.status, [...OPEN, "awaiting_data"])))
     .returning({ reference: existingMemberRequests.reference });
   if (!row) throw new RequestStateError("La solicitud ya fue resuelta o cambió de estado. Recargá la página.");
@@ -479,7 +530,7 @@ export async function convertPreAdmission(db: Database, deps: Deps, actorUserId:
     .from(preAdmissions)
     .where(eq(preAdmissions.id, preAdmissionId));
   if (!pre || pre.status === "cerrada" || pre.status === "derivada") throw new ExistingMemberError("Esta preadmisión ya no se puede derivar.");
-  if (await formalAdmissionOf(db, preAdmissionId)) throw new ExistingMemberError("Esta persona ya envió la solicitud formal: resolvela desde Admisiones.");
+  if (await formalAdmissionOf(db, preAdmissionId)) throw new ExistingMemberError("Esta persona ya envió la solicitud formal: requiere revisión manual desde Admisiones.");
 
   const created = await db.transaction(async (tx) => {
     const t = tx as unknown as Database;
@@ -489,7 +540,10 @@ export async function convertPreAdmission(db: Database, deps: Deps, actorUserId:
       .where(and(eq(preAdmissions.id, pre.id), eq(preAdmissions.status, pre.status)))
       .returning({ id: preAdmissions.id });
     if (!moved.length) throw new ExistingMemberError("La preadmisión cambió de estado. Recargá la página.");
+    // Revoke first, then look: a formal request being sent at this same moment either finds the link
+    // revoked, or is already committed and blocks this (the whole conversion rolls back).
     await revokeTokens(t, INVITATION_KIND, pre.id, now);
+    if (await formalAdmissionOf(t, pre.id)) throw new ExistingMemberError("Esta persona ya envió la solicitud formal: requiere revisión manual desde Admisiones.");
     const id = randomUUID();
     const reference = await nextReference(t, "existing_member", "SOC", now);
     await t.insert(existingMemberRequests).values({

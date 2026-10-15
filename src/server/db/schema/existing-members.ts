@@ -1,6 +1,7 @@
 // Members who joined Amarí Dul before this system: they update their legajo and get digital access,
 // without a new admission or a new Comisión decision.
-import { date, index, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { date, index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { persons, retentionColumns } from "./core";
 import { members, preAdmissions } from "./admissions";
@@ -46,6 +47,8 @@ export const existingMemberRequests = pgTable(
     postalCode: text("postal_code"),
     declaredMemberNumber: text("declared_member_number"),
     privacyAcceptedAt: timestamp("privacy_accepted_at", tz),
+    /** SHA-256 of the exact privacy text shown when it was accepted (the notice is still provisional). */
+    privacyNoticeSha256: text("privacy_notice_sha256"),
     dataConfirmedAt: timestamp("data_confirmed_at", tz),
     submittedAt: timestamp("submitted_at", tz),
     adminNotes: text("admin_notes"),
@@ -57,5 +60,12 @@ export const existingMemberRequests = pgTable(
     updatedAt: timestamp("updated_at", tz).notNull().defaultNow(),
     ...retentionColumns,
   },
-  (t) => [index("existing_member_requests_status_idx").on(t.status), index("existing_member_requests_dni_idx").on(t.dniLookup)],
+  (t) => [
+    index("existing_member_requests_status_idx").on(t.status),
+    index("existing_member_requests_dni_idx").on(t.dniLookup),
+    // At most one open request per identity; closed ones (linked, completed, rejected) stay as history.
+    uniqueIndex("existing_member_requests_open_dni_uq")
+      .on(t.dniLookup)
+      .where(sql`${t.status} in ('pending_verification', 'needs_review')`),
+  ],
 );

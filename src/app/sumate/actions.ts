@@ -1,17 +1,15 @@
 "use server";
 
-import { createHash } from "node:crypto";
 import { headers } from "next/headers";
 import { getDb } from "@/server/db";
 import { getKeyrings } from "@/server/crypto";
 import { getEmailSender } from "@/server/email";
-import { MemoryRateLimiter } from "@/server/rate-limit/limiter";
+import { limitKey, PostgresRateLimiter } from "@/server/rate-limit/postgres";
 import { createPreAdmission, preAdmissionInput } from "@/server/pre-admissions";
 
 export type SubmitResult = { ok: true; reference: string | null; demo?: boolean } | { ok: false; error: "validation" | "rate" | "server" };
 
-// Per instance until Upstash is connected: enough to slow down a flood from one connection.
-const limiter = new MemoryRateLimiter();
+// Shared across server instances (Postgres); the key is a hash of the connection's IP.
 const LIMIT = { max: 5, windowMs: 10 * 60 * 1000 };
 
 /** Public endpoint: anyone can call it, so it validates everything again and never trusts the client. */
@@ -23,8 +21,7 @@ export async function submitPreAdmission(raw: unknown, trap: string): Promise<Su
 
   const h = await headers();
   const ip = (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || "local";
-  const key = `pre_admission:${createHash("sha256").update(ip).digest("hex").slice(0, 32)}`;
-  if (!(await limiter.limit(key, LIMIT)).ok) return { ok: false, error: "rate" };
+  if (!(await new PostgresRateLimiter(await getDb()).limit(limitKey("pre_admission_ip", ip), LIMIT)).ok) return { ok: false, error: "rate" };
 
   const parsed = preAdmissionInput.safeParse(raw);
   if (!parsed.success) return { ok: false, error: "validation" };

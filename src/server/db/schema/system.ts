@@ -47,6 +47,16 @@ export const legalTexts = pgTable(
   (t) => [unique("legal_texts_kind_version_uq").on(t.kind, t.version)],
 );
 
+/**
+ * Shared fixed-window counters for the public forms, so every server instance sees the same count.
+ * Keys are hashes (of the IP or of the DNI's HMAC): never a raw IP nor a DNI.
+ */
+export const rateLimitBuckets = pgTable("rate_limit_buckets", {
+  key: text("key").primaryKey(),
+  count: integer("count").notNull(),
+  resetAt: timestamp("reset_at", tz).notNull(),
+});
+
 /** Per-account lockout for the member DNI login (Better Auth only rate-limits by IP). */
 export const authLockouts = pgTable("auth_lockouts", {
   userId: uuid("user_id")

@@ -5,7 +5,7 @@ import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
 import { getKeyrings } from "@/server/crypto";
 import { getEmailSender } from "@/server/email";
-import { getEnv } from "@/server/env";
+import { existingMemberWritesEnabled, getEnv } from "@/server/env";
 import {
   ExistingMemberError,
   institutionalInput,
@@ -34,8 +34,11 @@ function failure(e: unknown, fallback: string): ActionResult {
   return { ok: false, error: `${fallback} Probá de nuevo.` };
 }
 
+const DISABLED = "Registrar y vincular socios existentes todavía no está habilitado en producción.";
+
 export async function registerAction(id: string, raw: unknown): Promise<ActionResult> {
   const { user } = await requireAdmin();
+  if (!existingMemberWritesEnabled()) return { ok: false, error: DISABLED };
   const parsed = institutionalInput.safeParse(raw);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message?.startsWith("Escribí") ? parsed.error.issues[0].message : "Revisá los datos institucionales." };
   try {
@@ -49,6 +52,7 @@ export async function registerAction(id: string, raw: unknown): Promise<ActionRe
 
 export async function linkAction(id: string, raw: unknown): Promise<ActionResult> {
   const { user } = await requireAdmin();
+  if (!existingMemberWritesEnabled()) return { ok: false, error: DISABLED };
   const parsed = linkInput.safeParse(raw);
   if (!parsed.success) return { ok: false, error: "Revisá los datos institucionales." };
   try {

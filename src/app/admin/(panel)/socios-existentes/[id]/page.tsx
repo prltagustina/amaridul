@@ -6,6 +6,7 @@ import { getDb } from "@/server/db";
 import { getKeyrings } from "@/server/crypto";
 import { getExistingMemberRequest } from "@/server/existing-members";
 import { getMember } from "@/server/members";
+import { existingMemberWritesEnabled } from "@/server/env";
 import { DetailList } from "@/components/ui/data-list";
 import { Card, StatusBadge } from "@/components/ui/display";
 import { categoryOptions } from "@/demo/content";
@@ -99,6 +100,8 @@ export default async function SocioExistentePage({ params }: { params: Promise<{
                   ({account[linkedMember.accountStatus]}).
                 </span>
               </p>
+            ) : r.status === "rejected" ? (
+              <p className="text-base text-text-muted">Solicitud cerrada. El DNI, la fecha de nacimiento y el domicilio ya no se conservan.</p>
             ) : !r.dniMasked ? (
               <p className="text-base text-text-muted">Sin DNI todavía: la coincidencia se busca cuando la persona complete sus datos.</p>
             ) : match.member ? (
@@ -138,6 +141,7 @@ export default async function SocioExistentePage({ params }: { params: Promise<{
               : null
           }
           blocked={!!(match.openAdmission || match.otherAccount)}
+          writesEnabled={existingMemberWritesEnabled()}
           categories={categoryOptions.map((c) => ({ value: c.value, label: c.label }))}
         />
       </div>

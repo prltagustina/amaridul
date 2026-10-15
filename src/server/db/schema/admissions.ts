@@ -1,5 +1,6 @@
 // Fase 1: preadmissions sent from the public Sumate form.
-import { boolean, date, index, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { boolean, date, index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { persons, retentionColumns } from "./core";
 
@@ -159,4 +160,5 @@ export const members = pgTable("members", {
   createdAt: timestamp("created_at", tz).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", tz).notNull().defaultNow(),
   ...retentionColumns,
-});
+  // Historical numbers are typed in by hand: "ad-0045" and "AD-0045" are the same number.
+}, (t) => [uniqueIndex("members_member_number_ci_uq").on(sql`lower(${t.memberNumber})`)]);

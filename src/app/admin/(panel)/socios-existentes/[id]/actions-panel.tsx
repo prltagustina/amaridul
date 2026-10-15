@@ -28,6 +28,7 @@ export default function ExistingMemberActions({
   sentEmail,
   member,
   blocked,
+  writesEnabled,
   categories,
 }: {
   id: string;
@@ -36,6 +37,7 @@ export default function ExistingMemberActions({
   sentEmail: string;
   member: Found | null;
   blocked: boolean;
+  writesEnabled: boolean;
   categories: Option[];
 }) {
   const router = useRouter();
@@ -103,7 +105,9 @@ export default function ExistingMemberActions({
                 : "Cargá los datos del registro de la asociación. Si un dato histórico no está disponible, dejalo pendiente: nunca lo inventes."}
             </p>
           </div>
-          {blocked && !member ? (
+          {!writesEnabled ? (
+            <Alert tone="info">Registrar y vincular se habilita en producción cuando termine la verificación del deploy. La solicitud queda guardada.</Alert>
+          ) : blocked && !member ? (
             <Alert tone="warning">Hay un conflicto que resolver antes de registrar (mirá «En el sistema»).</Alert>
           ) : (
             <div className="space-y-4">

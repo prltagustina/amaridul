@@ -24,6 +24,9 @@ const schema = z
     // TEMPORARY (demo phase): "log" lets production run without an email provider, writing
     // messages to the server logs instead of sending them. Remove once Resend is connected.
     EMAIL_DELIVERY: z.enum(["log"]).optional(),
+    // Release switch: in production, registering or linking existing members (which creates members
+    // and accounts) stays off until "on", set after the deploy's smoke test. Requests are always received.
+    EXISTING_MEMBERS: z.enum(["on"]).optional(),
     // TEMPORARY (demo phase): comma-separated addresses that get a blind copy of every email, so
     // the team sees what the site sends. Copies include activation and reset links: remove before delivery.
     EMAIL_BCC: z
@@ -57,4 +60,9 @@ export function getEnv(): Env {
 
 export function parseEnv(source: Record<string, string | undefined>): Env {
   return schema.parse(source);
+}
+
+/** Whether the admin may create or link existing members (see EXISTING_MEMBERS). Always on outside production. */
+export function existingMemberWritesEnabled(env: Pick<Env, "APP_ENV" | "EXISTING_MEMBERS"> = getEnv()): boolean {
+  return env.APP_ENV !== "production" || env.EXISTING_MEMBERS === "on";
 }
