@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import heroPhoto from "@/assets/demo/qr-portada-provisoria.jpg";
 import { ArrowRight, ChevronDown, Info, Sprout, UserRound } from "lucide-react";
-import { BRAND, SITE_URL } from "@/lib/constants";
+import { BRAND, SHARE_DESCRIPTION, SHARE_IMAGE, SITE_URL } from "@/lib/constants";
 import { SiteFooter } from "@/components/brand/site-footer";
 import { CircleLogo } from "@/components/brand/circle-logo";
 import { EditorialSection } from "@/components/brand/editorial-section";
@@ -14,16 +14,11 @@ import { faqAnswers, faqClosingPhrase, faqPlaceholderAnswer, faqQuestions, insti
 import { isDemoEnabled } from "@/lib/demo";
 
 const title = BRAND.name;
-const description = "Información del producto y contacto.";
-const ogImage = {
-  url: `${SITE_URL}/og/qr.png`,
-  width: 1200,
-  height: 630,
-  alt: `${BRAND.name} — Información del producto y contacto`,
-};
+const description = SHARE_DESCRIPTION;
+const ogImage = SHARE_IMAGE;
 
 export const metadata: Metadata = {
-  title: `${BRAND.name} | Información del producto`,
+  title: `${BRAND.name} | ${BRAND.tagline}`,
   description,
   alternates: {
     canonical: `${SITE_URL}/qr`,

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Jost } from "next/font/google";
-import { BRAND, SITE_URL } from "@/lib/constants";
+import { BRAND, SHARE_DESCRIPTION, SHARE_IMAGE, SITE_URL } from "@/lib/constants";
 import "./globals.css";
 
 const jost = Jost({
@@ -11,14 +11,8 @@ const jost = Jost({
 });
 
 const title = `${BRAND.name} | ${BRAND.tagline}`;
-const description =
-  "Conocé Amarí Dul, su propuesta y la información vinculada a sus productos.";
-const ogImage = {
-  url: `${SITE_URL}/og/home.png`,
-  width: 1200,
-  height: 630,
-  alt: `${BRAND.name} — ${BRAND.tagline}`,
-};
+const description = SHARE_DESCRIPTION;
+const ogImage = SHARE_IMAGE;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
