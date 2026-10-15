@@ -2,16 +2,16 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { CheckCircle2, MailPlus, Trash2, XCircle } from "lucide-react";
+import { BadgeCheck, CheckCircle2, MailPlus, Trash2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, Card, StatusBadge } from "@/components/ui/display";
 import { Dialog } from "@/components/ui/dialog";
 import { Select, TextField, Textarea } from "@/components/ui/field";
 import type { PreAdmissionStatus } from "@/server/pre-admissions";
 import { preStatus } from "../../../status";
-import { addNote, closePreAdmission, deleteTestRequestAction, invite, markReviewed, type ActionResult } from "../actions";
+import { addNote, closePreAdmission, convertToExistingMemberAction, deleteTestRequestAction, invite, markReviewed, type ActionResult } from "../actions";
 
-type DialogKind = "revisada" | "invitar" | "cerrar" | "eliminar" | null;
+type DialogKind = "revisada" | "invitar" | "cerrar" | "eliminar" | "socio" | null;
 type Note = { id: string; text: string; at: string; author: string };
 
 export default function PreAdmissionActions({
@@ -24,6 +24,7 @@ export default function PreAdmissionActions({
   closedReason,
   closeReasons,
   notes,
+  existingRequest,
 }: {
   id: string;
   reference: string;
@@ -34,6 +35,8 @@ export default function PreAdmissionActions({
   closedReason: string | null;
   closeReasons: string[];
   notes: Note[];
+  /** The legajo update opened when this person turned out to be an existing member. */
+  existingRequest: { id: string; reference: string } | null;
 }) {
   const [dialog, setDialog] = useState<DialogKind>(null);
   const [notice, setNotice] = useState<{ tone: "success" | "error"; text: string } | null>(null);
@@ -99,7 +102,21 @@ export default function PreAdmissionActions({
               </Button>
             </>
           )}
-          {status !== "cerrada" && (
+          {(status === "recibida" || status === "en-revision" || status === "invitada") && !formal && (
+            <Button shape="admin" variant="secondary" onClick={() => setDialog("socio")} disabled={pending}>
+              <BadgeCheck aria-hidden className="size-4" strokeWidth={1.5} /> Es socio existente
+            </Button>
+          )}
+          {status === "derivada" && existingRequest && (
+            <p className="text-small text-text-muted">
+              Es socio existente: sigue como actualización de legajo{" "}
+              <Link href={`/admin/socios-existentes/${existingRequest.id}`} className="font-medium !text-forest underline underline-offset-2">
+                {existingRequest.reference}
+              </Link>
+              . No pasa por Comisión.
+            </p>
+          )}
+          {status !== "cerrada" && status !== "derivada" && (
             <Button shape="admin" variant="danger" onClick={() => setDialog("cerrar")} disabled={pending}>
               <XCircle aria-hidden className="size-4" strokeWidth={1.5} /> Cerrar solicitud
             </Button>
@@ -180,6 +197,20 @@ export default function PreAdmissionActions({
           </Alert>
         )}
         <TextField id="confirmar-referencia" label={`Escribí ${reference} para confirmar`} autoComplete="off" value={confirmRef} onChange={(e) => setConfirmRef(e.target.value)} />
+      </Dialog>
+
+      <Dialog
+        open={dialog === "socio"}
+        onClose={() => setDialog(null)}
+        title="Es socio existente"
+        description={reference}
+        confirmLabel={pending ? "Derivando…" : "Derivar a actualización de legajo"}
+        confirmDisabled={pending}
+        onConfirm={() => run(() => convertToExistingMemberAction(id), "Derivada. Le enviamos un link para completar su legajo.")}
+      >
+        <p className="text-body">
+          La persona ya es socia de Amarí Dul: no pasa por una nueva admisión ni por Comisión. La preadmisión se conserva, su invitación al alta deja de funcionar y le enviamos un email para que complete sus datos (DNI y domicilio).
+        </p>
       </Dialog>
 
       <Dialog

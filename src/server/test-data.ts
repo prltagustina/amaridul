@@ -1,8 +1,9 @@
-import { and, eq, or } from "drizzle-orm";
+import { and, eq, inArray, or } from "drizzle-orm";
 import type { Database } from "@/server/db/client";
-import { admissionDecisions, admissions, auditLogs, members, oneTimeTokens, persons, preAdmissions, user } from "@/server/db/schema";
+import { admissionDecisions, admissions, auditLogs, existingMemberRequests, members, oneTimeTokens, persons, preAdmissions, reprocannCases, reprocannDocuments, user } from "@/server/db/schema";
 import { audit } from "@/server/audit/log";
 import { INVITATION_KIND } from "@/server/pre-admissions";
+import { UPDATE_LINK_KIND } from "@/server/existing-members";
 
 export class DeleteNotAllowedError extends Error {}
 
@@ -22,11 +23,24 @@ export async function deleteTestRequest(db: Database, actorUserId: string, preAd
     const [adm] = await t.select({ id: admissions.id, reference: admissions.reference, personId: admissions.personId }).from(admissions).where(eq(admissions.preAdmissionId, pre.id));
     const [member] = adm ? await t.select({ id: members.id, userId: members.userId, memberNumber: members.memberNumber }).from(members).where(eq(members.admissionId, adm.id)) : [];
 
+    // A preadmission moved to the legajo update: its request goes too, unless a member was already linked.
+    const [existing] = await t.select({ id: existingMemberRequests.id, linkedMemberId: existingMemberRequests.linkedMemberId }).from(existingMemberRequests).where(eq(existingMemberRequests.preAdmissionId, pre.id));
+    if (existing?.linkedMemberId) throw new DeleteNotAllowedError("Esta solicitud ya tiene un socio vinculado: no se borra desde acá");
+    if (existing) {
+      await t.delete(oneTimeTokens).where(and(eq(oneTimeTokens.kind, UPDATE_LINK_KIND), eq(oneTimeTokens.subjectId, existing.id)));
+      await t.delete(existingMemberRequests).where(eq(existingMemberRequests.id, existing.id));
+    }
+
     if (member) {
       // Never through this path: an admin account is not a test member.
       const [u] = await t.select({ role: user.role }).from(user).where(eq(user.id, member.userId));
       if (u?.role !== "MEMBER") throw new DeleteNotAllowedError("La cuenta no es de socio");
       await t.delete(oneTimeTokens).where(or(eq(oneTimeTokens.userId, member.userId), eq(oneTimeTokens.subjectId, member.id)));
+      const cases = await t.select({ id: reprocannCases.id }).from(reprocannCases).where(eq(reprocannCases.memberId, member.id));
+      if (cases.length) {
+        await t.delete(reprocannDocuments).where(inArray(reprocannDocuments.caseId, cases.map((c) => c.id)));
+        await t.delete(reprocannCases).where(eq(reprocannCases.memberId, member.id));
+      }
       await t.delete(members).where(eq(members.id, member.id));
       await t.update(auditLogs).set({ actorUserId: null }).where(eq(auditLogs.actorUserId, member.userId));
       await t.delete(user).where(eq(user.id, member.userId)); // sessions, accounts, lockouts cascade

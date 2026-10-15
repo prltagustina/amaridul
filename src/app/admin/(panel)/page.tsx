@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, Boxes, ClipboardCheck, Inbox, Users } from "lucide-react";
+import { ArrowRight, Boxes, ClipboardCheck, Inbox, UserCheck, Users } from "lucide-react";
 import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
 import { countPreAdmissions } from "@/server/pre-admissions";
 import { countAdmissions } from "@/server/admissions";
 import { listMembers } from "@/server/members";
+import { countExistingMemberRequests } from "@/server/existing-members";
 import { Card, DevTag } from "@/components/ui/display";
 import { auditEntries, lots } from "@/demo/fixtures";
 import { AdminPageHeader } from "../ui";
@@ -12,8 +13,9 @@ import { AdminPageHeader } from "../ui";
 export default async function AdminHomePage() {
   const { user } = await requireAdmin();
   const db = await getDb();
-  const [newPreAdmissions, toElevate, inCommission, memberRows] = await Promise.all([
+  const [newPreAdmissions, existingToVerify, toElevate, inCommission, memberRows] = await Promise.all([
     countPreAdmissions(db, ["recibida"]),
+    countExistingMemberRequests(db, ["pending_verification", "needs_review"]),
     countAdmissions(db, ["recibida"]),
     countAdmissions(db, ["comision"]),
     listMembers(db),
@@ -25,6 +27,12 @@ export default async function AdminHomePage() {
       icon: Inbox,
       count: newPreAdmissions,
       label: "preadmisiones nuevas para revisar",
+    },
+    {
+      href: "/admin/socios-existentes",
+      icon: UserCheck,
+      count: existingToVerify,
+      label: "socios existentes por verificar",
     },
     {
       href: "/admin/admisiones",

@@ -98,7 +98,7 @@ export function findLotByCode(code: string): Lot | undefined {
   return pc ? lots.find((l) => l.code === pc.lot) : undefined;
 }
 
-export type PreAdmissionStatus = "recibida" | "en-revision" | "invitada" | "cerrada";
+export type PreAdmissionStatus = "recibida" | "en-revision" | "invitada" | "cerrada" | "derivada";
 
 export const preAdmissions = [
   {

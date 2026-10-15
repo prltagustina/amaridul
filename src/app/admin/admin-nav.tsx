@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { Boxes, ClipboardCheck, Home, Inbox, Menu, QrCode, ScrollText, ShieldCheck, Tag, UserRound, Users, X } from "lucide-react";
+import { Boxes, ClipboardCheck, Home, Inbox, Menu, QrCode, ScrollText, ShieldCheck, Tag, UserRound, Users, X, UserCheck } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { BrandLockup } from "@/components/brand/headers";
 
@@ -12,6 +12,7 @@ const SECTIONS = [
   { href: "/admin/preadmisiones", label: "Preadmisiones", icon: Inbox },
   { href: "/admin/admisiones", label: "Admisiones", icon: ClipboardCheck },
   { href: "/admin/socios", label: "Socios", icon: Users },
+  { href: "/admin/socios-existentes", label: "Socios existentes", icon: UserCheck },
   { href: "/admin/productos", label: "Productos", icon: Tag },
   { href: "/admin/lotes", label: "Lotes", icon: Boxes },
   { href: "/admin/codigos", label: "Códigos", icon: QrCode },
@@ -23,7 +24,8 @@ export function AdminNav({ email, signOut }: { email: string; signOut: ReactNode
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const sections = SECTIONS;
-  const isActive = (href: string) => (href === "/admin" ? pathname === href : pathname.startsWith(href));
+  // Whole path segments only: "/admin/socios" must not light up on "/admin/socios-existentes".
+  const isActive = (href: string) => (href === "/admin" ? pathname === href : pathname === href || pathname.startsWith(`${href}/`));
 
   const list = (
     <ul className="space-y-0.5">

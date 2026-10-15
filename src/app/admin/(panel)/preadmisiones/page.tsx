@@ -12,7 +12,7 @@ import { preStatus } from "../../status";
 import { AdminPageHeader } from "../../ui";
 
 type Search = Promise<Record<string, string | string[] | undefined>>;
-const FILTERS = ["todas", "recibida", "en-revision", "invitada", "cerrada"] as const;
+const FILTERS = ["todas", "recibida", "en-revision", "invitada", "cerrada", "derivada"] as const;
 
 const dateFormat = new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short", hourCycle: "h23", timeZone: "America/Argentina/Buenos_Aires" });
 

@@ -8,6 +8,7 @@ import { getEmailSender } from "@/server/email";
 import { getEnv } from "@/server/env";
 import { addPreAdmissionNote, changePreAdmissionStatus, InvalidTransitionError, inviteToAdmission } from "@/server/pre-admissions";
 import { DeleteNotAllowedError, deleteTestRequest } from "@/server/test-data";
+import { convertPreAdmission, ExistingMemberError } from "@/server/existing-members";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -76,4 +77,20 @@ export async function deleteTestRequestAction(id: string, confirmReference: stri
   revalidatePath("/admin/socios");
   revalidatePath("/admin");
   redirect("/admin/preadmisiones");
+}
+
+/** The person is an existing member: move the request to the legajo update, without Comisión. */
+export async function convertToExistingMemberAction(id: string): Promise<ActionResult> {
+  const { user } = await requireAdmin();
+  let emailed: boolean;
+  try {
+    ({ emailed } = await convertPreAdmission(await getDb(), { email: getEmailSender(), baseURL: getEnv().BETTER_AUTH_URL }, user.id, id));
+  } catch (e) {
+    if (e instanceof ExistingMemberError) return { ok: false, error: e.message };
+    console.error("Convert to existing member failed:", e instanceof Error ? e.message : e);
+    return { ok: false, error: "No pudimos derivar la solicitud." };
+  }
+  refresh(id);
+  revalidatePath("/admin/socios-existentes");
+  return emailed ? { ok: true } : { ok: false, error: "Quedó derivada, pero el email no se pudo enviar. Reenvialo desde Socios existentes." };
 }

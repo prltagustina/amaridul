@@ -6,6 +6,7 @@ import { CLOSE_REASONS, formalAdmissionOf, getPreAdmission, latestInvitation } f
 import { DetailList } from "@/components/ui/data-list";
 import { Card } from "@/components/ui/display";
 import { AdminPageHeader } from "../../../ui";
+import { existingRequestOfPreAdmission } from "@/server/existing-members";
 import PreAdmissionActions from "./actions-panel";
 
 const dateFormat = new Intl.DateTimeFormat("es-AR", { dateStyle: "long", timeStyle: "short", hourCycle: "h23", timeZone: "America/Argentina/Buenos_Aires" });
@@ -17,7 +18,7 @@ export default async function PreadmisionPage({ params }: { params: Promise<{ id
   const db = await getDb();
   const pre = await getPreAdmission(db, getKeyrings().field, id);
   if (!pre) notFound();
-  const [invitation, formal] = await Promise.all([latestInvitation(db, pre.id), formalAdmissionOf(db, pre.id)]);
+  const [invitation, formal, existingRequest] = await Promise.all([latestInvitation(db, pre.id), formalAdmissionOf(db, pre.id), existingRequestOfPreAdmission(db, pre.id)]);
 
   return (
     <>
@@ -59,6 +60,7 @@ export default async function PreadmisionPage({ params }: { params: Promise<{ id
           invitation={invitation && { sentAt: noteFormat.format(invitation.createdAt), expiresAt: noteFormat.format(invitation.expiresAt), expired: invitation.expiresAt <= new Date() }}
           closedReason={pre.closedReason}
           closeReasons={[...CLOSE_REASONS]}
+          existingRequest={existingRequest && { id: existingRequest.id, reference: existingRequest.reference }}
           notes={pre.notes.map((n) => ({ id: n.id, text: n.body, at: noteFormat.format(n.createdAt), author: n.author }))}
         />
       </div>

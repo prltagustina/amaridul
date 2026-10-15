@@ -5,7 +5,8 @@ import { persons, retentionColumns } from "./core";
 
 const tz = { withTimezone: true } as const;
 
-export const preAdmissionStatus = pgEnum("pre_admission_status", ["recibida", "en-revision", "invitada", "cerrada"]);
+// "derivada": the person turned out to be an existing member; the request moved to the legajo update.
+export const preAdmissionStatus = pgEnum("pre_admission_status", ["recibida", "en-revision", "invitada", "cerrada", "derivada"]);
 
 /**
  * Contact data is stored like `persons` (plain, needed to reply). What a person tells us about their
@@ -124,8 +125,13 @@ export const admissionDecisions = pgTable(
 );
 
 export const memberStatus = pgEnum("member_status", ["activo", "suspendido", "baja"]);
+/** How the member reached the digital register: a new admission, or an existing (pre-system) member. */
+export const memberOrigin = pgEnum("member_origin", ["admission", "legacy"]);
 
-/** Members, created when the Comisión Directiva approves an admission. */
+/**
+ * Members. Created when the Comisión Directiva approves an admission, or when the admin registers an
+ * existing member who joined before this system (no admission row, `origin = legacy`).
+ */
 export const members = pgTable("members", {
   id: uuid("id").primaryKey().defaultRandom(),
   memberNumber: text("member_number").notNull().unique(),
@@ -137,13 +143,19 @@ export const members = pgTable("members", {
     .notNull()
     .unique()
     .references(() => user.id, { onDelete: "restrict" }),
+  // Null for existing members: they never went through this system's admission.
   admissionId: uuid("admission_id")
-    .notNull()
     .unique()
     .references(() => admissions.id, { onDelete: "restrict" }),
   category: admissionCategory("category").notNull(),
-  since: date("since").notNull(),
+  // Real date of admission. Null when an existing member's historical date is not available.
+  since: date("since"),
   status: memberStatus("status").notNull().default("activo"),
+  origin: memberOrigin("origin").notNull().default("admission"),
+  /** Reference to the Comisión minutes, when known (existing members). */
+  minutesReference: text("minutes_reference"),
+  /** When the existing member finished the digital update (account activated). Never replaces `since`. */
+  digitalOnboardingCompletedAt: timestamp("digital_onboarding_completed_at", tz),
   createdAt: timestamp("created_at", tz).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", tz).notNull().defaultNow(),
   ...retentionColumns,

@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import * as z from "zod";
 import type { Database } from "@/server/db/client";
-import { account, admissionDecisions, admissions, members, oneTimeTokens, personIdentities, persons, user } from "@/server/db/schema";
+import { account, admissionDecisions, admissions, existingMemberRequests, members, oneTimeTokens, personIdentities, persons, user } from "@/server/db/schema";
 import { audit } from "@/server/audit/log";
 import { dniLookupCandidates, maskDni } from "@/server/crypto/dni";
 import { hashToken } from "@/server/crypto/tokens";
@@ -29,15 +29,24 @@ export type DecisionInput = z.infer<typeof decisionInput>;
 
 export class InvalidDecisionError extends Error {}
 
-/** Member numbers run without year: AD-0001, AD-0002… (same atomic counter as the references). */
-async function nextMemberNumber(db: Database): Promise<string> {
-  const result = await db.execute<{ last_value: number }>(sql`
-    insert into reference_counters (kind, year, last_value) values ('member', 0, 1)
-    on conflict (kind, year) do update set last_value = reference_counters.last_value + 1
-    returning last_value
-  `);
-  const rows = (Array.isArray(result) ? result : (result as { rows: { last_value: number }[] }).rows) as { last_value: number }[];
-  return `AD-${String(Number(rows[0].last_value)).padStart(4, "0")}`;
+/**
+ * Member numbers run without year: AD-0001, AD-0002… (same atomic counter as the references).
+ * Existing members may keep a historical number typed in by the admin; the counter skips any
+ * number already taken, so the two never collide.
+ */
+export async function nextMemberNumber(db: Database): Promise<string> {
+  for (let attempt = 0; attempt < 1000; attempt++) {
+    const result = await db.execute<{ last_value: number }>(sql`
+      insert into reference_counters (kind, year, last_value) values ('member', 0, 1)
+      on conflict (kind, year) do update set last_value = reference_counters.last_value + 1
+      returning last_value
+    `);
+    const rows = (Array.isArray(result) ? result : (result as { rows: { last_value: number }[] }).rows) as { last_value: number }[];
+    const candidate = `AD-${String(Number(rows[0].last_value)).padStart(4, "0")}`;
+    const [taken] = await db.select({ id: members.id }).from(members).where(sql`lower(${members.memberNumber}) = lower(${candidate})`);
+    if (!taken) return candidate;
+  }
+  throw new Error("No hay números de socio disponibles");
 }
 
 /**
@@ -45,11 +54,21 @@ async function nextMemberNumber(db: Database): Promise<string> {
  * that email (an admin who is also a member). So the account carries an internal address; emails
  * always go to the person's real one (see `memberEmailOf`).
  */
-const accountEmail = (memberNumber: string) => `socio.${memberNumber.toLowerCase()}@socios.amaridul.invalid`;
+export const accountEmail = (memberNumber: string) => `socio.${memberNumber.toLowerCase().replace(/[^a-z0-9-]+/g, "-")}@socios.amaridul.invalid`;
 
-type Deps = { email: EmailSender; baseURL: string };
+export type Deps = { email: EmailSender; baseURL: string };
 
-async function sendActivation(db: Database, deps: Deps, m: { memberId: string; userId: string; memberNumber: string; firstName: string; to: string }, actorUserId: string | null, now: Date) {
+/** "approval" for a new member admitted by the Comisión; "existing" for a member whose legajo was digitalised. */
+export type ActivationWording = "approval" | "existing";
+
+export async function sendActivation(
+  db: Database,
+  deps: Deps,
+  m: { memberId: string; userId: string; memberNumber: string; firstName: string; to: string },
+  actorUserId: string | null,
+  now: Date,
+  wording: ActivationWording = "approval",
+) {
   const { token, expiresAt } = await issueToken(
     db,
     { kind: ACTIVATION_KIND, ttlMs: ACTIVATION_TTL_MS, userId: m.userId, subjectId: m.memberId, createdBy: actorUserId ?? undefined, revokePrevious: true },
@@ -57,8 +76,9 @@ async function sendActivation(db: Database, deps: Deps, m: { memberId: string; u
   );
   const url = `${deps.baseURL.replace(/\/$/, "")}/qr/activar#t=${token}`;
   try {
-    const { subject, text, html } = emailTemplates.admission_approved({ name: m.firstName, memberNumber: m.memberNumber, url, expiresAt });
-    await deps.email.send({ to: m.to, subject, text, html, template: "admission_approved", idempotencyKey: `admission_approved:${m.memberNumber}:${hashToken(token).slice(0, 16)}` });
+    const template = wording === "existing" ? "existing_member_access" : "admission_approved";
+    const { subject, text, html } = emailTemplates[template]({ name: m.firstName, memberNumber: m.memberNumber, url, expiresAt });
+    await deps.email.send({ to: m.to, subject, text, html, template, idempotencyKey: `${template}:${m.memberNumber}:${hashToken(token).slice(0, 16)}` });
     return { expiresAt, emailed: true };
   } catch (e) {
     console.error("Activation email failed:", m.memberNumber, e instanceof Error ? e.message : e);
@@ -155,14 +175,21 @@ export async function recordDecision(db: Database, deps: Deps, actorUserId: stri
 /** `actorUserId` is the admin who resends it, or null when the person asks for it (password recovery). */
 export async function resendActivation(db: Database, deps: Deps, actorUserId: string | null, memberId: string, now = new Date()) {
   const [m] = await db
-    .select({ memberId: members.id, userId: members.userId, memberNumber: members.memberNumber, userStatus: user.status, fullName: user.name, notificationEmail: admissions.notificationEmail, email: persons.email })
+    .select({ memberId: members.id, userId: members.userId, memberNumber: members.memberNumber, origin: members.origin, userStatus: user.status, fullName: user.name, notificationEmail: admissions.notificationEmail, email: persons.email })
     .from(members)
     .innerJoin(user, eq(user.id, members.userId))
-    .innerJoin(admissions, eq(admissions.id, members.admissionId))
+    .leftJoin(admissions, eq(admissions.id, members.admissionId))
     .innerJoin(persons, eq(persons.id, members.personId))
     .where(eq(members.id, memberId));
   if (!m || m.userStatus !== "pending_activation") throw new InvalidDecisionError("La cuenta ya está activa");
-  const sent = await sendActivation(db, deps, { memberId: m.memberId, userId: m.userId, memberNumber: m.memberNumber, firstName: m.fullName.split(/\s+/)[0], to: m.notificationEmail || m.email || "" }, actorUserId, now);
+  const sent = await sendActivation(
+    db,
+    deps,
+    { memberId: m.memberId, userId: m.userId, memberNumber: m.memberNumber, firstName: m.fullName.split(/\s+/)[0], to: m.notificationEmail || m.email || "" },
+    actorUserId,
+    now,
+    m.origin === "legacy" ? "existing" : "approval",
+  );
   await audit(db, { actorUserId, action: "member.activation_resent", entityType: "member", entityId: memberId, metadata: { memberNumber: m.memberNumber } });
   return sent;
 }
@@ -206,6 +233,17 @@ export async function activateAccount(db: Database, token: string, password: str
     if (!activated.length) throw new InvalidDecisionError("La cuenta no está pendiente de activación");
     await t.insert(account).values({ userId: used.userId, accountId: used.userId, providerId: "credential", password: passwordHash });
     await audit(t, { actorUserId: used.userId, action: "member.activated", entityType: "user", entityId: used.userId });
+    // An existing member finishes the digital update here: the historical admission date stays as it was.
+    const [m] = await t.select({ id: members.id, origin: members.origin }).from(members).where(eq(members.userId, used.userId));
+    if (m?.origin === "legacy") {
+      await t.update(members).set({ digitalOnboardingCompletedAt: now, updatedAt: now }).where(eq(members.id, m.id));
+      const done = await t
+        .update(existingMemberRequests)
+        .set({ status: "completed", updatedAt: now })
+        .where(and(eq(existingMemberRequests.linkedMemberId, m.id), eq(existingMemberRequests.status, "matched")))
+        .returning({ id: existingMemberRequests.id });
+      for (const r of done) await audit(t, { actorUserId: used.userId, action: "existing_member.completed", entityType: "existing_member_request", entityId: r.id });
+    }
     return { ok: true as const };
   });
 }
@@ -230,7 +268,7 @@ export async function memberEmailOf(db: Database, userId: string): Promise<strin
   const [r] = await db
     .select({ notificationEmail: admissions.notificationEmail, email: persons.email })
     .from(members)
-    .innerJoin(admissions, eq(admissions.id, members.admissionId))
+    .leftJoin(admissions, eq(admissions.id, members.admissionId))
     .innerJoin(persons, eq(persons.id, members.personId))
     .where(eq(members.userId, userId));
   return r ? r.notificationEmail || r.email : null;
@@ -256,6 +294,9 @@ export async function getMember(db: Database, rings: Keyrings, id: string) {
       status: members.status,
       name: user.name,
       accountStatus: user.status,
+      origin: members.origin,
+      minutesReference: members.minutesReference,
+      digitalOnboardingCompletedAt: members.digitalOnboardingCompletedAt,
       admissionId: admissions.id,
       admissionReference: admissions.reference,
       email: persons.email,
@@ -263,7 +304,7 @@ export async function getMember(db: Database, rings: Keyrings, id: string) {
     })
     .from(members)
     .innerJoin(user, eq(user.id, members.userId))
-    .innerJoin(admissions, eq(admissions.id, members.admissionId))
+    .leftJoin(admissions, eq(admissions.id, members.admissionId))
     .innerJoin(persons, eq(persons.id, members.personId))
     .where(eq(members.id, id));
   if (!m) return null;

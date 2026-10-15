@@ -135,6 +135,8 @@ const TRANSITIONS: Record<PreAdmissionStatus, PreAdmissionStatus[]> = {
   "en-revision": ["invitada", "cerrada"],
   invitada: ["invitada", "cerrada"],
   cerrada: [],
+  // Moved to the legajo update of an existing member: kept as it was, nothing else applies.
+  derivada: [],
 };
 
 export const CLOSE_REASONS = ["Sin respuesta", "No continúa con el proceso", "No corresponde", "Duplicada"] as const;

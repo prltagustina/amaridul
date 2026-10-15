@@ -119,6 +119,65 @@ export const emailTemplates = {
       ],
     ),
 
+  // Existing members (joined before this system): legajo update, no new admission.
+  existing_member_received: (p: { reference: string; name: string }): Rendered =>
+    email(
+      "Recibimos la actualización de tu legajo",
+      `Hola, ${p.name}:`,
+      {
+        tone: "join",
+        preheader: "Vamos a verificar tus datos con el registro de Amarí Dul.",
+        title: "Recibimos tus datos",
+        tab: "Actualización de legajo",
+        reason: "Recibís este email porque completaste la actualización de legajo de socio en amaridul.com.",
+      },
+      [
+        { kind: "p", text: "Recibimos la actualización de tu legajo. Vamos a verificar tu información con el registro de Amarí Dul." },
+        { kind: "fact", label: "Referencia", value: p.reference, mono: true },
+        { kind: "note", text: "Cuando tu cuenta esté lista vas a recibir otro email para activarla. Si tenés dudas, respondé este email." },
+      ],
+    ),
+
+  existing_member_update_link: (p: { name: string; url: string; expiresAt: Date }): Rendered =>
+    email(
+      "Actualizá tu legajo en Amarí Dul",
+      `Hola, ${p.name}:`,
+      {
+        tone: "join",
+        preheader: "Completá tus datos para activar tu acceso digital de socio.",
+        title: "Actualizá tu legajo",
+        tab: "Actualización de legajo",
+        reason: "Recibís este email porque el equipo de Amarí Dul registró que ya sos socio o socia de la asociación.",
+      },
+      [
+        { kind: "p", text: "Vimos que ya formás parte de Amarí Dul. No tenés que volver a asociarte: solo completá tus datos para incorporarlos al sistema y activar tu acceso digital." },
+        { kind: "button", label: "Completar mis datos", url: p.url },
+        { kind: "fact", label: "El link vence el", value: longDate.format(p.expiresAt) },
+        { kind: "note", text: "El link es personal: no lo compartas." },
+      ],
+    ),
+
+  existing_member_access: (p: { name: string; memberNumber: string; url: string; expiresAt: Date }): Rendered =>
+    email(
+      "Tu acceso a Amarí Dul está listo",
+      `Hola, ${p.name}:`,
+      {
+        tone: "member",
+        preheader: "Verificamos tu legajo. Activá tu cuenta de socio.",
+        title: "Tu acceso está listo",
+        tab: "Socios",
+        reason: "Recibís este email porque el equipo de Amarí Dul verificó la actualización de tu legajo.",
+      },
+      [
+        { kind: "p", text: "Verificamos tus datos con el registro de Amarí Dul. Ya podés activar tu acceso digital de socio." },
+        { kind: "fact", label: "Tu número de socio", value: p.memberNumber, mono: true },
+        { kind: "p", text: "Para entrar a tu espacio, activá tu cuenta creando una contraseña:" },
+        { kind: "button", label: "Activar mi cuenta", url: p.url },
+        { kind: "fact", label: "El link vence el", value: longDate.format(p.expiresAt) },
+        { kind: "note", text: "El link sirve una sola vez. Después ingresás en amaridul.com con tu DNI y esa contraseña." },
+      ],
+    ),
+
   // Not used yet (activation goes in the approval email); kept with its pending marker.
   account_activation: (p: { url: string; expiresAt: Date }): Rendered => ({
     subject: "Activá tu cuenta",

@@ -31,7 +31,7 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
           firstName: m.firstName,
           number: m.memberNumber,
           category: m.categoryLabel,
-          since: m.since.split("-").reverse().join("/"),
+          since: m.since ? m.since.split("-").reverse().join("/") : "—",
           status: "Activo",
           fee: "A confirmar por la asociación",
           procedures: [

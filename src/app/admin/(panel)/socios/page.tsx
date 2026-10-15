@@ -27,7 +27,7 @@ export default async function SociosPage({ searchParams }: { searchParams: Promi
             { key: "name", header: "Nombre", primary: true, render: (r) => r.name },
             { key: "number", header: "N.º de socio", render: (r) => <span className="font-mono text-[13px]">{r.memberNumber}</span> },
             { key: "cat", header: "Categoría", render: (r) => categoryOptions.find((c) => c.value === r.category)?.label ?? r.category },
-            { key: "since", header: "Desde", render: (r) => r.since.split("-").reverse().join("/") },
+            { key: "since", header: "Desde", render: (r) => (r.since ? r.since.split("-").reverse().join("/") : "—") },
             { key: "web", header: "Cuenta web", render: (r) => (r.accountStatus === "active" ? "Activa" : r.accountStatus === "pending_activation" ? "Activación pendiente" : "Deshabilitada") },
             { key: "status", header: "Estado", render: (r) => <StatusBadge tone={memberStatus[r.status].tone}>{memberStatus[r.status].label}</StatusBadge> },
           ]}
