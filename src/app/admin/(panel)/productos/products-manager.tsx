@@ -141,22 +141,32 @@ export default function ProductsManager({ rows, varieties, options }: { rows: Pr
             { key: "name", header: "Producto", primary: true, render: (r) => r.name },
             { key: "type", header: "Tipo", render: (r) => r.typeLabel },
             { key: "variety", header: "Variedad", render: (r) => r.varietyLabel ?? missing },
-            { key: "cultivation", header: "Cultivo", render: (r) => r.cultivationLabel ?? missing },
+            {
+              key: "cultivation",
+              header: "Cultivo",
+              render: (r) => (
+                <span className="block">
+                  {r.cultivationLabel ?? missing}
+                  <span className="block text-xs tabular-nums text-text-muted">{r.cultivatedOn ? formatDate(r.cultivatedOn) : "Fecha sin cargar"}</span>
+                </span>
+              ),
+            },
             { key: "chemotype", header: "Quimiotipo", render: (r) => (r.chemotype ? <span className="tabular-nums">{r.chemotype}</span> : missing) },
-            { key: "cultivatedOn", header: "Fecha de cultivo", render: (r) => (r.cultivatedOn ? <span className="tabular-nums">{formatDate(r.cultivatedOn)}</span> : missing) },
             { key: "status", header: "Estado", render: (r) => <StatusBadge tone={r.status === "activo" ? "success" : "neutral"}>{r.status === "activo" ? "Activo" : "Inactivo"}</StatusBadge> },
             {
               key: "edit",
               header: "Acciones",
               render: (r) => (
-                <div className="flex gap-2 whitespace-nowrap">
-                  <Button variant="secondary" shape="admin" className="min-h-10 px-4" onClick={() => open(r)} aria-label={`Editar ${r.name}`}>
-                    <Pencil aria-hidden className="size-4" strokeWidth={1.5} /> Editar
+                // Icon buttons keep the row narrow enough for every column on a laptop screen.
+                <div className="flex gap-1.5 whitespace-nowrap">
+                  <Button variant="secondary" shape="admin" className="min-h-9 min-w-9 px-0" onClick={() => open(r)} aria-label={`Editar ${r.name}`} title="Editar">
+                    <Pencil aria-hidden className="size-4" strokeWidth={1.5} />
                   </Button>
                   <Button
                     variant="danger"
                     shape="admin"
-                    className="min-h-10 px-3"
+                    className="min-h-9 min-w-9 px-0"
+                    title="Eliminar"
                     onClick={() => {
                       setDeleting(r);
                       setDeleteError("");
@@ -187,12 +197,10 @@ export default function ProductsManager({ rows, varieties, options }: { rows: Pr
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {varieties.map((v) => (
-            <Card key={v.id} className="flex items-center justify-between gap-3 !p-4">
-              <div className="min-w-0">
-                <p className="font-medium tabular-nums text-forest">{v.code}</p>
-                <p className="text-small break-words text-text-muted">{v.name ?? "Nombre a definir"}</p>
-              </div>
-              <Button variant="ghost" shape="admin" className="shrink-0" onClick={() => openVariety(v)} aria-label={`Definir el nombre de ${v.code}`}>
+            <Card key={v.id} className="flex flex-col items-start gap-1 !p-4">
+              <p className="font-medium tabular-nums text-forest">{v.code}</p>
+              <p className="text-small text-text-muted [overflow-wrap:anywhere]">{v.name ?? "Nombre a definir"}</p>
+              <Button variant="ghost" shape="admin" className="-ml-1 min-h-9" onClick={() => openVariety(v)} aria-label={`Definir el nombre de ${v.code}`}>
                 <Pencil aria-hidden className="size-4" strokeWidth={1.5} /> {v.name ? "Cambiar" : "Definir"}
               </Button>
             </Card>
