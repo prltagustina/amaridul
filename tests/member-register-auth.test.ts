@@ -21,6 +21,7 @@ vi.mock("@/server/crypto", () => ({ getKeyrings: () => app.ctx!.rings }));
 
 const actions = await import("@/app/admin/(panel)/socios/[id]/actions");
 const reprocann = await import("@/app/admin/(panel)/socios/[id]/reprocann-actions");
+const importing = await import("@/app/admin/(panel)/socios/importar/actions");
 
 let ctx: Awaited<ReturnType<typeof makeContext>>;
 let memberId: string;
@@ -115,3 +116,33 @@ describe("the admin's edits landed", () => {
     expect(await rejection(EDITS.contacto)).toMatch(/NEXT_REDIRECT.*\/admin\/login/);
   });
 });
+
+describe("importar padrón (server-side, with the production keys)", () => {
+  const csvForm = (sha?: string) => {
+    const f = new FormData();
+    f.set("file", new File(["N°,Apellido,Nombre,DNI,Socio/a\n1,Ficticia,Importada,99007301,SI\n"], "padron.csv", { type: "text/csv" }));
+    if (sha) f.set("sha", sha);
+    return f;
+  };
+
+  it("without session or as a member, neither the review nor the apply runs", async () => {
+    for (const cookie of ["", memberCookie]) {
+      request.cookie = cookie;
+      expect(await rejection(() => importing.previewImportAction(csvForm()))).toMatch(/NEXT_REDIRECT|NEXT_HTTP_ERROR_FALLBACK;404/);
+      expect(await rejection(() => importing.applyImportAction(csvForm("x")))).toMatch(/NEXT_REDIRECT|NEXT_HTTP_ERROR_FALLBACK;404/);
+    }
+  });
+
+  it("an admin reviews without writing, and applies only the same file", async () => {
+    request.cookie = adminCookie;
+    const before = (await ctx.db.select().from(members)).length;
+    const preview = await importing.previewImportAction(csvForm());
+    expect(preview).toMatchObject({ ok: true, summary: { create: 1 } });
+    expect((await ctx.db.select().from(members)).length).toBe(before);
+    expect(await importing.applyImportAction(csvForm("otro-hash"))).toMatchObject({ ok: false });
+    expect((await ctx.db.select().from(members)).length).toBe(before);
+    expect(await importing.applyImportAction(csvForm((preview as { sha: string }).sha))).toEqual({ ok: true, created: 1, updated: 0 });
+    expect((await ctx.db.select().from(members)).length).toBe(before + 1);
+  });
+});
+

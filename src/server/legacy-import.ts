@@ -69,10 +69,10 @@ const HEADERS = {
   locality: ["localidad"],
   isMember: ["socio/a", "socio", "socia", "socio / a"],
   room: ["sala"],
-  expiresOn: ["fecha de vencimiento", "vencimiento"],
+  expiresOn: ["fecha de vencimiento", "vencimiento", "fecha de vencimiento reprocann", "vencimiento reprocann"],
   daysToExpiry: ["dias para vencer"],
   credentialState: ["estado credencial", "estado de la credencial"],
-  credentialFile: ["credencial", "archivo", "credencial / archivo", "credencial/archivo", "ver credencial"],
+  credentialFile: ["credencial", "archivo", "credencial / archivo", "credencial/archivo", "credencial archivo", "ver credencial"],
   feeEnrollmentDate: ["cuota fecha de alta", "fecha de alta cuota", "cuota fecha alta", "fecha de alta"],
   paymentMethod: ["medio de pago", "forma de pago"],
   notes: ["observaciones", "observacion"],
@@ -81,16 +81,23 @@ const REQUIRED = ["lastNames", "firstNames", "dni", "isMember"] as const;
 type Field = keyof typeof HEADERS;
 export type SourceRow = { line: number } & Partial<Record<Field, string>>;
 
-export function mapRows(table: string[][]) {
-  const [header = [], ...data] = table;
-  const columns: (Field | null)[] = header.map((h) => {
+const columnsOf = (header: string[]): (Field | null)[] =>
+  header.map((h) => {
     const n = norm(h);
     return (Object.keys(HEADERS) as Field[]).find((f) => (HEADERS[f] as string[]).includes(n)) ?? null;
   });
+
+export function mapRows(table: string[][]) {
+  // Sheet exports often carry a title and notes above the header: the header is the first row
+  // (within the first ten) naming at least the surname and DNI columns.
+  const at = Math.max(0, table.slice(0, 10).findIndex((row) => ["lastNames", "dni"].every((f) => columnsOf(row).includes(f as Field))));
+  const header = table[at] ?? [];
+  const data = table.slice(at + 1);
+  const columns = columnsOf(header);
   const ignoredHeaders = header.filter((_, i) => !columns[i]);
   const missing = REQUIRED.filter((f) => !columns.includes(f));
   const rows: SourceRow[] = data.map((cells, i) => {
-    const r: SourceRow = { line: i + 2 };
+    const r: SourceRow = { line: at + i + 2 };
     columns.forEach((f, c) => {
       if (f) r[f] = (cells[c] ?? "").trim();
     });
@@ -292,7 +299,7 @@ async function hasImportNote(db: Database, memberId: string, body: string) {
 // ---------- Apply ----------
 
 /** Writes what the analysis allows. Refuses if there are blocking conflicts. Sends no email. */
-export async function applyImport(db: Database, rings: Keyrings, file: { name: string; content: string }, now = new Date()) {
+export async function applyImport(db: Database, rings: Keyrings, file: { name: string; content: string }, now = new Date(), actorUserId: string | null = null) {
   const { rows, missing } = mapRows(parseCsv(file.content));
   if (missing.length) throw new Error(`Faltan columnas: ${missing.join(", ")}`);
   const analysis = await analyse(db, rings, rows);
@@ -322,7 +329,7 @@ export async function applyImport(db: Database, rings: Keyrings, file: { name: s
           .values({ personId: person.id, origin: "legacy", status: "activo", room: r.room || null, importRunId: run.id, createdAt: now, updatedAt: now })
           .returning({ id: members.id });
         await writeExtras(t, rings, p, m.id, run.id, now);
-        await audit(t, { action: "member.imported", entityType: "member", entityId: m.id, metadata: { importRun: run.id, line: r.line } });
+        await audit(t, { actorUserId, action: "member.imported", entityType: "member", entityId: m.id, metadata: { importRun: run.id, line: r.line } });
         created++;
       } else if (p.result.outcome === "update") {
         const memberId = p.result.memberId!;
@@ -334,7 +341,7 @@ export async function applyImport(db: Database, rings: Keyrings, file: { name: s
           .where(eq(persons.id, m.personId));
         if (!m.room && r.room) await t.update(members).set({ room: r.room, updatedAt: now }).where(eq(members.id, memberId));
         await writeExtras(t, rings, p, memberId, run.id, now);
-        await audit(t, { action: "member.import_updated", entityType: "member", entityId: memberId, metadata: { importRun: run.id, line: r.line, fields: (p.result.changes ?? []).join(", ") } });
+        await audit(t, { actorUserId, action: "member.import_updated", entityType: "member", entityId: memberId, metadata: { importRun: run.id, line: r.line, fields: (p.result.changes ?? []).join(", ") } });
         updated++;
       }
     }

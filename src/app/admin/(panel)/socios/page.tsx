@@ -1,4 +1,6 @@
+import { FileUp } from "lucide-react";
 import { requireAdmin } from "@/server/auth/session";
+import { LinkButton } from "@/components/ui/button";
 import { getDb } from "@/server/db";
 import { categoryLabel, listRegister } from "@/server/member-profile";
 import { DataList } from "@/components/ui/data-list";
@@ -22,7 +24,15 @@ export default async function SociosPage() {
   const rows = await listRegister(await getDb());
   return (
     <>
-      <AdminPageHeader title="Socios" description="Padrón de Amarí Dul: socios admitidos en el sistema y socios históricos. La membresía, la cuenta digital y REPROCANN se muestran por separado." />
+      <AdminPageHeader
+        title="Socios"
+        description="Padrón de Amarí Dul: socios admitidos en el sistema y socios históricos. La membresía, la cuenta digital y REPROCANN se muestran por separado."
+        actions={
+          <LinkButton href="/admin/socios/importar" shape="admin" variant="secondary">
+            <FileUp aria-hidden className="size-4" strokeWidth={1.5} /> Importar padrón
+          </LinkButton>
+        }
+      />
       <ListStateView state={rows.length ? "default" : "empty"} emptyTitle="Todavía no hay socios" emptyDescription="Aparecen al aprobar una admisión, al registrar un socio existente o al importar el padrón histórico.">
         <DataList
           caption="Socios"

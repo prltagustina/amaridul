@@ -271,3 +271,21 @@ describe("4–6. what the import reports without writing", () => {
     expect(JSON.stringify(profile)).not.toContain("ejemplo.invalid");
   });
 });
+
+describe("sheet exports with a title above the header", () => {
+  it("finds the header row, reads the sheet's column names and keeps file line numbers", () => {
+    const content = [
+      "Asociación ficticia,,,,,",
+      "Actualizado: nota ficticia,,,,,",
+      ",,,,,",
+      "N°,Apellido,Nombre,DNI,Socio/a,Fecha de vencimiento REPROCANN,Credencial (archivo),Días para vencer",
+      "1,Ficticia,Encabezado,99008501,SI,17/12/2028,https://ejemplo.invalid/ver,30",
+    ].join("\n");
+    const { rows, missing, ignoredHeaders } = mapRows(parseCsv(content));
+    expect(missing).toEqual([]);
+    expect(ignoredHeaders).toEqual([]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ line: 5, lastNames: "Ficticia", dni: "99008501", expiresOn: "17/12/2028", credentialFile: "https://ejemplo.invalid/ver" });
+  });
+});
+
