@@ -34,7 +34,7 @@ export async function previewImportAction(form: FormData): Promise<PreviewResult
   const file = await readCsv(form);
   if ("error" in file) return { ok: false, error: file.error };
   const { rows, ignoredHeaders, missing } = mapRows(parseCsv(file.content));
-  if (missing.length) return { ok: false, error: "No encontramos las columnas obligatorias (Apellido, Nombre, DNI y Socio/a). Revisá que sea la planilla de socios." };
+  if (missing.length) return { ok: false, error: "No encontramos las columnas obligatorias (Apellido, Nombre y DNI). Revisá que sea la planilla de socios." };
   try {
     const { results, summary, blocking } = await analyse(await getDb(), getKeyrings(), rows);
     return { ok: true, fileName: file.name, sha: sha256(file.content), ignoredHeaders, summary, blocking, rows: results };

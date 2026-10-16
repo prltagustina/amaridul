@@ -114,7 +114,6 @@ export function ImportFlow() {
             <Figure label="Revisión manual" value={s.review} tone="warning" />
             <Figure label="Sin DNI" value={s.withoutDni} tone="warning" />
             <Figure label="DNI inválido" value={s.invalidDni} tone="warning" />
-            <Figure label="Socio/a NO" value={s.notMember} tone="warning" />
             <Figure label="DNI repetidos" value={s.duplicateDni} tone="error" />
             <Figure label="Conflictos" value={s.conflict} tone="error" />
             <Figure label="Conflictos de email" value={s.emailConflict} tone="warning" />

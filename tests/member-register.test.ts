@@ -61,7 +61,7 @@ describe("CSV reading", () => {
   it("does not treat the sheet's N° as a member number, and flags missing columns", () => {
     const { rows, missing } = mapRows(parseCsv(csv("7,Ficticia,Persona,99002001,,,SI,,,,,,,,")));
     expect(rows[0]).not.toHaveProperty("memberNumber");
-    expect(mapRows(parseCsv("Apellido,Nombre\nA,B")).missing).toEqual(["dni", "isMember"]);
+    expect(mapRows(parseCsv("Apellido,Nombre\nA,B")).missing).toEqual(["dni"]);
     expect(missing).toEqual([]);
   });
 });
@@ -81,16 +81,17 @@ describe("historical register import", () => {
     const { rows } = mapRows(parseCsv(content));
     const { results, summary, blocking } = await analyse(ctx.db, ctx.rings, rows);
     expect(blocking).toBe(false);
-    expect(summary).toMatchObject({ rows: 6, create: 2, review: 3, skip: 1, withoutDni: 1, invalidDni: 1, notMember: 1 });
+    expect(summary).toMatchObject({ rows: 6, create: 3, review: 2, skip: 1, withoutDni: 1, invalidDni: 1 });
     expect(results.find((r) => r.line === 4)!.reason).toMatch(/Sin DNI/);
-    expect(results.find((r) => r.line === 5)!.reason).toMatch(/Socio\/a/);
+    // "Socio/a" does not decide membership: every row of the register is a member.
+    expect(results.find((r) => r.line === 5)!.outcome).toBe("create");
     expect(results[0].dniMasked).not.toContain("99002001");
     expect(await memberCount()).toBe(before);
   });
 
   it("A, C, S: creates historical members without account, without emails, with conservative REPROCANN data", async () => {
     const out = await applyImport(ctx.db, ctx.rings, file(content));
-    expect(out).toMatchObject({ created: 2, updated: 0 });
+    expect(out).toMatchObject({ created: 3, updated: 0 });
     expect(ctx.email.sent).toHaveLength(0);
 
     const m = (await memberByDni("99002001"))!;
@@ -115,7 +116,7 @@ describe("historical register import", () => {
     expect(profile!.membership.legajo).toBe("imported");
 
     const [run] = await ctx.db.select().from(importRuns).where(eq(importRuns.id, out.runId));
-    expect(run).toMatchObject({ rows: 6, created: 2, kind: "legacy_members" });
+    expect(run).toMatchObject({ rows: 6, created: 3, kind: "legacy_members" });
     expect(run.fileSha256).toMatch(/^[0-9a-f]{64}$/);
     expect(JSON.stringify(await ctx.db.select().from(auditLogs))).not.toContain("99002001");
   });
@@ -124,7 +125,7 @@ describe("historical register import", () => {
     const before = await memberCount();
     const out = await applyImport(ctx.db, ctx.rings, file(content));
     expect(out).toMatchObject({ created: 0, updated: 0 });
-    expect(out.results.filter((r) => r.outcome === "match")).toHaveLength(2);
+    expect(out.results.filter((r) => r.outcome === "match")).toHaveLength(3);
     expect(await memberCount()).toBe(before);
     const m = (await memberByDni("99002001"))!;
     expect(await ctx.db.select().from(memberNotes).where(eq(memberNotes.memberId, m.id))).toHaveLength(1);
@@ -141,9 +142,8 @@ describe("historical register import", () => {
     expect(after).toMatchObject({ room: "Sala Sur", category: "adherente", since: "2019-01-01", minutesReference: "Acta 3" });
   });
 
-  it("refuses to apply with a repeated DNI or an unknown Socio/a value", async () => {
+  it("refuses to apply with a repeated DNI", async () => {
     await expect(applyImport(ctx.db, ctx.rings, file(csv("1,A,B,99002010,,,SI,,,,,,,,", "2,C,D,99002010,,,SI,,,,,,,,")))).rejects.toThrow(/conflictos/);
-    await expect(applyImport(ctx.db, ctx.rings, file(csv("1,A,B,99002011,,,QUIZÁS,,,,,,,,")))).rejects.toThrow(/conflictos/);
     expect(await memberByDni("99002010")).toBeNull();
   });
 

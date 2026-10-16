@@ -77,7 +77,9 @@ const HEADERS = {
   paymentMethod: ["medio de pago", "forma de pago"],
   notes: ["observaciones", "observacion"],
 } satisfies Record<string, string[]>;
-const REQUIRED = ["lastNames", "firstNames", "dni", "isMember"] as const;
+// Every row of the register is a member. The sheet's "Socio/a" column means something else for
+// the association, so it is recognised (not reported as unknown) but decides nothing.
+const REQUIRED = ["lastNames", "firstNames", "dni"] as const;
 type Field = keyof typeof HEADERS;
 export type SourceRow = { line: number } & Partial<Record<Field, string>>;
 
@@ -121,9 +123,6 @@ export function parseDate(raw: string | undefined): string | null | undefined {
   return date.toISOString().slice(0, 10);
 }
 
-const YES = new Set(["si", "s", "x", "yes"]);
-const NO = new Set(["no", "n", ""]);
-
 // ---------- Analysis (dry run) ----------
 
 export type Outcome = "create" | "update" | "match" | "skip" | "review" | "conflict";
@@ -160,15 +159,6 @@ export async function analyse(db: Database, rings: Keyrings, rows: SourceRow[]) 
     const values = (Object.keys(row) as (keyof SourceRow)[]).filter((k) => k !== "line").map((k) => row[k] as string | undefined);
     if (values.every((v) => !v)) {
       Object.assign(result, { outcome: "skip", reason: "Fila vacía" });
-      continue;
-    }
-    const member = norm(row.isMember ?? "");
-    if (!YES.has(member) && !NO.has(member)) {
-      Object.assign(result, { outcome: "conflict", reason: `Valor de «Socio/a» no reconocido: «${row.isMember}»` });
-      continue;
-    }
-    if (NO.has(member)) {
-      Object.assign(result, { outcome: "review", reason: "«Socio/a» dice NO o está vacío: no se importa como socio" });
       continue;
     }
     if (!row.firstNames || !row.lastNames) {
@@ -258,7 +248,6 @@ export async function analyse(db: Database, rings: Keyrings, rows: SourceRow[]) 
     withoutDni: results.filter((r) => r.reason.startsWith("Sin DNI")).length,
     invalidDni: results.filter((r) => r.reason === "DNI inválido").length,
     duplicateDni: results.filter((r) => r.reason.startsWith("DNI repetido")).length,
-    notMember: results.filter((r) => r.reason.startsWith("«Socio/a» dice NO")).length,
     personWithoutMember: results.filter((r) => r.reason.startsWith("La persona ya está")).length,
     repeatedEmail: results.filter((r) => r.warnings.some((w) => w.startsWith("Email repetido"))).length,
     emailConflict: results.filter((r) => r.warnings.some((w) => w.startsWith("Conflicto de email"))).length,

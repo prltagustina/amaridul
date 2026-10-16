@@ -23,7 +23,7 @@ async function main() {
     [
       `Filas: ${summary.rows}`,
       `Se crearían: ${summary.create} · Se completarían: ${summary.update} · Ya registrados sin cambios: ${summary.match}`,
-      `Revisión manual: ${summary.review} (sin DNI ${summary.withoutDni}, DNI inválido ${summary.invalidDni}, Socio/a NO ${summary.notMember}, persona sin membresía ${summary.personWithoutMember})`,
+      `Revisión manual: ${summary.review} (sin DNI ${summary.withoutDni}, DNI inválido ${summary.invalidDni}, persona sin membresía ${summary.personWithoutMember})`,
       `Conflictos: ${summary.conflict} (DNI repetidos ${summary.duplicateDni}) · Omitidas: ${summary.skip}`,
       `Emails: ${summary.emailConflict} en conflicto (no se cargan, revisión manual) · ${summary.repeatedEmail} repetidos en el archivo`,
       `Credenciales históricas sin archivo migrado: ${summary.historicalCredential} (en poder de la asociación, revisión pendiente, sin link)`,
