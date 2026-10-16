@@ -71,6 +71,20 @@
       "when": 1792091349618,
       "tag": "0009_endurecimiento_socios_existentes",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792112640332,
+      "tag": "0010_padron_socios",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792113570464,
+      "tag": "0011_reprocann_sin_informar",
+      "breakpoints": true
     }
   ]
 }

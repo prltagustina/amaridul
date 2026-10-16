@@ -14,7 +14,7 @@ import { admissionStatus } from "../../../status";
 import { decide, elevate } from "../actions";
 
 type Decision = { decision: "aprobada" | "rechazada" | "diferida"; meetingDate: string; minutes: string } | null;
-type Member = { id: string; memberNumber: string; accountStatus: string } | null;
+type Member = { id: string; memberNumber: string | null; accountStatus: string | null } | null;
 
 const DECISION_LABEL = { aprobada: "Aprobada", rechazada: "Rechazada", diferida: "Diferida" } as const;
 const today = () => new Date().toLocaleDateString("sv-SE", { timeZone: "America/Argentina/Buenos_Aires" });
@@ -94,7 +94,7 @@ export default function AdmissionReview({
           <p className="text-small">
             Socio{" "}
             <Link href={`/admin/socios/${member.id}`} className="font-medium !text-forest underline underline-offset-2">
-              {member.memberNumber}
+              {member.memberNumber ?? "Número a confirmar"}
             </Link>
             {member.accountStatus === "pending_activation" ? " · activación de la cuenta pendiente" : " · cuenta activa"}
           </p>

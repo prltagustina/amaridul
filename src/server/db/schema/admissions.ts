@@ -135,20 +135,23 @@ export const memberOrigin = pgEnum("member_origin", ["admission", "legacy"]);
  */
 export const members = pgTable("members", {
   id: uuid("id").primaryKey().defaultRandom(),
-  memberNumber: text("member_number").notNull().unique(),
+  // Null while a historical member's number is not known. Every number ever used stays in
+  // member_numbers, so it is never given to someone else.
+  memberNumber: text("member_number").unique(),
   personId: uuid("person_id")
     .notNull()
     .unique()
     .references(() => persons.id, { onDelete: "restrict" }),
+  // Membership is not the digital account: a historical member exists before ever using the web.
   userId: uuid("user_id")
-    .notNull()
     .unique()
     .references(() => user.id, { onDelete: "restrict" }),
   // Null for existing members: they never went through this system's admission.
   admissionId: uuid("admission_id")
     .unique()
     .references(() => admissions.id, { onDelete: "restrict" }),
-  category: admissionCategory("category").notNull(),
+  // Null when a historical member's category is not confirmed yet.
+  category: admissionCategory("category"),
   // Real date of admission. Null when an existing member's historical date is not available.
   since: date("since"),
   status: memberStatus("status").notNull().default("activo"),
@@ -157,6 +160,10 @@ export const members = pgTable("members", {
   minutesReference: text("minutes_reference"),
   /** When the existing member finished the digital update (account activated). Never replaces `since`. */
   digitalOnboardingCompletedAt: timestamp("digital_onboarding_completed_at", tz),
+  /** Internal "sala" of the association. Free text: the list of rooms is not settled. */
+  room: text("room"),
+  /** The historical-register import that created this member, if any. */
+  importRunId: uuid("import_run_id"),
   createdAt: timestamp("created_at", tz).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", tz).notNull().defaultNow(),
   ...retentionColumns,

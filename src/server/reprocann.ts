@@ -12,6 +12,7 @@ import { decryptField, encryptField } from "@/server/crypto/field-encryption";
 import type { Keyring } from "@/server/crypto/keyring";
 
 export const PERMIT_STATUS = [
+  { value: "no_informado", label: "Sin informar" },
   { value: "sin_permiso", label: "Sin permiso" },
   { value: "iniciado_informado", label: "Trámite iniciado (informado por el equipo médico)" },
   { value: "pendiente_aprobacion", label: "Pendiente de aprobación" },

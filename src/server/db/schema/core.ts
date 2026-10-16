@@ -13,11 +13,21 @@ export const retentionColumns = {
   anonymizedAt: timestamp("anonymized_at", tz),
 };
 
+/**
+ * The person: identity (names) and contact. The single owner of these fields: admissions and
+ * existing-member requests keep what was submitted, but the person's current data lives here.
+ * `fullName` is the display form of `firstNames` + `lastNames` (older rows may only have it).
+ */
 export const persons = pgTable("persons", {
   id: uuid("id").primaryKey().defaultRandom(),
   fullName: text("full_name").notNull(),
+  firstNames: text("first_names"),
+  lastNames: text("last_names"),
+  /** The person's real contact email (never the account's internal one). */
   email: text("email"),
   phone: text("phone"),
+  address: text("address"),
+  postalCode: text("postal_code"),
   province: text("province"),
   locality: text("locality"),
   isFixture: boolean("is_fixture").notNull().default(false),

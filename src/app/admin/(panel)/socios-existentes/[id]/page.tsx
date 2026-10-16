@@ -16,7 +16,7 @@ import ExistingMemberActions from "./actions-panel";
 
 const dateFormat = new Intl.DateTimeFormat("es-AR", { dateStyle: "long", timeStyle: "short", hourCycle: "h23", timeZone: "America/Argentina/Buenos_Aires" });
 const day = (iso: string | null) => (iso ? iso.split("-").reverse().join("/") : "—");
-const account = { pending_activation: "activación pendiente", active: "cuenta activa", disabled: "cuenta deshabilitada" } as const;
+const account = { none: "sin cuenta digital todavía", pending_activation: "activación pendiente", active: "cuenta activa", disabled: "cuenta deshabilitada" } as const;
 
 export default async function SocioExistentePage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
@@ -95,9 +95,9 @@ export default async function SocioExistentePage({ params }: { params: Promise<{
                 <span>
                   Vinculado con el socio{" "}
                   <Link className="!text-forest underline" href={`/admin/socios/${linkedMember.id}`}>
-                    {linkedMember.memberNumber}
+                    {linkedMember.memberNumber ?? "ver ficha"}
                   </Link>{" "}
-                  ({account[linkedMember.accountStatus]}).
+                  ({account[linkedMember.accountStatus ?? "none"]}).
                 </span>
               </p>
             ) : r.status === "rejected" ? (
@@ -110,7 +110,7 @@ export default async function SocioExistentePage({ params }: { params: Promise<{
                 <span>
                   Ya hay un socio con este DNI:{" "}
                   <Link className="!text-forest underline" href={`/admin/socios/${match.member.id}`}>
-                    {match.member.name} · {match.member.memberNumber}
+                    {match.member.name} · {match.member.memberNumber ?? "número a confirmar"}
                   </Link>{" "}
                   ({account[match.member.accountStatus]}). Vinculá la solicitud con ese socio: no se crea otro.
                 </span>
@@ -137,7 +137,7 @@ export default async function SocioExistentePage({ params }: { params: Promise<{
           sentEmail={r.email}
           member={
             found
-              ? { number: found.memberNumber, category: found.category, since: found.since ?? "", minutesReference: found.minutesReference ?? "", status: found.status, accountStatus: found.accountStatus, email: found.email }
+              ? { number: found.memberNumber, category: found.category ?? "", since: found.since ?? "", minutesReference: found.minutesReference ?? "", status: found.status, accountStatus: found.accountStatus ?? "none", email: found.email }
               : null
           }
           blocked={!!(match.openAdmission || match.otherAccount)}

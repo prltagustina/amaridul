@@ -14,7 +14,9 @@
     "keys:generate": "tsx scripts/generate-keys.ts",
     "seed:fixtures": "tsx --conditions=react-server --env-file=.env.local scripts/seed-fixtures.ts",
     "admin:create": "tsx --conditions=react-server --env-file=.env.local scripts/create-admin.ts",
-    "admin:break-glass": "tsx --conditions=react-server --env-file=.env.local scripts/break-glass-admin.ts"
+    "admin:break-glass": "tsx --conditions=react-server --env-file=.env.local scripts/break-glass-admin.ts",
+    "import:legacy-members": "tsx --conditions=react-server --env-file=.env.local scripts/import-legacy-members.ts",
+    "precheck:padron": "tsx --conditions=react-server --env-file=.env.local scripts/precheck-padron.ts"
   },
   "dependencies": {
     "@node-rs/argon2": "2.2.2",

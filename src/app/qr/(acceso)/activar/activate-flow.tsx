@@ -10,7 +10,7 @@ import { activate, openActivation } from "../actions";
 import { NewPasswordForm } from "../new-password-form";
 
 type Step = "default" | "loading" | "expired" | "unauthorized" | "success";
-type Who = { token: string; memberNumber: string; dniMasked: string; firstName: string } | null;
+type Who = { token: string; memberNumber: string | null; dniMasked: string; firstName: string } | null;
 
 /**
  * The activation token travels in the URL fragment (#t=…) and is checked with a server action.
@@ -103,7 +103,7 @@ export default function ActivateFlow({ initial, demo }: { initial: Step; demo: b
         <dl className="grid grid-cols-2 gap-4 !rounded-control bg-mist px-4 py-3">
           <div>
             <dt className="text-xs text-forest/85">Socio</dt>
-            <dd className="mt-0.5 font-medium text-forest">{who?.memberNumber ?? demoMember.number}</dd>
+            <dd className="mt-0.5 font-medium text-forest">{who ? (who.memberNumber ?? "A confirmar") : demoMember.number}</dd>
           </div>
           <div>
             <dt className="text-xs text-forest/85">DNI</dt>

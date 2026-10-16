@@ -157,7 +157,8 @@ export const emailTemplates = {
       ],
     ),
 
-  existing_member_access: (p: { name: string; memberNumber: string; url: string; expiresAt: Date }): Rendered =>
+  // A historical member may not have a number yet (imported register): the line is left out.
+  existing_member_access: (p: { name: string; memberNumber: string | null; url: string; expiresAt: Date }): Rendered =>
     email(
       "Tu acceso a Amarí Dul está listo",
       `Hola, ${p.name}:`,
@@ -170,7 +171,7 @@ export const emailTemplates = {
       },
       [
         { kind: "p", text: "Verificamos tus datos con el registro de Amarí Dul. Ya podés activar tu acceso digital de socio." },
-        { kind: "fact", label: "Tu número de socio", value: p.memberNumber, mono: true },
+        ...(p.memberNumber ? [{ kind: "fact" as const, label: "Tu número de socio", value: p.memberNumber, mono: true }] : []),
         { kind: "p", text: "Para entrar a tu espacio, activá tu cuenta creando una contraseña:" },
         { kind: "button", label: "Activar mi cuenta", url: p.url },
         { kind: "fact", label: "El link vence el", value: longDate.format(p.expiresAt) },

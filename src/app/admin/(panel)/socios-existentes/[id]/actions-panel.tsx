@@ -12,7 +12,7 @@ import type { ExistingMemberRequestStatus } from "@/server/existing-members";
 import { linkAction, needsReviewAction, registerAction, rejectAction, resendLinkAction, type ActionResult } from "../actions";
 
 type Option = { value: string; label: string };
-type Found = { number: string; category: string; since: string; minutesReference: string; status: string; accountStatus: "pending_activation" | "active" | "disabled"; email: string | null };
+type Found = { number: string | null; category: string; since: string; minutesReference: string; status: string; accountStatus: "none" | "pending_activation" | "active" | "disabled"; email: string | null };
 
 const STATUS_OPTIONS = [
   { value: "activo", label: "Activo" },
@@ -101,7 +101,7 @@ export default function ExistingMemberActions({
             <h2 className="text-h3">{member ? "Vincular con el socio" : "Registrar socio existente"}</h2>
             <p className="text-small text-text-muted">
               {member
-                ? `Se reutilizan el socio ${member.number}, su persona y su cuenta: no se crea nada nuevo.`
+                ? `Se reutilizan el socio ${member.number ?? "ya registrado"}, su persona y su cuenta: no se crea nada nuevo.${member.accountStatus === "none" ? " Todavía no tiene cuenta digital: se crea al vincular y le enviamos la activación." : ""}`
                 : "Cargá los datos del registro de la asociación. Si un dato histórico no está disponible, dejalo pendiente: nunca lo inventes."}
             </p>
           </div>

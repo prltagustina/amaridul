@@ -5,3 +5,4 @@ export * from "./admissions";
 export * from "./catalog";
 export * from "./existing-members";
 export * from "./reprocann";
+export * from "./register";

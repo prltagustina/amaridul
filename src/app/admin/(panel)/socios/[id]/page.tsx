@@ -3,13 +3,12 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
 import { getKeyrings } from "@/server/crypto";
-import { getMember } from "@/server/members";
-import { DetailList } from "@/components/ui/data-list";
-import { Card, StatusBadge } from "@/components/ui/display";
+import { categoryLabel, getMemberProfile } from "@/server/member-profile";
+import { DOCUMENT_KIND, INFO_SOURCE, LINKAGE_STATUS, MANAGEMENT_SOURCE, PERMIT_STATUS, REVIEW_STATUS, labelIn } from "@/server/reprocann";
+import { categoryOptions, provinces } from "@/demo/content";
 import { memberStatus } from "../../../status";
 import { AdminPageHeader } from "../../../ui";
-import { DOCUMENT_KIND, getReprocann, INFO_SOURCE, LINKAGE_STATUS, MANAGEMENT_SOURCE, PERMIT_STATUS, REVIEW_STATUS, labelIn } from "@/server/reprocann";
-import ResendActivation from "./resend-activation";
+import { AccountBlock, ContactBlock, FeeBlock, MembershipBlock, NotesBlock, PersonalBlock } from "./profile-blocks";
 import ReprocannPanel, { type ReprocannView } from "./reprocann-panel";
 
 const stamp = new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short", hourCycle: "h23", timeZone: "America/Argentina/Buenos_Aires" });
@@ -19,11 +18,12 @@ const DIMENSIONS: Record<string, { name: string; list: readonly { value: string;
   linkageStatus: { name: "Vinculación", list: LINKAGE_STATUS },
   responsibleName: { name: "Responsable", list: [] },
 };
+const LEGAJO = { imported: "Importado del padrón histórico", pending_update: "Pendiente de actualizar", updated: "Actualizado" } as const;
 
-/** Audit entries of the case, in words. */
+/** Audit entries of the REPROCANN case, in words. */
 function describe(action: string, m: Record<string, string | number | boolean | null> | null): string {
   if (action === "reprocann.case_opened") return "Se abrió el trámite.";
-  if (action === "reprocann.document_added") return `Documento registrado: ${labelIn(DOCUMENT_KIND, String(m?.kind))} (${labelIn(INFO_SOURCE, String(m?.source))}).`;
+  if (action === "reprocann.document_added") return `Documento registrado: ${labelIn(DOCUMENT_KIND, String(m?.kind))} (${labelIn(INFO_SOURCE, String(m?.source))})${m?.importRun ? " · importación del padrón" : ""}.`;
   if (action === "reprocann.document_reviewed") return `Documento revisado: ${labelIn(REVIEW_STATUS, String(m?.reviewStatus_before))} → ${labelIn(REVIEW_STATUS, String(m?.reviewStatus_after))}.`;
   if (action === "reprocann.case_updated")
     return Object.entries(DIMENSIONS)
@@ -39,62 +39,71 @@ function describe(action: string, m: Record<string, string | number | boolean | 
 export default async function SocioPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
-  const db = await getDb();
-  const m = await getMember(db, getKeyrings(), id);
-  if (!m) notFound();
-  const rep = await getReprocann(db, getKeyrings().field, m.id);
+  const p = await getMemberProfile(await getDb(), getKeyrings(), id);
+  if (!p) notFound();
+  const name = p.personal.lastNames && p.personal.firstNames ? `${p.personal.firstNames} ${p.personal.lastNames}` : p.personal.fullName;
+  const ms = p.membership;
+
+  const rep = p.reprocann;
   const reprocann: ReprocannView = {
     case: rep ? { permitStatus: rep.case.permitStatus, managementSource: rep.case.managementSource, responsibleName: rep.case.responsibleName ?? "", linkageStatus: rep.case.linkageStatus } : null,
     documents: (rep?.documents ?? []).map((d) => ({ id: d.id, kind: d.kind, permitIdentifier: d.permitIdentifier, issuedOn: d.issuedOn, expiresOn: d.expiresOn, source: d.source, reviewStatus: d.reviewStatus, verifiedOn: d.verifiedOn, notes: d.notes, createdAt: d.createdAt.toISOString() })),
     history: (rep?.history ?? []).map((h) => ({ at: stamp.format(h.at), actor: h.actor ?? "Sistema", text: describe(h.action, h.metadata) })),
+    credential: {
+      validityLabel: p.validity.label,
+      validityTone: p.validity.tone,
+      expiresOn: p.credential?.expiresOn ?? null,
+      review: p.credential?.reviewStatus ?? null,
+      source: p.credential?.source ?? null,
+      digitized: !!p.credential?.fileKey,
+    },
   };
-  const pending = m.accountStatus === "pending_activation";
+
+  const missing = [!p.contact.email && "email de contacto", !p.personal.dniMasked && "DNI"].filter(Boolean).join(" y ");
 
   return (
     <>
-      <AdminPageHeader back={{ href: "/admin/socios", label: "Socios" }} eyebrow={`Socio ${m.memberNumber}`} title={m.name} />
-      <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
-        <Card className="space-y-5">
-          <h2 className="text-h3">Datos asociativos</h2>
-          <DetailList
-            items={[
-              { label: "Número de socio", value: m.memberNumber },
-              { label: "Categoría", value: m.categoryLabel },
-              { label: "Socio desde", value: m.since ? m.since.split("-").reverse().join("/") : "No disponible" },
-              { label: "DNI", value: m.dniMasked },
-              { label: "Email", value: m.email ?? "—" },
-              { label: "Teléfono", value: m.phone ?? "—" },
-              m.admissionId
-                ? {
-                    label: "Admisión",
-                    value: (
-                      <Link href={`/admin/admisiones/${m.admissionId}`} className="!text-forest underline underline-offset-2">
-                        {m.admissionReference}
-                      </Link>
-                    ),
-                  }
-                : { label: "Origen", value: "Socio existente: ingresó antes del sistema" },
-              ...(m.minutesReference ? [{ label: "Acta", value: m.minutesReference }] : []),
-              ...(m.origin === "legacy" ? [{ label: "Legajo digital", value: m.digitalOnboardingCompletedAt ? `Completado el ${stamp.format(m.digitalOnboardingCompletedAt)}` : "Activación pendiente" }] : []),
-            ]}
+      <AdminPageHeader back={{ href: "/admin/socios", label: "Socios" }} eyebrow={ms.memberNumber ? `Socio ${ms.memberNumber}` : "Socio · número a confirmar"} title={name} />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="space-y-6">
+          <PersonalBlock id={p.id} data={p.personal} />
+          <ContactBlock id={p.id} data={p.contact} provinces={provinces} />
+          <FeeBlock id={p.id} data={p.fee} />
+        </div>
+        <div className="space-y-6">
+          <MembershipBlock
+            id={p.id}
+            categories={categoryOptions.map((c) => ({ value: c.value, label: c.label }))}
+            statuses={Object.entries(memberStatus).map(([value, s]) => ({ value, label: s.label }))}
+            data={{
+              memberNumber: ms.memberNumber,
+              category: ms.category,
+              categoryLabel: categoryLabel(ms.category),
+              since: ms.since,
+              status: ms.status,
+              statusLabel: memberStatus[ms.status].label,
+              minutesReference: ms.minutesReference,
+              originLabel: ms.origin === "legacy" ? "Socio existente (ingresó antes del sistema)" : "Admisión en el sistema",
+              room: ms.room,
+              onboardedAt: ms.digitalOnboardingCompletedAt ? stamp.format(ms.digitalOnboardingCompletedAt) : null,
+              legajoLabel: ms.digitalOnboardingCompletedAt ? `${LEGAJO[ms.legajo]} · ${stamp.format(ms.digitalOnboardingCompletedAt)}` : LEGAJO[ms.legajo],
+              previousNumbers: ms.previousNumbers,
+              declaredNumber: ms.declaredNumber,
+              admission: ms.admissionId ? (
+                <Link href={`/admin/admisiones/${ms.admissionId}`} className="!text-forest underline underline-offset-2">
+                  {ms.admissionReference}
+                </Link>
+              ) : (
+                <span className="text-text-muted">No corresponde</span>
+              ),
+            }}
           />
-        </Card>
-        <aside className="order-first space-y-6 lg:order-none" aria-label="Cuenta">
-          <Card className="space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-h3">Estado</h2>
-              <StatusBadge tone={memberStatus[m.status].tone}>{memberStatus[m.status].label}</StatusBadge>
-            </div>
-            <p className="text-small text-text-muted">
-              Cuenta web: {pending ? "activación pendiente. La persona todavía no creó su contraseña." : m.accountStatus === "active" ? "activa. Ingresa con su DNI." : "deshabilitada."}
-            </p>
-            {pending && <ResendActivation memberId={m.id} />}
-          </Card>
-        </aside>
+          <AccountBlock id={p.id} account={p.account} canInvite={!missing} missing={missing || null} />
+        </div>
       </div>
       <div className="mt-10">
         <ReprocannPanel
-          memberId={m.id}
+          memberId={p.id}
           view={reprocann}
           options={{
             permit: [...PERMIT_STATUS],
@@ -105,6 +114,9 @@ export default async function SocioPage({ params }: { params: Promise<{ id: stri
             source: [...INFO_SOURCE],
           }}
         />
+      </div>
+      <div className="mt-10">
+        <NotesBlock id={p.id} notes={p.notes.map((n) => ({ id: n.id, body: n.body, at: stamp.format(n.createdAt), author: n.source === "import" ? "Importación de padrón histórico" : (n.author ?? "Administración") }))} />
       </div>
     </>
   );

@@ -99,7 +99,7 @@ describe("from approval to the member portal", () => {
     const [m] = await ctx.db.select().from(members).where(eq(members.admissionId, admissionId));
     expect(m.category).toBe("adherente");
     expect(m.since).toBe("2026-10-10");
-    const [u] = await ctx.db.select().from(user).where(eq(user.id, m.userId));
+    const [u] = await ctx.db.select().from(user).where(eq(user.id, m.userId!));
     expect(u.status).toBe("pending_activation");
     expect(u.role).toBe("MEMBER");
     expect(await ctx.db.select().from(account).where(eq(account.userId, u.id))).toHaveLength(0);
@@ -171,7 +171,7 @@ describe("from approval to the member portal", () => {
     await resendActivation(ctx.db, { email: second, baseURL }, adminId, m.id);
     expect(await checkActivation(ctx.db, ctx.rings, tokenIn(first.sent[0].text))).toEqual({ status: "invalid" });
     // A deliberate resend is a new event: it carries its own key, so it is not dropped as a duplicate.
-    expect(first.sent[0].idempotencyKey).toMatch(/^admission_approved:AD-\d{4}:/);
+    expect(first.sent[0].idempotencyKey).toMatch(/^admission_approved:[0-9a-f-]{36}:/);
     expect(second.sent[0].idempotencyKey).not.toBe(first.sent[0].idempotencyKey);
     expect(await activateAccount(ctx.db, tokenIn(second.sent[0].text), "una frase larga y ficticia")).toEqual({ ok: true });
     await expect(resendActivation(ctx.db, { email: new MemoryEmailSender(), baseURL }, adminId, m.id)).rejects.toBeInstanceOf(InvalidDecisionError);

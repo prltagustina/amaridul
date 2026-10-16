@@ -58,9 +58,9 @@ export async function linkAction(id: string, raw: unknown): Promise<ActionResult
   try {
     const r = await linkExistingMember(await getDb(), deps(), user.id, String(id), parsed.data);
     refresh(id);
-    if (r.account === "active") return { ok: true, message: `Vinculado con ${r.memberNumber}. La cuenta ya estaba activa: no se creó otra.` };
-    if (r.account === "disabled") return { ok: true, message: `Vinculado con ${r.memberNumber}. La cuenta está deshabilitada: no se envió activación.` };
-    return { ok: true, message: "emailed" in r && r.emailed ? `Vinculado con ${r.memberNumber}. Le enviamos el email para activar su cuenta.` : `Vinculado con ${r.memberNumber}, pero el email de activación no se pudo enviar.` };
+    if (r.account === "active") return { ok: true, message: `Vinculado con ${r.memberNumber ?? "el socio (número a confirmar)"}. La cuenta ya estaba activa: no se creó otra.` };
+    if (r.account === "disabled") return { ok: true, message: `Vinculado con ${r.memberNumber ?? "el socio (número a confirmar)"}. La cuenta está deshabilitada: no se envió activación.` };
+    return { ok: true, message: "emailed" in r && r.emailed ? `Vinculado con ${r.memberNumber ?? "el socio (número a confirmar)"}. Le enviamos el email para activar su cuenta.` : `Vinculado con ${r.memberNumber ?? "el socio (número a confirmar)"}, pero el email de activación no se pudo enviar.` };
   } catch (e) {
     return failure(e, "No pudimos vincular la solicitud.");
   }

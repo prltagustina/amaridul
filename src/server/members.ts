@@ -1,7 +1,8 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
+import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import * as z from "zod";
 import type { Database } from "@/server/db/client";
-import { account, admissionDecisions, admissions, existingMemberRequests, members, oneTimeTokens, personIdentities, persons, user } from "@/server/db/schema";
+import { account, admissionDecisions, admissions, existingMemberRequests, memberNumbers, members, oneTimeTokens, personIdentities, persons, user } from "@/server/db/schema";
 import { audit } from "@/server/audit/log";
 import { dniLookupCandidates, maskDni } from "@/server/crypto/dni";
 import { hashToken } from "@/server/crypto/tokens";
@@ -43,18 +44,43 @@ export async function nextMemberNumber(db: Database): Promise<string> {
     `);
     const rows = (Array.isArray(result) ? result : (result as { rows: { last_value: number }[] }).rows) as { last_value: number }[];
     const candidate = `AD-${String(Number(rows[0].last_value)).padStart(4, "0")}`;
-    const [taken] = await db.select({ id: members.id }).from(members).where(sql`lower(${members.memberNumber}) = lower(${candidate})`);
-    if (!taken) return candidate;
+    if (!(await memberNumberTaken(db, candidate))) return candidate;
   }
   throw new Error("No hay números de socio disponibles");
 }
 
+/** Whether a number was ever used by any member (current or replaced): such a number is never reused. */
+export async function memberNumberTaken(db: Database, number: string, exceptMemberId?: string): Promise<boolean> {
+  const rows = await db
+    .select({ memberId: memberNumbers.memberId })
+    .from(memberNumbers)
+    .where(sql`lower(${memberNumbers.number}) = lower(${number})`);
+  const current = await db.select({ id: members.id }).from(members).where(sql`lower(${members.memberNumber}) = lower(${number})`);
+  return [...rows.map((r) => r.memberId), ...current.map((r) => r.id)].some((id) => id !== exceptMemberId);
+}
+
+/** Records a number in the member's history (the number becomes reserved for them for good). */
+export async function recordMemberNumber(db: Database, memberId: string, number: string, now = new Date()) {
+  await db.insert(memberNumbers).values({ memberId, number, assignedAt: now });
+}
+
 /**
  * Member accounts sign in with DNI, never by email, and a person may already have an account with
- * that email (an admin who is also a member). So the account carries an internal address; emails
- * always go to the person's real one (see `memberEmailOf`).
+ * that email (an admin who is also a member). So the account carries an internal address built
+ * from the account's own id (stable: correcting the member number never touches it); emails always
+ * go to the person's real one (see `memberEmailOf`). Accounts created before this change keep
+ * their older "socio.<number>" address, which stays unique because numbers are never reused.
  */
-export const accountEmail = (memberNumber: string) => `socio.${memberNumber.toLowerCase().replace(/[^a-z0-9-]+/g, "-")}@socios.amaridul.invalid`;
+export const accountEmail = (userId: string) => `socio.${userId}@socios.amaridul.invalid`;
+
+/** Creates the member's digital account, pending activation. A member has at most one. */
+export async function createMemberAccount(db: Database, m: { memberId: string; personId: string; name: string }) {
+  const id = randomUUID();
+  await db.insert(user).values({ id, name: m.name, email: accountEmail(id), role: "MEMBER", status: "pending_activation", personId: m.personId });
+  const linked = await db.update(members).set({ userId: id, updatedAt: new Date() }).where(and(eq(members.id, m.memberId), isNull(members.userId))).returning({ id: members.id });
+  if (!linked.length) throw new InvalidDecisionError("El socio ya tiene una cuenta");
+  return id;
+}
 
 export type Deps = { email: EmailSender; baseURL: string };
 
@@ -64,7 +90,7 @@ export type ActivationWording = "approval" | "existing";
 export async function sendActivation(
   db: Database,
   deps: Deps,
-  m: { memberId: string; userId: string; memberNumber: string; firstName: string; to: string },
+  m: { memberId: string; userId: string; memberNumber: string | null; firstName: string; to: string },
   actorUserId: string | null,
   now: Date,
   wording: ActivationWording = "approval",
@@ -77,11 +103,14 @@ export async function sendActivation(
   const url = `${deps.baseURL.replace(/\/$/, "")}/qr/activar#t=${token}`;
   try {
     const template = wording === "existing" ? "existing_member_access" : "admission_approved";
-    const { subject, text, html } = emailTemplates[template]({ name: m.firstName, memberNumber: m.memberNumber, url, expiresAt });
-    await deps.email.send({ to: m.to, subject, text, html, template, idempotencyKey: `${template}:${m.memberNumber}:${hashToken(token).slice(0, 16)}` });
+    const { subject, text, html } =
+      template === "existing_member_access"
+        ? emailTemplates.existing_member_access({ name: m.firstName, memberNumber: m.memberNumber, url, expiresAt })
+        : emailTemplates.admission_approved({ name: m.firstName, memberNumber: m.memberNumber ?? "A confirmar", url, expiresAt });
+    await deps.email.send({ to: m.to, subject, text, html, template, idempotencyKey: `${template}:${m.memberId}:${hashToken(token).slice(0, 16)}` });
     return { expiresAt, emailed: true };
   } catch (e) {
-    console.error("Activation email failed:", m.memberNumber, e instanceof Error ? e.message : e);
+    console.error("Activation email failed:", m.memberId, e instanceof Error ? e.message : e);
     return { expiresAt, emailed: false };
   }
 }
@@ -155,14 +184,20 @@ export async function recordDecision(db: Database, deps: Deps, actorUserId: stri
       recordedAt: now,
     });
     const memberNumber = await nextMemberNumber(t);
-    const [u] = await t
-      .insert(user)
-      .values({ name: `${adm.firstNames} ${adm.lastNames}`, email: accountEmail(memberNumber), role: "MEMBER", status: "pending_activation", personId: adm.personId })
-      .returning({ id: user.id });
+    // The person owns names and address: the admission keeps what was submitted. The contact email
+    // is only completed, never replaced; the notification email stays on the admission.
+    const [submitted] = await t.select({ address: admissions.address, postalCode: admissions.postalCode, email: persons.email }).from(admissions).innerJoin(persons, eq(persons.id, admissions.personId)).where(eq(admissions.id, admissionId));
+    await t
+      .update(persons)
+      .set({ firstNames: adm.firstNames, lastNames: adm.lastNames, fullName: `${adm.firstNames} ${adm.lastNames}`, address: submitted.address, postalCode: submitted.postalCode, ...(!submitted.email?.trim() && adm.notificationEmail ? { email: adm.notificationEmail } : {}), updatedAt: now })
+      .where(eq(persons.id, adm.personId));
     const [m] = await t
       .insert(members)
-      .values({ memberNumber, personId: adm.personId, userId: u.id, admissionId, category, since: input.meetingDate, createdAt: now, updatedAt: now })
+      .values({ memberNumber, personId: adm.personId, admissionId, category, since: input.meetingDate, createdAt: now, updatedAt: now })
       .returning({ id: members.id });
+    await recordMemberNumber(t, m.id, memberNumber, now);
+    const userId = await createMemberAccount(t, { memberId: m.id, personId: adm.personId, name: `${adm.firstNames} ${adm.lastNames}` });
+    const u = { id: userId };
     await audit(t, { actorUserId, action: "admission.approved", entityType: "admission", entityId: admissionId, metadata: { reference: adm.reference, memberNumber, category } });
     return { memberId: m.id, userId: u.id, memberNumber };
   });
@@ -175,7 +210,7 @@ export async function recordDecision(db: Database, deps: Deps, actorUserId: stri
 /** `actorUserId` is the admin who resends it, or null when the person asks for it (password recovery). */
 export async function resendActivation(db: Database, deps: Deps, actorUserId: string | null, memberId: string, now = new Date()) {
   const [m] = await db
-    .select({ memberId: members.id, userId: members.userId, memberNumber: members.memberNumber, origin: members.origin, userStatus: user.status, fullName: user.name, notificationEmail: admissions.notificationEmail, email: persons.email })
+    .select({ memberId: members.id, userId: user.id, memberNumber: members.memberNumber, origin: members.origin, userStatus: user.status, fullName: user.name, notificationEmail: admissions.notificationEmail, email: persons.email })
     .from(members)
     .innerJoin(user, eq(user.id, members.userId))
     .leftJoin(admissions, eq(admissions.id, members.admissionId))
@@ -185,7 +220,7 @@ export async function resendActivation(db: Database, deps: Deps, actorUserId: st
   const sent = await sendActivation(
     db,
     deps,
-    { memberId: m.memberId, userId: m.userId, memberNumber: m.memberNumber, firstName: m.fullName.split(/\s+/)[0], to: m.notificationEmail || m.email || "" },
+    { memberId: m.memberId, userId: m.userId, memberNumber: m.memberNumber, firstName: m.fullName.split(/\s+/)[0], to: deliveryEmail(m) },
     actorUserId,
     now,
     m.origin === "legacy" ? "existing" : "approval",
@@ -194,7 +229,7 @@ export async function resendActivation(db: Database, deps: Deps, actorUserId: st
   return sent;
 }
 
-export type ActivationCheck = { status: "ok"; firstName: string; memberNumber: string; dniMasked: string } | { status: "expired" } | { status: "invalid" };
+export type ActivationCheck = { status: "ok"; firstName: string; memberNumber: string | null; dniMasked: string } | { status: "expired" } | { status: "invalid" };
 
 /** What the person sees when opening the activation link. Does not consume it. */
 export async function checkActivation(db: Database, rings: Keyrings, token: string, now = new Date()): Promise<ActivationCheck> {
@@ -263,6 +298,13 @@ export async function memberOfUser(db: Database, userId: string) {
   };
 }
 
+/**
+ * Where the system writes to a member: the notification email they declared in their admission,
+ * if any, otherwise the person's contact email (unchanged rule; persons.email stays the canonical
+ * contact and a difference between the two is shown to the admin for review).
+ */
+export const deliveryEmail = (r: { notificationEmail?: string | null; email: string | null }) => r.notificationEmail?.trim() || r.email || "";
+
 /** Real address for emails to a member account (the account itself carries an internal one). */
 export async function memberEmailOf(db: Database, userId: string): Promise<string | null> {
   const [r] = await db
@@ -271,14 +313,15 @@ export async function memberEmailOf(db: Database, userId: string): Promise<strin
     .leftJoin(admissions, eq(admissions.id, members.admissionId))
     .innerJoin(persons, eq(persons.id, members.personId))
     .where(eq(members.userId, userId));
-  return r ? r.notificationEmail || r.email : null;
+  return r ? deliveryEmail(r) || null : null;
 }
 
 export async function listMembers(db: Database) {
   return db
-    .select({ id: members.id, memberNumber: members.memberNumber, name: user.name, category: members.category, since: members.since, status: members.status, accountStatus: user.status })
+    .select({ id: members.id, memberNumber: members.memberNumber, name: persons.fullName, category: members.category, since: members.since, status: members.status, accountStatus: user.status })
     .from(members)
-    .innerJoin(user, eq(user.id, members.userId))
+    .innerJoin(persons, eq(persons.id, members.personId))
+    .leftJoin(user, eq(user.id, members.userId))
     .orderBy(desc(members.createdAt));
 }
 
@@ -292,7 +335,7 @@ export async function getMember(db: Database, rings: Keyrings, id: string) {
       category: members.category,
       since: members.since,
       status: members.status,
-      name: user.name,
+      name: persons.fullName,
       accountStatus: user.status,
       origin: members.origin,
       minutesReference: members.minutesReference,
@@ -303,7 +346,7 @@ export async function getMember(db: Database, rings: Keyrings, id: string) {
       phone: persons.phone,
     })
     .from(members)
-    .innerJoin(user, eq(user.id, members.userId))
+    .leftJoin(user, eq(user.id, members.userId))
     .leftJoin(admissions, eq(admissions.id, members.admissionId))
     .innerJoin(persons, eq(persons.id, members.personId))
     .where(eq(members.id, id));

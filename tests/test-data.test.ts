@@ -62,8 +62,8 @@ describe("deleting a test request", () => {
     expect(await ctx.db.select().from(preAdmissions).where(eq(preAdmissions.id, preId))).toHaveLength(0);
     expect(await ctx.db.select().from(admissions).where(eq(admissions.id, adm.id))).toHaveLength(0);
     expect(await ctx.db.select().from(members).where(eq(members.id, member.id))).toHaveLength(0);
-    expect(await ctx.db.select().from(user).where(eq(user.id, member.userId))).toHaveLength(0);
-    expect(await ctx.db.select().from(session).where(eq(session.userId, member.userId))).toHaveLength(0);
+    expect(await ctx.db.select().from(user).where(eq(user.id, member.userId!))).toHaveLength(0);
+    expect(await ctx.db.select().from(session).where(eq(session.userId, member.userId!))).toHaveLength(0);
     expect(await ctx.db.select().from(persons).where(eq(persons.id, adm.personId))).toHaveLength(0);
     expect(await ctx.db.select().from(personIdentities).where(eq(personIdentities.personId, adm.personId))).toHaveLength(0);
     expect(await ctx.db.select().from(oneTimeTokens).where(eq(oneTimeTokens.subjectId, preId))).toHaveLength(0);
@@ -71,7 +71,7 @@ describe("deleting a test request", () => {
 
     const logs = await ctx.db.select().from(auditLogs).where(eq(auditLogs.entityId, preId));
     expect(logs.map((l) => l.action)).toContain("test_request.deleted");
-    expect(await ctx.db.select().from(auditLogs).where(eq(auditLogs.actorUserId, member.userId))).toHaveLength(0);
+    expect(await ctx.db.select().from(auditLogs).where(eq(auditLogs.actorUserId, member.userId!))).toHaveLength(0);
 
     // The same DNI can be used again for a new test.
     const again = await fullMember("99000401");

@@ -7,7 +7,8 @@ import { members } from "./admissions";
 
 const tz = { withTimezone: true } as const;
 
-export const reprocannPermitStatus = pgEnum("reprocann_permit_status", ["sin_permiso", "iniciado_informado", "pendiente_aprobacion", "aprobado", "vencido", "renovacion"]);
+// "no_informado": the status is not known yet (e.g. a credential imported from the historical register).
+export const reprocannPermitStatus = pgEnum("reprocann_permit_status", ["sin_permiso", "iniciado_informado", "pendiente_aprobacion", "aprobado", "vencido", "renovacion", "no_informado"]);
 export const reprocannManagementSource = pgEnum("reprocann_management_source", ["self_or_external", "association"]);
 export const reprocannLinkageStatus = pgEnum("reprocann_linkage_status", ["pendiente", "verificada"]);
 export const reprocannDocumentKind = pgEnum("reprocann_document_kind", ["credencial", "certificado", "constancia_vinculacion", "otro"]);

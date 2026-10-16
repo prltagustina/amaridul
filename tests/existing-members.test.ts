@@ -101,7 +101,7 @@ describe("TEST B: an existing member not on file", () => {
 
     const [m] = await ctx.db.select().from(members).where(eq(members.memberNumber, "123"));
     expect(m).toMatchObject({ origin: "legacy", admissionId: null, category: "paciente", since: "2019-06-01", minutesReference: "Libro 1, folio 4", digitalOnboardingCompletedAt: null });
-    const [u] = await ctx.db.select().from(user).where(eq(user.id, m.userId));
+    const [u] = await ctx.db.select().from(user).where(eq(user.id, m.userId!));
     expect(u.status).toBe("pending_activation");
     const [p] = await ctx.db.select().from(persons).where(eq(persons.id, m.personId));
     expect(p).toMatchObject({ fullName: "Persona Histórica", email: "historica.99000510@example.com" });

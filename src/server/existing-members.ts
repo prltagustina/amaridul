@@ -14,7 +14,7 @@ import { hashToken } from "@/server/crypto/tokens";
 import type { EmailSender } from "@/server/email/sender";
 import { emailTemplates } from "@/server/email/templates";
 import { setPersonDni, type Keyrings } from "@/server/identity/person-identity";
-import { accountEmail, sendActivation, nextMemberNumber, type Deps } from "@/server/members";
+import { createMemberAccount, memberNumberTaken, nextMemberNumber, recordMemberNumber, sendActivation, type Deps } from "@/server/members";
 import { nextReference } from "@/server/references";
 import { consumeToken, findLiveToken, issueToken, revokeTokens } from "@/server/tokens/one-time";
 import { formalAdmissionOf, INVITATION_KIND } from "@/server/pre-admissions";
@@ -256,7 +256,8 @@ function requestDni(rings: Keyrings, r: typeof existingMemberRequests.$inferSele
 
 export type MatchReport = {
   /** A member already on file for this DNI: the request must be linked to it, never registered again. */
-  member: { id: string; memberNumber: string; name: string; accountStatus: "pending_activation" | "active" | "disabled"; personId: string } | null;
+  /** `accountStatus: "none"` for a member with no digital account yet (e.g. imported from the historical register). */
+  member: { id: string; memberNumber: string | null; name: string; accountStatus: "none" | "pending_activation" | "active" | "disabled"; personId: string } | null;
   /** A person on file for this DNI without a member (e.g. an earlier, unfinished admission). */
   personId: string | null;
   /** An admission in progress for the same person: it has to be resolved first. */
@@ -264,7 +265,7 @@ export type MatchReport = {
   /** The person already has a non-member account (e.g. an admin): registration would collide. */
   otherAccount: boolean;
   /** The number the person declared belongs to a different member. */
-  declaredNumberOwner: { id: string; memberNumber: string; name: string } | null;
+  declaredNumberOwner: { id: string; memberNumber: string | null; name: string } | null;
   /** Other update requests with the same DNI. */
   duplicates: { id: string; reference: string; status: ExistingMemberRequestStatus }[];
   /** Other people on file with the same email (shared emails exist, so it is a warning). */
@@ -282,11 +283,12 @@ export async function matchExistingMember(db: Database, rings: Keyrings, r: type
     if (identity) {
       report.personId = identity.personId;
       const [m] = await db
-        .select({ id: members.id, memberNumber: members.memberNumber, name: user.name, accountStatus: user.status, personId: members.personId })
+        .select({ id: members.id, memberNumber: members.memberNumber, name: persons.fullName, accountStatus: user.status, personId: members.personId })
         .from(members)
-        .innerJoin(user, eq(user.id, members.userId))
+        .innerJoin(persons, eq(persons.id, members.personId))
+        .leftJoin(user, eq(user.id, members.userId))
         .where(eq(members.personId, identity.personId));
-      if (m) report.member = m;
+      if (m) report.member = { ...m, accountStatus: m.accountStatus ?? "none" };
       const [adm] = await db
         .select({ reference: admissions.reference })
         .from(admissions)
@@ -305,9 +307,9 @@ export async function matchExistingMember(db: Database, rings: Keyrings, r: type
 
   if (r.declaredMemberNumber) {
     const [owner] = await db
-      .select({ id: members.id, memberNumber: members.memberNumber, name: user.name })
+      .select({ id: members.id, memberNumber: members.memberNumber, name: persons.fullName })
       .from(members)
-      .innerJoin(user, eq(user.id, members.userId))
+      .innerJoin(persons, eq(persons.id, members.personId))
       .where(sql`lower(${members.memberNumber}) = lower(${r.declaredMemberNumber})`);
     if (owner && owner.id !== report.member?.id) report.declaredNumberOwner = owner;
   }
@@ -317,7 +319,8 @@ export async function matchExistingMember(db: Database, rings: Keyrings, r: type
     .from(persons)
     .leftJoin(members, eq(members.personId, persons.id))
     .where(sql`lower(${persons.email}) = lower(${r.email})`);
-  report.emailConflicts = sameEmail.filter((p) => p.id !== report.personId).map((p) => ({ memberNumber: p.memberNumber, name: p.name }));
+  // The request's own person is never a conflict (once linked, its DNI is no longer kept to match it).
+  report.emailConflicts = sameEmail.filter((p) => p.id !== report.personId && p.id !== r.linkedPersonId).map((p) => ({ memberNumber: p.memberNumber, name: p.name }));
   return report;
 }
 
@@ -330,7 +333,7 @@ export async function getExistingMemberRequest(db: Database, rings: Keyrings, id
     ? await db
         .select({ id: members.id, memberNumber: members.memberNumber, accountStatus: user.status })
         .from(members)
-        .innerJoin(user, eq(user.id, members.userId))
+        .leftJoin(user, eq(user.id, members.userId))
         .where(eq(members.id, r.linkedMemberId))
     : [];
   return {
@@ -363,7 +366,7 @@ export async function registerExistingMember(db: Database, deps: Deps & { rings:
   const dni = requestDni(deps.rings, r);
   if (!dni) throw new ExistingMemberError("La solicitud todavía no tiene DNI.");
   const match = await matchExistingMember(db, deps.rings, r);
-  if (match.member) throw new ExistingMemberError(`Ya hay un socio con este DNI (${match.member.memberNumber}): vinculá la solicitud con ese socio.`);
+  if (match.member) throw new ExistingMemberError(`Ya hay un socio con este DNI (${match.member.memberNumber ?? "número a confirmar"}): vinculá la solicitud con ese socio.`);
   if (match.openAdmission) throw new ExistingMemberError(`Esta persona tiene una solicitud de admisión en curso (${match.openAdmission}). Resolvela primero.`);
   if (match.otherAccount) throw new ExistingMemberError("Esta persona ya tiene una cuenta que no es de socio. Revisalo antes de registrarla.");
 
@@ -372,8 +375,7 @@ export async function registerExistingMember(db: Database, deps: Deps & { rings:
     let memberNumber: string;
     if (input.numberMode === "historic") {
       memberNumber = input.memberNumber;
-      const [taken] = await t.select({ id: members.id }).from(members).where(sql`lower(${members.memberNumber}) = lower(${memberNumber})`);
-      if (taken) throw new ExistingMemberError(`El número ${memberNumber} ya pertenece a otro socio.`);
+      if (await memberNumberTaken(t, memberNumber)) throw new ExistingMemberError(`El número ${memberNumber} ya pertenece o perteneció a otro socio.`);
     } else {
       memberNumber = await nextMemberNumber(t);
     }
@@ -383,25 +385,20 @@ export async function registerExistingMember(db: Database, deps: Deps & { rings:
     if (!personId) {
       const [p] = await t
         .insert(persons)
-        .values({ fullName: r.fullName, email: r.email, province: r.province, locality: r.locality, createdAt: now, updatedAt: now })
+        .values({ ...personData(r), createdAt: now, updatedAt: now })
         .returning({ id: persons.id });
       personId = p.id;
       await setPersonDni(t, deps.rings, personId, dni);
     } else {
-      await t.update(persons).set({ fullName: r.fullName, email: r.email, province: r.province, locality: r.locality, updatedAt: now }).where(eq(persons.id, personId));
+      await t.update(persons).set({ ...personData(r), updatedAt: now }).where(eq(persons.id, personId));
     }
     await t.update(personIdentities).set({ birthDate: r.birthDate, updatedAt: now }).where(eq(personIdentities.personId, personId));
 
-    const [u] = await t
-      .insert(user)
-      .values({ name: r.fullName, email: accountEmail(memberNumber), role: "MEMBER", status: "pending_activation", personId })
-      .returning({ id: user.id });
     const [m] = await t
       .insert(members)
       .values({
         memberNumber,
         personId,
-        userId: u.id,
         admissionId: null,
         category: input.category,
         since: input.since || null,
@@ -412,6 +409,8 @@ export async function registerExistingMember(db: Database, deps: Deps & { rings:
         updatedAt: now,
       })
       .returning({ id: members.id });
+    await recordMemberNumber(t, m.id, memberNumber, now);
+    const u = { id: await createMemberAccount(t, { memberId: m.id, personId, name: r.fullName }) };
     await t.update(existingMemberRequests).set({ linkedMemberId: m.id, linkedPersonId: personId }).where(eq(existingMemberRequests.id, id));
     await audit(t, {
       actorUserId,
@@ -452,7 +451,10 @@ export async function linkExistingMember(db: Database, deps: Deps & { rings: Key
     await claim(t, id, accountActive ? "completed" : "matched", actorUserId, now, { linkedMemberId: member.id, linkedPersonId: member.personId, ...purgeIdentity, closedAt: now });
     // The contact data sent replaces the one on file only when the admin confirmed it.
     if (updateContact) {
-      await t.update(persons).set({ email: r.email, province: r.province, locality: r.locality, updatedAt: now }).where(eq(persons.id, member.personId));
+      await t
+        .update(persons)
+        .set({ email: r.email, province: r.province, locality: r.locality, address: r.address, postalCode: r.postalCode, updatedAt: now })
+        .where(eq(persons.id, member.personId));
       if (r.birthDate) await t.update(personIdentities).set({ birthDate: r.birthDate, updatedAt: now }).where(eq(personIdentities.personId, member.personId));
     }
     await t
@@ -471,7 +473,13 @@ export async function linkExistingMember(db: Database, deps: Deps & { rings: Key
   });
 
   if (accountActive || member.accountStatus === "disabled") return { memberNumber: member.memberNumber, account: member.accountStatus, emailed: false };
-  const sent = await sendActivation(db, deps, { memberId: member.id, userId: (await memberUser(db, member.id))!, memberNumber: member.memberNumber, firstName: r.fullName.split(/\s+/)[0], to: activationTo }, actorUserId, now, "existing");
+  // A member from the historical register has no account yet: it is created now, pending activation.
+  let userId = await memberUser(db, member.id);
+  if (!userId) {
+    userId = await createMemberAccount(db, { memberId: member.id, personId: member.personId, name: member.name });
+    await audit(db, { actorUserId, action: "member.account_created", entityType: "member", entityId: member.id, metadata: { memberNumber: member.memberNumber, origin: "legacy" } });
+  }
+  const sent = await sendActivation(db, deps, { memberId: member.id, userId, memberNumber: member.memberNumber, firstName: r.fullName.split(/\s+/)[0], to: activationTo }, actorUserId, now, "existing");
   await audit(db, { actorUserId, action: "member.activation_sent", entityType: "member", entityId: member.id, metadata: { memberNumber: member.memberNumber, emailed: sent.emailed } });
   return { memberNumber: member.memberNumber, account: member.accountStatus, ...sent };
 }
@@ -479,6 +487,20 @@ export async function linkExistingMember(db: Database, deps: Deps & { rings: Key
 async function memberUser(db: Database, memberId: string) {
   const [m] = await db.select({ userId: members.userId }).from(members).where(eq(members.id, memberId));
   return m?.userId ?? null;
+}
+
+/** The person's own data from the request: names, contact and address (the person is their owner). */
+function personData(r: typeof existingMemberRequests.$inferSelect) {
+  return {
+    fullName: r.fullName,
+    firstNames: r.firstNames,
+    lastNames: r.lastNames,
+    email: r.email,
+    province: r.province,
+    locality: r.locality,
+    address: r.address,
+    postalCode: r.postalCode,
+  };
 }
 
 export async function markNeedsReview(db: Database, actorUserId: string, id: string, notes: string, now = new Date()) {

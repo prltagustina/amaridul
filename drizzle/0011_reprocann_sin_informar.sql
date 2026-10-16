@@ -1,0 +1,1 @@
+ALTER TYPE "public"."reprocann_permit_status" ADD VALUE 'no_informado';

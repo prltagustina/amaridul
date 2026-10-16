@@ -29,8 +29,8 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
       ? { firstName: demoMember.name.split(" ")[0], number: demoMember.number, category: demoMember.category, since: demoMember.since, status: demoMember.status, fee: <span>Al día <DevTag>Demo</DevTag></span>, procedures: demoMember.procedures }
       : {
           firstName: m.firstName,
-          number: m.memberNumber,
-          category: m.categoryLabel,
+          number: m.memberNumber ?? "A confirmar",
+          category: m.categoryLabel ?? "A confirmar",
           since: m.since ? m.since.split("-").reverse().join("/") : "—",
           status: "Activo",
           fee: "A confirmar por la asociación",
