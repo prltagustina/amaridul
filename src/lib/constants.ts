@@ -8,15 +8,15 @@ export const BRAND = {
 
 /**
  * What a shared link shows (WhatsApp, social networks, search results) on every page: the slogan
- * and one image in the hero's design (plant photo, circular logo, slogan). A new image name makes
- * apps that cached the old preview fetch it again.
+ * as text, and one image in the hero's design (plant photo and a large circular logo, no text, so
+ * it reads on a phone). A new image name makes apps that cached the old preview fetch it again.
  */
 export const SHARE_DESCRIPTION = "Construyendo comunidad para el acceso seguro.";
 export const SHARE_IMAGE = {
-  url: `${SITE_URL}/og/amaridul-hero.jpg`,
+  url: `${SITE_URL}/og/amaridul-logo.jpg`,
   width: 1200,
   height: 630,
-  alt: `${BRAND.name} — ${SHARE_DESCRIPTION}`,
+  alt: `${BRAND.name}, asociación civil`,
 };
 
 /** Confirmed contact channels. Empty means pending: hidden in production, flagged locally. */
