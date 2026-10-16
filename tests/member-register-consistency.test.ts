@@ -24,7 +24,7 @@ import {
   updateMembership,
   updatePersonal,
 } from "@/server/member-profile";
-import { existingMemberInput, getExistingMemberRequest, linkExistingMember, linkInput, submitExistingMemberRequest } from "@/server/existing-members";
+import { convertPreAdmission, existingMemberInput, getExistingMemberRequest, linkExistingMember, linkInput, submitExistingMemberRequest } from "@/server/existing-members";
 import { PRECHECK_EMAIL } from "../scripts/lib/precheck-padron";
 import { makeContext } from "./helpers/context";
 
@@ -289,3 +289,45 @@ describe("sheet exports with a title above the header", () => {
   });
 });
 
+describe("«Ya soy socio/a» asks only name, DNI and email", () => {
+  const minimal = (dni: string, email: string) =>
+    existingMemberInput.parse({ nombres: "Persona", apellidos: "Mínima", dni, email, privacidad: true, confirmacion: true });
+  const requestOf = async (reference: string) => (await ctx.db.select().from(existingMemberRequests).where(eq(existingMemberRequests.reference, reference)))[0];
+
+  it("accepts a request with only the required data, and still checks the optional data when given", async () => {
+    const out = await submitExistingMemberRequest(ctx.db, { rings: ctx.rings, email: new MemoryEmailSender() }, minimal("99008601", "persona.minima@example.com"), null);
+    expect(out).toMatchObject({ ok: true });
+    expect(await requestOf(out.reference!)).toMatchObject({ birthDate: null, address: null, locality: null, province: null, postalCode: null });
+    expect(existingMemberInput.safeParse({ nombres: "A", apellidos: "B", dni: "99008602", email: "a@example.com", domicilio: "x", privacidad: true, confirmacion: true }).success).toBe(false);
+    expect(existingMemberInput.safeParse({ nombres: "A", apellidos: "B", dni: "99008602", email: "a@example.com", nacimiento: "2999-01-01", privacidad: true, confirmacion: true }).success).toBe(false);
+  });
+
+  it("linking with «actualizar contacto» never erases the address on file with an empty field", async () => {
+    const [p] = await ctx.db
+      .insert(persons)
+      .values({ fullName: "Persona Con Domicilio", address: "Calle Ficticia 1", locality: "Santa Fe", province: "Santa Fe", postalCode: "3000", isFixture: true })
+      .returning({ id: persons.id });
+    await setPersonDni(ctx.db, ctx.rings, p.id, "99008603");
+    await ctx.db.insert(members).values({ personId: p.id, origin: "legacy" });
+    const out = await submitExistingMemberRequest(ctx.db, { rings: ctx.rings, email: new MemoryEmailSender() }, minimal("99008603", "con.domicilio@example.com"), null);
+    const r = await requestOf(out.reference!);
+    await linkExistingMember(ctx.db, { email: new MemoryEmailSender(), baseURL, rings: ctx.rings }, adminId, r.id, linkInput.parse({ updateContact: true, category: "activo", since: "", minutesReference: "", status: "activo" }));
+    const [after] = await ctx.db.select().from(persons).where(eq(persons.id, p.id));
+    expect(after).toMatchObject({ email: "con.domicilio@example.com", address: "Calle Ficticia 1", locality: "Santa Fe", province: "Santa Fe", postalCode: "3000" });
+  });
+
+  it("completing a request opened from a preadmission keeps its province and locality", async () => {
+    const { id: preId } = await createPreAdmission(
+      ctx.db,
+      { field: ctx.rings.field, email: new MemoryEmailSender() },
+      preAdmissionInput.parse({ nombre: "Persona Derivada", email: "persona.derivada@example.com", provincia: "Santa Fe", localidad: "Rafaela", intereses: ["comunidad"], reprocann: "", participacion: "si", privacidad: true }),
+    );
+    const mail = new MemoryEmailSender();
+    await convertPreAdmission(ctx.db, { email: mail, baseURL }, adminId, preId);
+    const token = mail.sent[0].text.match(/#t=([A-Za-z0-9_-]+)/)![1];
+    const out = await submitExistingMemberRequest(ctx.db, { rings: ctx.rings, email: new MemoryEmailSender() }, minimal("99008604", "persona.derivada@example.com"), token);
+    expect(out).toMatchObject({ ok: true });
+    const r = await requestOf(out.reference!);
+    expect(r).toMatchObject({ province: "Santa Fe", locality: "Rafaela", address: null, status: "pending_verification" });
+  });
+});

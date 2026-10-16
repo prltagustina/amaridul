@@ -50,12 +50,11 @@ function validate(v: Values) {
   if (v.apellidos.trim().length < 2) e.apellidos = "Escribí tu apellido.";
   const digits = v.dni.replace(/\D/g, "");
   if (digits.length < 7 || digits.length > 8) e.dni = "Escribí tu DNI: 7 u 8 números.";
-  if (!v.nacimiento || v.nacimiento >= today()) e.nacimiento = "Indicá tu fecha de nacimiento.";
+  if (v.nacimiento && v.nacimiento >= today()) e.nacimiento = "Revisá la fecha de nacimiento.";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email.trim())) e.email = "Revisá el email: tiene que tener el formato nombre@dominio.com.";
-  if (v.domicilio.trim().length < 3) e.domicilio = "Escribí tu domicilio.";
-  if (!v.localidad.trim()) e.localidad = "Escribí tu localidad.";
-  if (!v.provincia) e.provincia = "Elegí tu provincia.";
-  if (v.cp.trim().length < 3) e.cp = "Escribí tu código postal.";
+  // Domicilio and the rest are optional; if written, they have to make sense.
+  if (v.domicilio.trim() && v.domicilio.trim().length < 3) e.domicilio = "Revisá el domicilio.";
+  if (v.cp.trim() && v.cp.trim().length < 3) e.cp = "Revisá el código postal.";
   if (!v.privacidad) e.privacidad = "Necesitamos tu conformidad para tratar tus datos.";
   if (!v.confirmacion) e.confirmacion = "Confirmá que los datos son correctos.";
   return e;
@@ -198,17 +197,17 @@ export default function ExistingMemberForm() {
           <TextField id="nombres" label="Nombre/s" autoComplete="given-name" value={values.nombres} onChange={(e) => set("nombres", e.target.value)} error={errors.nombres} />
           <TextField id="apellidos" label="Apellido/s" autoComplete="family-name" value={values.apellidos} onChange={(e) => set("apellidos", e.target.value)} error={errors.apellidos} />
           <TextField id="dni" label="DNI" inputMode="numeric" autoComplete="off" hint="Sin puntos." value={values.dni} onChange={(e) => set("dni", e.target.value)} error={errors.dni} />
-          <TextField id="nacimiento" type="date" label="Fecha de nacimiento" autoComplete="bday" max={today()} value={values.nacimiento} onChange={(e) => set("nacimiento", e.target.value)} error={errors.nacimiento} />
+          <TextField id="nacimiento" type="date" label="Fecha de nacimiento" optional autoComplete="bday" max={today()} value={values.nacimiento} onChange={(e) => set("nacimiento", e.target.value)} error={errors.nacimiento} />
         </div>
       </TabbedCard>
 
       <TabbedCard tab="2. Contacto y domicilio" bodyClassName="space-y-5">
         <TextField id="email" type="email" label="Email" autoComplete="email" inputMode="email" value={values.email} onChange={(e) => set("email", e.target.value)} error={errors.email} />
-        <TextField id="domicilio" label="Domicilio" autoComplete="street-address" hint="Calle, número, piso y departamento." value={values.domicilio} onChange={(e) => set("domicilio", e.target.value)} error={errors.domicilio} />
+        <TextField id="domicilio" label="Domicilio" optional autoComplete="street-address" hint="Calle, número, piso y departamento." value={values.domicilio} onChange={(e) => set("domicilio", e.target.value)} error={errors.domicilio} />
         <div className="grid gap-5 sm:grid-cols-2">
-          <TextField id="localidad" label="Localidad" autoComplete="address-level2" value={values.localidad} onChange={(e) => set("localidad", e.target.value)} error={errors.localidad} />
-          <Select id="provincia" label="Provincia" placeholder="Elegí una provincia" options={provinces} value={values.provincia} onChange={(e) => set("provincia", e.target.value)} error={errors.provincia} />
-          <TextField id="cp" label="Código postal" autoComplete="postal-code" value={values.cp} onChange={(e) => set("cp", e.target.value)} error={errors.cp} />
+          <TextField id="localidad" label="Localidad" optional autoComplete="address-level2" value={values.localidad} onChange={(e) => set("localidad", e.target.value)} error={errors.localidad} />
+          <Select id="provincia" label="Provincia" optional placeholder="Elegí una provincia" options={provinces} value={values.provincia} onChange={(e) => set("provincia", e.target.value)} error={errors.provincia} />
+          <TextField id="cp" label="Código postal" optional autoComplete="postal-code" value={values.cp} onChange={(e) => set("cp", e.target.value)} error={errors.cp} />
         </div>
       </TabbedCard>
 

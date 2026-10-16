@@ -49,6 +49,16 @@ export class ExistingMemberError extends Error {}
 export class RequestStateError extends ExistingMemberError {}
 
 /** What the person fills in. No category and no admission request: the admin confirms those. */
+/** Optional legajo data: empty is fine; when given, it has to be valid. */
+const optionalText = (min: number, max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .refine((v) => !v || v.length >= min)
+    .optional()
+    .default("");
+
 export const existingMemberInput = z.object({
   nombres: z.string().trim().min(2).max(80),
   apellidos: z.string().trim().min(2).max(80),
@@ -64,11 +74,12 @@ export const existingMemberInput = z.object({
       }
     }),
   email: z.string().trim().toLowerCase().max(200).regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
-  nacimiento: z.iso.date().refine((d) => d < today()),
-  domicilio: z.string().trim().min(3).max(160),
-  localidad: z.string().trim().min(1).max(120),
-  provincia: z.enum(provinces),
-  cp: z.string().trim().min(3).max(10),
+  // Only name, DNI and email are required: the rest completes the legajo and can come later.
+  nacimiento: z.union([z.iso.date().refine((d) => d < today()), z.literal("")]).optional().default(""),
+  domicilio: optionalText(3, 160),
+  localidad: optionalText(1, 120),
+  provincia: z.union([z.enum(provinces), z.literal("")]).optional().default(""),
+  cp: optionalText(3, 10),
   numeroSocio: z.string().trim().max(30).optional().default(""),
   privacidad: z.literal(true),
   confirmacion: z.literal(true),
@@ -124,11 +135,9 @@ export async function submitExistingMemberRequest(db: Database, deps: PublicDeps
     email: input.email,
     dniLookup: lookup.value,
     dniLookupKeyVersion: lookup.version,
-    birthDate: input.nacimiento,
-    address: input.domicilio,
-    locality: input.localidad,
-    province: input.provincia,
-    postalCode: input.cp,
+    // Optional data goes in only when given, so completing a request opened from a preadmission
+    // keeps the province and locality it already had.
+    ...provided({ birthDate: input.nacimiento, address: input.domicilio, locality: input.localidad, province: input.provincia, postalCode: input.cp }),
     declaredMemberNumber: input.numeroSocio || null,
     privacyAcceptedAt: now,
     privacyNoticeSha256: PRIVACY_NOTICE_SHA256,
@@ -390,9 +399,10 @@ export async function registerExistingMember(db: Database, deps: Deps & { rings:
       personId = p.id;
       await setPersonDni(t, deps.rings, personId, dni);
     } else {
-      await t.update(persons).set({ ...personData(r), updatedAt: now }).where(eq(persons.id, personId));
+      // A person already on file keeps what the request left empty.
+      await t.update(persons).set({ ...provided(personData(r)), updatedAt: now }).where(eq(persons.id, personId));
     }
-    await t.update(personIdentities).set({ birthDate: r.birthDate, updatedAt: now }).where(eq(personIdentities.personId, personId));
+    if (r.birthDate) await t.update(personIdentities).set({ birthDate: r.birthDate, updatedAt: now }).where(eq(personIdentities.personId, personId));
 
     const [m] = await t
       .insert(members)
@@ -453,7 +463,7 @@ export async function linkExistingMember(db: Database, deps: Deps & { rings: Key
     if (updateContact) {
       await t
         .update(persons)
-        .set({ email: r.email, province: r.province, locality: r.locality, address: r.address, postalCode: r.postalCode, updatedAt: now })
+        .set({ email: r.email, ...provided({ province: r.province, locality: r.locality, address: r.address, postalCode: r.postalCode }), updatedAt: now })
         .where(eq(persons.id, member.personId));
       if (r.birthDate) await t.update(personIdentities).set({ birthDate: r.birthDate, updatedAt: now }).where(eq(personIdentities.personId, member.personId));
     }
@@ -487,6 +497,11 @@ export async function linkExistingMember(db: Database, deps: Deps & { rings: Key
 async function memberUser(db: Database, memberId: string) {
   const [m] = await db.select({ userId: members.userId }).from(members).where(eq(members.id, memberId));
   return m?.userId ?? null;
+}
+
+/** Only the values that were actually given: an empty optional field never erases data on file. */
+function provided<T extends Record<string, string | null | undefined>>(data: T): Partial<T> {
+  return Object.fromEntries(Object.entries(data).filter(([, v]) => v !== null && v !== undefined && v !== "")) as Partial<T>;
 }
 
 /** The person's own data from the request: names, contact and address (the person is their owner). */
