@@ -146,3 +146,14 @@ describe("importar padrón (server-side, with the production keys)", () => {
   });
 });
 
+describe("L: enviar la activación (acceso digital)", () => {
+  it("sin sesión o con sesión de socio → rechazado, y no se crea ninguna cuenta", async () => {
+    for (const cookie of ["", memberCookie]) {
+      request.cookie = cookie;
+      expect(await rejection(() => actions.invite(memberId))).toMatch(/NEXT_REDIRECT|NEXT_HTTP_ERROR_FALLBACK;404/);
+    }
+    const [m] = await ctx.db.select().from(members).where(eq(members.id, memberId));
+    expect(m.userId).toBeNull();
+  });
+});
+

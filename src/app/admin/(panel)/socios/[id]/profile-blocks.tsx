@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useTransition, type ReactNode } from "react";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { MailPlus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DetailList } from "@/components/ui/data-list";
-import { Alert, Card } from "@/components/ui/display";
+import { Alert, Card, StatusBadge, type Tone } from "@/components/ui/display";
 import { Dialog } from "@/components/ui/dialog";
 import { Select, TextField, Textarea } from "@/components/ui/field";
 import { invite, saveContact, saveDni, saveFee, saveMemberNumber, saveMembership, saveNote, savePersonal, type BlockResult } from "./actions";
@@ -31,6 +31,24 @@ function useBlockAction() {
       router.refresh();
     });
   return { pending, error, notice, setError, setNotice, run };
+}
+
+// Another block can ask this one to open its editor (e.g. «Cuenta digital» asking for the DNI).
+const EDIT_EVENT = "member-profile:edit";
+type EditorRequest = "dni" | "contact";
+const requestEditor = (which: EditorRequest) => window.dispatchEvent(new CustomEvent<EditorRequest>(EDIT_EVENT, { detail: which }));
+function useEditorRequest(which: EditorRequest, open: () => void) {
+  const latest = useRef(open);
+  useEffect(() => {
+    latest.current = open;
+  });
+  useEffect(() => {
+    const handle = (e: Event) => {
+      if ((e as CustomEvent<EditorRequest>).detail === which) latest.current();
+    };
+    window.addEventListener(EDIT_EVENT, handle);
+    return () => window.removeEventListener(EDIT_EVENT, handle);
+  }, [which]);
 }
 
 /** A read-only block with its own "Editar". */
@@ -64,6 +82,7 @@ export function PersonalBlock({ id, data }: { id: string; data: { firstNames: st
   const [open, setOpen] = useState<"edit" | "dni" | null>(null);
   const [form, setForm] = useState({ firstNames: data.firstNames ?? "", lastNames: data.lastNames ?? "", birthDate: data.birthDate ?? "" });
   const [dni, setDni] = useState("");
+  useEditorRequest("dni", () => (setDni(""), a.setError(""), setOpen("dni")));
   return (
     <Block title="Datos personales" onEdit={() => (setForm({ firstNames: data.firstNames ?? data.fullName.split(" ")[0], lastNames: data.lastNames ?? data.fullName.split(" ").slice(1).join(" "), birthDate: data.birthDate ?? "" }), a.setError(""), setOpen("edit"))} notice={a.notice}>
       <DetailList
@@ -117,6 +136,7 @@ export function ContactBlock({ id, data, provinces }: { id: string; data: Contac
   const blank = (d: Contact) => ({ email: d.email ?? "", phone: d.phone ?? "", address: d.address ?? "", locality: d.locality ?? "", province: d.province ?? "", postalCode: d.postalCode ?? "" });
   const [form, setForm] = useState(blank(data));
   const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  useEditorRequest("contact", () => (setForm(blank(data)), a.setError(""), setOpen(true)));
   return (
     <Block title="Contacto" onEdit={() => (setForm(blank(data)), a.setError(""), setOpen(true))} notice={a.notice}>
       <DetailList
@@ -234,26 +254,101 @@ export function MembershipBlock({ id, data, categories, statuses }: { id: string
 
 // ---------- Cuenta digital ----------
 
-export function AccountBlock({ id, account, canInvite, missing }: { id: string; account: "none" | "pending_activation" | "active" | "disabled"; canInvite: boolean; missing: string | null }) {
+export type Access = {
+  state: "none" | "pending_activation" | "active" | "disabled";
+  missing: "dni" | "email" | null;
+  destination: string | null;
+  emailShared: boolean;
+  lastSentAt: string | null;
+  link: "live" | "expired" | "used" | "revoked" | null;
+  linkExpiresAt: string | null;
+  activatedAt: string | null;
+};
+
+const ACCESS_STATE: Record<Access["state"], { label: string; tone: Tone }> = {
+  none: { label: "Sin cuenta digital", tone: "neutral" },
+  pending_activation: { label: "Activación pendiente", tone: "warning" },
+  active: { label: "Cuenta activa", tone: "success" },
+  disabled: { label: "Cuenta bloqueada", tone: "error" },
+};
+
+/**
+ * Sin cuenta → Enviar invitación → Activación pendiente → Cuenta activa. The person creates their
+ * own password from the email; the administration never sees or sets it.
+ */
+export function AccountBlock({ id, access }: { id: string; access: Access }) {
   const a = useBlockAction();
-  const text = {
-    none: "Sin cuenta digital. El socio todavía no activó su acceso.",
-    pending_activation: "Activación pendiente: la persona todavía no creó su contraseña.",
-    active: "Activa. Ingresa con su DNI.",
-    disabled: "Deshabilitada.",
-  }[account];
+  const [confirming, setConfirming] = useState(false);
+  const open = access.state === "none" || access.state === "pending_activation";
+  const resend = access.state === "pending_activation";
+  const canSend = open && !access.missing && !!access.destination;
+  const link = {
+    live: `Vigente hasta el ${access.linkExpiresAt}`,
+    expired: `Venció el ${access.linkExpiresAt}`,
+    revoked: "Sin link vigente",
+    used: "Ya se usó",
+  };
   return (
     <Block title="Cuenta digital" notice={a.notice}>
-      <p className="text-small text-text-muted">{text}</p>
-      {a.error && <Alert tone="error" live>{a.error}</Alert>}
-      {(account === "none" || account === "pending_activation") &&
-        (canInvite ? (
-          <Button shape="admin" variant="secondary" full loading={a.pending} loadingLabel="Enviando…" onClick={() => a.run(() => invite(id), () => {})}>
-            <MailPlus aria-hidden className="size-4" strokeWidth={1.5} /> {account === "none" ? "Invitar a activar la cuenta" : "Reenviar activación"}
-          </Button>
-        ) : (
-          <p className="text-small text-text-muted">Para invitarlo falta: {missing}.</p>
-        ))}
+      <StatusBadge tone={ACCESS_STATE[access.state].tone}>{ACCESS_STATE[access.state].label}</StatusBadge>
+      {access.state === "none" && <p className="text-small text-text-muted">El socio está en el padrón, pero todavía no tiene acceso a su espacio en la web.</p>}
+      {access.state === "pending_activation" && (
+        <DetailList
+          items={[
+            { label: "Último envío", value: shown(access.lastSentAt, "Sin envíos registrados") },
+            { label: "Enviada a", value: shown(access.destination) },
+            { label: "Link de activación", value: access.link ? link[access.link] : shown(null, "Sin link") },
+          ]}
+        />
+      )}
+      {access.state === "active" && (
+        <>
+          {access.activatedAt && <DetailList items={[{ label: "Activada", value: access.activatedAt }]} />}
+          <p className="text-small text-text-muted">Ingresa con su DNI y su contraseña. Si la olvida, la recupera desde «Olvidé mi contraseña» en el ingreso: la administración no ve ni define contraseñas.</p>
+        </>
+      )}
+      {access.state === "disabled" && <p className="text-small text-text-muted">No puede ingresar a su espacio.</p>}
+
+      {a.error && !confirming && <Alert tone="error" live>{a.error}</Alert>}
+      {open && access.missing === "dni" && (
+        <div className="space-y-2 !rounded-control bg-warning-bg px-3 py-2.5 text-small text-warning-fg">
+          <p>Para habilitar el acceso, primero completá y verificá el DNI: es con lo que va a ingresar.</p>
+          <button type="button" className="font-medium underline underline-offset-2" onClick={() => requestEditor("dni")}>
+            Editar datos personales
+          </button>
+        </div>
+      )}
+      {open && access.missing === "email" && (
+        <div className="space-y-2 !rounded-control bg-warning-bg px-3 py-2.5 text-small text-warning-fg">
+          <p>Para habilitar el acceso, primero completá un email de contacto: ahí le llega el link.</p>
+          <button type="button" className="font-medium underline underline-offset-2" onClick={() => requestEditor("contact")}>
+            Editar contacto
+          </button>
+        </div>
+      )}
+      {canSend && access.emailShared && (
+        <p className="!rounded-control bg-warning-bg px-3 py-2.5 text-small text-warning-fg">Ese email también figura en otro registro del padrón. Confirmá con la persona que es el suyo antes de enviar.</p>
+      )}
+      {canSend && (
+        <Button shape="admin" variant="secondary" full onClick={() => (a.setError(""), setConfirming(true))}>
+          <MailPlus aria-hidden className="size-4" strokeWidth={1.5} /> {resend ? "Reenviar activación" : "Enviar invitación de activación"}
+        </Button>
+      )}
+      <Dialog
+        open={confirming}
+        onClose={() => setConfirming(false)}
+        title={resend ? "Reenviar activación" : "Enviar invitación de activación"}
+        confirmLabel={a.pending ? "Enviando…" : resend ? "Reenviar activación" : "Enviar activación"}
+        confirmDisabled={a.pending}
+        onConfirm={() => a.run(() => invite(id, access.emailShared), () => setConfirming(false))}
+      >
+        {a.error && <Alert tone="error" live>{a.error}</Alert>}
+        <p className="text-body [overflow-wrap:anywhere]">
+          Vas a enviar una invitación a <strong>{access.destination}</strong> para que esta persona cree su contraseña y active su acceso.
+        </p>
+        {resend && <p className="text-small text-text-muted">El link anterior deja de funcionar.</p>}
+        {access.emailShared && <p className="!rounded-control bg-warning-bg px-3 py-2.5 text-small text-warning-fg">Ese email también figura en otro registro del padrón. Enviá solo si confirmaste con la persona que es el suyo.</p>}
+      </Dialog>
     </Block>
   );
 }

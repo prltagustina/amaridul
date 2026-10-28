@@ -59,7 +59,17 @@ export default async function SocioPage({ params }: { params: Promise<{ id: stri
     },
   };
 
-  const missing = [!p.contact.email && "email de contacto", !p.personal.dniMasked && "DNI"].filter(Boolean).join(" y ");
+  const ac = p.access;
+  const access = {
+    state: ac.state,
+    missing: ac.missing,
+    destination: ac.destination,
+    emailShared: ac.emailShared,
+    lastSentAt: ac.lastSentAt ? stamp.format(ac.lastSentAt) : null,
+    link: ac.link,
+    linkExpiresAt: ac.linkExpiresAt ? stamp.format(ac.linkExpiresAt) : null,
+    activatedAt: ac.activatedAt ? stamp.format(ac.activatedAt) : null,
+  };
 
   return (
     <>
@@ -98,7 +108,7 @@ export default async function SocioPage({ params }: { params: Promise<{ id: stri
               ),
             }}
           />
-          <AccountBlock id={p.id} account={p.account} canInvite={!missing} missing={missing || null} />
+          <AccountBlock id={p.id} access={access} />
         </div>
       </div>
       <div className="mt-10">

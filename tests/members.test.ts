@@ -110,7 +110,7 @@ describe("from approval to the member portal", () => {
     expect(await memberEmailOf(ctx.db, u.id)).toBe("persona.99000301@example.com");
 
     const token = tokenIn(mail.sent[0].text);
-    expect(await checkActivation(ctx.db, ctx.rings, token)).toEqual({ status: "ok", firstName: "Persona", memberNumber, dniMasked: "**.***.301" });
+    expect(await checkActivation(ctx.db, ctx.rings, token)).toEqual({ status: "ok", firstName: "Persona", memberNumber, dniMasked: "**.***.301", origin: "admission" });
 
     expect(await activateAccount(ctx.db, token, "corta")).toEqual({ ok: false, error: "weak_password" });
     expect(await activateAccount(ctx.db, token, "una frase larga y ficticia")).toEqual({ ok: true });

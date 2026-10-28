@@ -27,6 +27,7 @@ export async function issueToken(db: Database, opts: IssueOptions, now = new Dat
       subjectId: opts.subjectId,
       createdBy: opts.createdBy,
       expiresAt,
+      createdAt: now,
     })
     .returning({ id: oneTimeTokens.id });
   return { id: row.id, token, expiresAt };

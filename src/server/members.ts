@@ -10,7 +10,7 @@ import type { EmailSender } from "@/server/email/sender";
 import { emailTemplates } from "@/server/email/templates";
 import { hashPassword, MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@/server/auth/password";
 import { readPersonDni, type Keyrings } from "@/server/identity/person-identity";
-import { consumeToken, issueToken } from "@/server/tokens/one-time";
+import { consumeToken, issueToken, revokeTokens } from "@/server/tokens/one-time";
 import { categoryOptions } from "@/demo/content";
 
 export const ACTIVATION_KIND = "member_activation";
@@ -84,35 +84,127 @@ export async function createMemberAccount(db: Database, m: { memberId: string; p
 
 export type Deps = { email: EmailSender; baseURL: string };
 
-/** "approval" for a new member admitted by the Comisión; "existing" for a member whose legajo was digitalised. */
-export type ActivationWording = "approval" | "existing";
+/**
+ * "approval": a new member admitted by the Comisión. "existing": a member whose legajo update
+ * («Ya soy socio/a») was verified. "invitation": a member of the register invited directly by the
+ * administration.
+ */
+export type ActivationWording = "approval" | "existing" | "invitation";
+
+type ActivationMail = { memberId: string; memberNumber: string | null; firstName: string; to: string };
+
+/** A single-use activation link for the member: any earlier live link stops working. */
+function issueActivation(db: Database, m: { memberId: string; userId: string }, actorUserId: string | null, now: Date) {
+  return issueToken(db, { kind: ACTIVATION_KIND, ttlMs: ACTIVATION_TTL_MS, userId: m.userId, subjectId: m.memberId, createdBy: actorUserId ?? undefined, revokePrevious: true }, now);
+}
+
+/** Emails an issued activation link. Never throws: says whether it went out. */
+async function deliverActivation(deps: Deps, m: ActivationMail, link: { token: string; expiresAt: Date }, wording: ActivationWording) {
+  const url = `${deps.baseURL.replace(/\/$/, "")}/qr/activar#t=${link.token}`;
+  try {
+    const template = wording === "approval" ? "admission_approved" : "existing_member_access";
+    const { subject, text, html } =
+      template === "existing_member_access"
+        ? emailTemplates.existing_member_access({ name: m.firstName, memberNumber: m.memberNumber, url, expiresAt: link.expiresAt, variant: wording === "invitation" ? "invited" : "verified" })
+        : emailTemplates.admission_approved({ name: m.firstName, memberNumber: m.memberNumber ?? "A confirmar", url, expiresAt: link.expiresAt });
+    await deps.email.send({ to: m.to, subject, text, html, template, idempotencyKey: `${template}:${m.memberId}:${hashToken(link.token).slice(0, 16)}` });
+    return true;
+  } catch (e) {
+    console.error("Activation email failed:", m.memberId, e instanceof Error ? e.message : e);
+    return false;
+  }
+}
 
 export async function sendActivation(
   db: Database,
   deps: Deps,
-  m: { memberId: string; userId: string; memberNumber: string | null; firstName: string; to: string },
+  m: ActivationMail & { userId: string },
   actorUserId: string | null,
   now: Date,
   wording: ActivationWording = "approval",
 ) {
-  const { token, expiresAt } = await issueToken(
-    db,
-    { kind: ACTIVATION_KIND, ttlMs: ACTIVATION_TTL_MS, userId: m.userId, subjectId: m.memberId, createdBy: actorUserId ?? undefined, revokePrevious: true },
-    now,
-  );
-  const url = `${deps.baseURL.replace(/\/$/, "")}/qr/activar#t=${token}`;
-  try {
-    const template = wording === "existing" ? "existing_member_access" : "admission_approved";
-    const { subject, text, html } =
-      template === "existing_member_access"
-        ? emailTemplates.existing_member_access({ name: m.firstName, memberNumber: m.memberNumber, url, expiresAt })
-        : emailTemplates.admission_approved({ name: m.firstName, memberNumber: m.memberNumber ?? "A confirmar", url, expiresAt });
-    await deps.email.send({ to: m.to, subject, text, html, template, idempotencyKey: `${template}:${m.memberId}:${hashToken(token).slice(0, 16)}` });
-    return { expiresAt, emailed: true };
-  } catch (e) {
-    console.error("Activation email failed:", m.memberId, e instanceof Error ? e.message : e);
-    return { expiresAt, emailed: false };
-  }
+  const link = await issueActivation(db, m, actorUserId, now);
+  const emailed = await deliverActivation(deps, m, link, wording);
+  return { expiresAt: link.expiresAt, emailed };
+}
+
+export class MemberAccessError extends Error {}
+
+const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/** With `skipRepeat`, a second request this soon (a double click, a second tab) sends nothing new. */
+const REPEAT_WINDOW_MS = 10 * 1000;
+
+/**
+ * The member's one digital account: the one already linked; the person's own account if it exists
+ * but was never linked (the database allows one per person); or a new one, pending activation.
+ */
+async function ensureMemberAccount(t: Database, m: { memberId: string; personId: string; name: string; userId: string | null }, now: Date) {
+  if (m.userId) return { userId: m.userId, change: null };
+  const [own] = await t.select({ id: user.id, role: user.role }).from(user).where(eq(user.personId, m.personId));
+  if (!own) return { userId: await createMemberAccount(t, m), change: "created" as const };
+  if (own.role !== "MEMBER") throw new MemberAccessError("Esta persona ya tiene una cuenta que no es de socio. Revisalo antes de habilitar el acceso.");
+  const [taken] = await t.select({ id: members.id }).from(members).where(eq(members.userId, own.id));
+  if (taken) throw new MemberAccessError("La cuenta de esta persona ya está vinculada a otro registro. Revisalo antes de habilitar el acceso.");
+  await t.update(members).set({ userId: own.id, updatedAt: now }).where(and(eq(members.id, m.memberId), isNull(members.userId)));
+  return { userId: own.id, change: "linked" as const };
+}
+
+export type AccessResult = { status: "sent"; resent: boolean; emailed: boolean; expiresAt: Date } | { status: "already_sent" };
+
+/**
+ * The one way the administration gives a member digital access, whether the member is invited
+ * straight from the register or after their «Ya soy socio/a» was verified. Requires the DNI (it is
+ * the login) and an email (where the link goes); never the member number, the category, an
+ * admission or REPROCANN. Makes sure the member has exactly one account, then sends a single-use
+ * activation link: the previous one stops working. With `skipRepeat` (the admin's own button), a
+ * repeat within seconds sends nothing new; the «Ya soy socio/a» steps are one-shot already.
+ * The person creates their own password; nobody else ever sees or sets it.
+ */
+export async function grantMemberAccess(
+  db: Database,
+  deps: Deps,
+  actorUserId: string,
+  memberId: string,
+  opts: { to: string; wording: ActivationWording; now?: Date; skipRepeat?: boolean },
+): Promise<AccessResult> {
+  const now = opts.now ?? new Date();
+  const to = opts.to.trim().toLowerCase();
+  if (!EMAIL_FORMAT.test(to)) throw new MemberAccessError("Para habilitar el acceso, primero completá un email de contacto.");
+  const step = await db.transaction(async (tx) => {
+    const t = tx as unknown as Database;
+    // One request at a time per member: a second click waits here and then finds the first one's link.
+    const [m] = await t
+      .select({ personId: members.personId, userId: members.userId, memberNumber: members.memberNumber })
+      .from(members)
+      .where(eq(members.id, memberId))
+      .for("update");
+    if (!m) throw new MemberAccessError("El socio no existe.");
+    const [identity] = await t.select({ id: personIdentities.personId }).from(personIdentities).where(eq(personIdentities.personId, m.personId));
+    if (!identity) throw new MemberAccessError("Para habilitar el acceso, primero completá y verificá el DNI.");
+    const [p] = await t.select({ fullName: persons.fullName, firstNames: persons.firstNames }).from(persons).where(eq(persons.id, m.personId));
+    const acc = await ensureMemberAccount(t, { memberId, personId: m.personId, name: p.fullName, userId: m.userId }, now);
+    const [u] = await t.select({ status: user.status }).from(user).where(eq(user.id, acc.userId));
+    if (u.status === "active") throw new MemberAccessError("La cuenta ya está activa. Si la persona olvidó su contraseña, la recupera desde «Olvidé mi contraseña» en el ingreso.");
+    if (u.status === "disabled") throw new MemberAccessError("La cuenta está bloqueada: no se envían activaciones.");
+    const [last] = await t
+      .select({ createdAt: oneTimeTokens.createdAt, usedAt: oneTimeTokens.usedAt, revokedAt: oneTimeTokens.revokedAt, expiresAt: oneTimeTokens.expiresAt })
+      .from(oneTimeTokens)
+      .where(and(eq(oneTimeTokens.kind, ACTIVATION_KIND), eq(oneTimeTokens.subjectId, memberId)))
+      .orderBy(desc(oneTimeTokens.createdAt))
+      .limit(1);
+    const justSent = last && !last.usedAt && !last.revokedAt && last.expiresAt > now && now.getTime() - last.createdAt.getTime() < REPEAT_WINDOW_MS;
+    if (opts.skipRepeat && justSent) return { repeat: true as const };
+    if (acc.change === "created") await audit(t, { actorUserId, action: "member.account_created", entityType: "member", entityId: memberId, metadata: { memberNumber: m.memberNumber } });
+    if (acc.change === "linked") await audit(t, { actorUserId, action: "member.account_linked", entityType: "member", entityId: memberId, metadata: { memberNumber: m.memberNumber } });
+    const link = await issueActivation(t, { memberId, userId: acc.userId }, actorUserId, now);
+    return { repeat: false as const, resent: !!last, link, memberNumber: m.memberNumber, firstName: (p.firstNames ?? p.fullName).split(/\s+/)[0] };
+  });
+  if (step.repeat) return { status: "already_sent" };
+  const emailed = await deliverActivation(deps, { memberId, memberNumber: step.memberNumber, firstName: step.firstName, to }, step.link, opts.wording);
+  // An undelivered link is withdrawn, so the next attempt is not taken for a repeat.
+  if (!emailed) await revokeTokens(db, ACTIVATION_KIND, memberId, now);
+  await audit(db, { actorUserId, action: step.resent ? "member.activation_resent" : "member.activation_sent", entityType: "member", entityId: memberId, metadata: { memberNumber: step.memberNumber, emailed, wording: opts.wording } });
+  return { status: "sent", resent: step.resent, emailed, expiresAt: step.link.expiresAt };
 }
 
 /**
@@ -229,7 +321,7 @@ export async function resendActivation(db: Database, deps: Deps, actorUserId: st
   return sent;
 }
 
-export type ActivationCheck = { status: "ok"; firstName: string; memberNumber: string | null; dniMasked: string } | { status: "expired" } | { status: "invalid" };
+export type ActivationCheck = { status: "ok"; firstName: string; memberNumber: string | null; dniMasked: string; origin: "admission" | "legacy" } | { status: "expired" } | { status: "invalid" };
 
 /** What the person sees when opening the activation link. Does not consume it. */
 export async function checkActivation(db: Database, rings: Keyrings, token: string, now = new Date()): Promise<ActivationCheck> {
@@ -241,13 +333,13 @@ export async function checkActivation(db: Database, rings: Keyrings, token: stri
   if (!t?.userId || t.usedAt || t.revokedAt) return { status: "invalid" };
   if (t.expiresAt <= now) return { status: "expired" };
   const [m] = await db
-    .select({ memberNumber: members.memberNumber, personId: members.personId, name: user.name, status: user.status })
+    .select({ memberNumber: members.memberNumber, personId: members.personId, origin: members.origin, name: user.name, status: user.status })
     .from(members)
     .innerJoin(user, eq(user.id, members.userId))
     .where(eq(members.userId, t.userId));
   if (!m || m.status !== "pending_activation") return { status: "invalid" };
   const dni = await readPersonDni(db, rings, m.personId);
-  return { status: "ok", firstName: m.name.split(/\s+/)[0], memberNumber: m.memberNumber, dniMasked: dni ? maskDni(dni) : "—" };
+  return { status: "ok", firstName: m.name.split(/\s+/)[0], memberNumber: m.memberNumber, dniMasked: dni ? maskDni(dni) : "—", origin: m.origin };
 }
 
 export type ActivateResult = { ok: true } | { ok: false; error: "invalid_link" | "weak_password" };

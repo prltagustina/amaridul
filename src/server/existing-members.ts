@@ -14,7 +14,7 @@ import { hashToken } from "@/server/crypto/tokens";
 import type { EmailSender } from "@/server/email/sender";
 import { emailTemplates } from "@/server/email/templates";
 import { setPersonDni, type Keyrings } from "@/server/identity/person-identity";
-import { createMemberAccount, memberNumberTaken, nextMemberNumber, recordMemberNumber, sendActivation, type Deps } from "@/server/members";
+import { createMemberAccount, grantMemberAccess, memberNumberTaken, nextMemberNumber, recordMemberNumber, type Deps } from "@/server/members";
 import { nextReference } from "@/server/references";
 import { consumeToken, findLiveToken, issueToken, revokeTokens } from "@/server/tokens/one-time";
 import { formalAdmissionOf, INVITATION_KIND } from "@/server/pre-admissions";
@@ -433,9 +433,9 @@ export async function registerExistingMember(db: Database, deps: Deps & { rings:
     return { memberId: m.id, userId: u.id, memberNumber };
   });
 
-  const sent = await sendActivation(db, deps, { ...created, firstName: r.firstNames?.split(/\s+/)[0] ?? r.fullName.split(/\s+/)[0], to: r.email }, actorUserId, now, "existing");
-  await audit(db, { actorUserId, action: "member.activation_sent", entityType: "member", entityId: created.memberId, metadata: { memberNumber: created.memberNumber, emailed: sent.emailed } });
-  return { memberNumber: created.memberNumber, ...sent };
+  // Same mechanism as an invitation from the register: a single-use link to create the password.
+  const sent = await grantMemberAccess(db, deps, actorUserId, created.memberId, { to: r.email, wording: "existing", now });
+  return { memberNumber: created.memberNumber, ...(sent.status === "sent" ? { expiresAt: sent.expiresAt, emailed: sent.emailed } : { emailed: true }) };
 }
 
 /** Case A: the member is already on file. Reuses member, person and account; never duplicates them. */
@@ -483,20 +483,10 @@ export async function linkExistingMember(db: Database, deps: Deps & { rings: Key
   });
 
   if (accountActive || member.accountStatus === "disabled") return { memberNumber: member.memberNumber, account: member.accountStatus, emailed: false };
-  // A member from the historical register has no account yet: it is created now, pending activation.
-  let userId = await memberUser(db, member.id);
-  if (!userId) {
-    userId = await createMemberAccount(db, { memberId: member.id, personId: member.personId, name: member.name });
-    await audit(db, { actorUserId, action: "member.account_created", entityType: "member", entityId: member.id, metadata: { memberNumber: member.memberNumber, origin: "legacy" } });
-  }
-  const sent = await sendActivation(db, deps, { memberId: member.id, userId, memberNumber: member.memberNumber, firstName: r.fullName.split(/\s+/)[0], to: activationTo }, actorUserId, now, "existing");
-  await audit(db, { actorUserId, action: "member.activation_sent", entityType: "member", entityId: member.id, metadata: { memberNumber: member.memberNumber, emailed: sent.emailed } });
-  return { memberNumber: member.memberNumber, account: member.accountStatus, ...sent };
-}
-
-async function memberUser(db: Database, memberId: string) {
-  const [m] = await db.select({ userId: members.userId }).from(members).where(eq(members.id, memberId));
-  return m?.userId ?? null;
+  // A member from the historical register may have no account yet: the same mechanism as an
+  // invitation from the register creates or links it and sends the single-use link.
+  const sent = await grantMemberAccess(db, deps, actorUserId, member.id, { to: activationTo, wording: "existing", now });
+  return { memberNumber: member.memberNumber, account: member.accountStatus, ...(sent.status === "sent" ? { expiresAt: sent.expiresAt, emailed: sent.emailed } : { emailed: true }) };
 }
 
 /** Only the values that were actually given: an empty optional field never erases data on file. */

@@ -60,12 +60,14 @@ export const saveDni = async (id: string, dni: string) =>
     "No pudimos cambiar el DNI.",
   );
 export const saveNote = async (id: string, body: string) => run(id, async (a) => addMemberNote(await getDb(), a, String(id), String(body)), "No pudimos guardar la nota.");
-export const invite = async (id: string) =>
+export const invite = async (id: string, confirmSharedEmail = false) =>
   run(
     id,
     async (a) => {
-      const r = await inviteToActivate(await getDb(), { email: getEmailSender(), baseURL: getEnv().BETTER_AUTH_URL }, a, String(id));
-      return r.emailed ? "Le enviamos el email para activar la cuenta." : "La cuenta quedó lista, pero el email no se pudo enviar. Probá de nuevo.";
+      const r = await inviteToActivate(await getDb(), { email: getEmailSender(), baseURL: getEnv().BETTER_AUTH_URL }, a, String(id), { confirmSharedEmail: confirmSharedEmail === true });
+      if (r.status === "already_sent") return "La invitación ya se envió hace un momento. Si no llega, esperá un minuto y reenviala.";
+      if (!r.emailed) throw new MemberProfileError("La cuenta quedó lista, pero el email no se pudo enviar. Probá de nuevo en unos minutos.");
+      return r.resent ? "Activación reenviada. El link anterior dejó de funcionar." : "Invitación enviada.";
     },
     "No pudimos enviar la invitación.",
   );

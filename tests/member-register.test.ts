@@ -225,7 +225,8 @@ describe("member page editing", () => {
   it("B, J: activation after the invitation; a DNI change moves the login, closes sessions and stays unique", async () => {
     const m = (await memberByDni("99002001"))!;
     const mail = new MemoryEmailSender();
-    await inviteToActivate(ctx.db, { email: mail, baseURL }, adminId, m.id);
+    // A minute after the invitation sent in the previous test: a real resend, not a double click.
+    await inviteToActivate(ctx.db, { email: mail, baseURL }, adminId, m.id, { now: new Date(Date.now() + 60_000) });
     expect(mail.sent[0]).toMatchObject({ to: "persona.01@example.com", template: "existing_member_access" });
     expect(await activateAccount(ctx.db, tokenIn(mail.sent[0].text), PASSWORD)).toEqual({ ok: true });
     const res = await ctx.post("/sign-in/dni", { dni: "99002001", password: PASSWORD });
@@ -297,6 +298,6 @@ describe("R: only admins can change the register", () => {
     expect(source).toMatch(/async function run\([\s\S]*?await requireAdmin\(\)/);
     const exported = [...source.matchAll(/export const (\w+) = async/g)].map((m) => m[1]);
     expect(exported.length).toBeGreaterThanOrEqual(8);
-    for (const name of exported) expect(source).toMatch(new RegExp(`export const ${name} = async [^=]*=>\\s*run\\(`));
+    for (const name of exported) expect(source).toMatch(new RegExp(`export const ${name} = async \\([^)]*\\)\\s*=>\\s*run\\(`));
   });
 });

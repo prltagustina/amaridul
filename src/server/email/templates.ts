@@ -158,19 +158,29 @@ export const emailTemplates = {
     ),
 
   // A historical member may not have a number yet (imported register): the line is left out.
-  existing_member_access: (p: { name: string; memberNumber: string | null; url: string; expiresAt: Date }): Rendered =>
+  // "verified": after their «Ya soy socio/a» was checked. "invited": straight from the register.
+  existing_member_access: (p: { name: string; memberNumber: string | null; url: string; expiresAt: Date; variant?: "verified" | "invited" }): Rendered =>
     email(
       "Tu acceso a Amarí Dul está listo",
       `Hola, ${p.name}:`,
       {
         tone: "member",
-        preheader: "Verificamos tu legajo. Activá tu cuenta de socio.",
+        preheader: p.variant === "invited" ? "Tu cuenta de socio está lista. Creá tu contraseña." : "Verificamos tu legajo. Activá tu cuenta de socio.",
         title: "Tu acceso está listo",
         tab: "Socios",
-        reason: "Recibís este email porque el equipo de Amarí Dul verificó la actualización de tu legajo.",
+        reason:
+          p.variant === "invited"
+            ? "Recibís este email porque sos socio/a de Amarí Dul y la asociación habilitó tu acceso digital."
+            : "Recibís este email porque el equipo de Amarí Dul verificó la actualización de tu legajo.",
       },
       [
-        { kind: "p", text: "Verificamos tus datos con el registro de Amarí Dul. Ya podés activar tu acceso digital de socio." },
+        {
+          kind: "p",
+          text:
+            p.variant === "invited"
+              ? "La asociación habilitó tu acceso digital de socio: tu cuenta ya está lista. Solo falta que crees tu contraseña."
+              : "Verificamos tus datos con el registro de Amarí Dul. Ya podés activar tu acceso digital de socio.",
+        },
         ...(p.memberNumber ? [{ kind: "fact" as const, label: "Tu número de socio", value: p.memberNumber, mono: true }] : []),
         { kind: "p", text: "Para entrar a tu espacio, activá tu cuenta creando una contraseña:" },
         { kind: "button", label: "Activar mi cuenta", url: p.url },

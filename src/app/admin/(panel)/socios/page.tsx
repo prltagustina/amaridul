@@ -11,7 +11,7 @@ import { AdminPageHeader } from "../../ui";
 
 const ACCOUNT = {
   none: { label: "Sin cuenta", tone: "neutral" },
-  pending_activation: { label: "Pendiente de activación", tone: "warning" },
+  pending_activation: { label: "Activación pendiente", tone: "warning" },
   active: { label: "Activa", tone: "success" },
   disabled: { label: "Bloqueada", tone: "error" },
 } as const;

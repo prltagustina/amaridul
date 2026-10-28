@@ -10,7 +10,7 @@ import { activate, openActivation } from "../actions";
 import { NewPasswordForm } from "../new-password-form";
 
 type Step = "default" | "loading" | "expired" | "unauthorized" | "success";
-type Who = { token: string; memberNumber: string | null; dniMasked: string; firstName: string } | null;
+type Who = { token: string; memberNumber: string | null; dniMasked: string; firstName: string; origin: "admission" | "legacy" } | null;
 
 /**
  * The activation token travels in the URL fragment (#t=…) and is checked with a server action.
@@ -31,7 +31,7 @@ export default function ActivateFlow({ initial, demo }: { initial: Step; demo: b
       const v = await openActivation(token);
       if (cancelled) return;
       if (v.status === "ok") {
-        setWho({ token, memberNumber: v.memberNumber, dniMasked: v.dniMasked, firstName: v.firstName });
+        setWho({ token, memberNumber: v.memberNumber, dniMasked: v.dniMasked, firstName: v.firstName, origin: v.origin });
         setStep("default");
       } else setStep(v.status === "expired" ? "expired" : "unauthorized");
     })();
@@ -73,7 +73,7 @@ export default function ActivateFlow({ initial, demo }: { initial: Step; demo: b
           icon={<CircleCheck aria-hidden className="size-10" strokeWidth={1.25} />}
           title="Ya podés ingresar"
           description="Desde ahora ingresás con tu DNI y la contraseña que acabás de crear."
-          action={<LinkButton href={who ? "/qr/login" : "/qr/mi-espacio"}>{who ? "Ingresar" : "Ir a mi espacio"}</LinkButton>}
+          action={<LinkButton href={who ? "/qr/login" : "/qr/mi-espacio"}>{who ? "Ingresar a mi espacio" : "Ir a mi espacio"}</LinkButton>}
         />
       </AccessShell>
     );
@@ -83,7 +83,10 @@ export default function ActivateFlow({ initial, demo }: { initial: Step; demo: b
     <AccessShell
       eyebrow="Te damos la bienvenida"
       title={who ? `Hola, ${who.firstName}` : "Activá tu cuenta"}
-      description="La Comisión Directiva aprobó tu admisión. Creá tu contraseña para ingresar a tu espacio."
+      description={
+        // A member from before the system did not go through the Comisión online: their account is simply ready.
+        who?.origin === "legacy" ? "Tu cuenta de socio está lista. Creá tu contraseña para ingresar a tu espacio." : "La Comisión Directiva aprobó tu admisión. Creá tu contraseña para ingresar a tu espacio."
+      }
       tab="Activación"
     >
       <NewPasswordForm

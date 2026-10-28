@@ -42,7 +42,7 @@ export async function memberSignOut(): Promise<void> {
 }
 
 export async function openActivation(token: string): Promise<ActivationCheck> {
-  if (preview()) return { status: "ok", firstName: "Persona", memberNumber: "AD-0004", dniMasked: "**.***.004" };
+  if (preview()) return { status: "ok", firstName: "Persona", memberNumber: "AD-0004", dniMasked: "**.***.004", origin: "admission" };
   try {
     return await checkActivation(await getDb(), getKeyrings(), String(token));
   } catch (e) {

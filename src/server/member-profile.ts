@@ -12,6 +12,7 @@ import {
   memberNotes,
   memberNumbers,
   members,
+  oneTimeTokens,
   personIdentities,
   persons,
   reprocannCases,
@@ -22,7 +23,7 @@ import {
 import { audit } from "@/server/audit/log";
 import { dniLookupCandidates, maskDni, normalizeDni } from "@/server/crypto/dni";
 import { readPersonDni, setPersonDni, type Keyrings } from "@/server/identity/person-identity";
-import { createMemberAccount, deliveryEmail, memberNumberTaken, sendActivation, type Deps } from "@/server/members";
+import { ACTIVATION_KIND, deliveryEmail, grantMemberAccess, MemberAccessError, memberNumberTaken, type Deps } from "@/server/members";
 import { getReprocann } from "@/server/reprocann";
 import { credentialValidity, currentCredential, todayInArgentina } from "@/lib/credential-validity";
 import { categoryOptions, provinces } from "@/demo/content";
@@ -41,6 +42,63 @@ function legajoOf(m: { origin: string; importRunId: string | null; digitalOnboar
 /** Both emails present and different (case and spaces aside): nobody chooses automatically. */
 export const emailConflict = (contact: string | null, notification: string | null) =>
   !!contact?.trim() && !!notification?.trim() && contact.trim().toLowerCase() !== notification.trim().toLowerCase();
+/** "lucia@example.com" → "lu•••@example.com": enough for the admin to recognise it, not to copy it. */
+export function maskEmail(email: string) {
+  const [local, domain] = email.split("@");
+  if (!domain) return "•••";
+  return `${local.slice(0, local.length > 2 ? 2 : 1)}•••@${domain}`;
+}
+
+/** Whether another person on file uses this email (contact or admission notifications). Never says who. */
+async function emailUsedElsewhere(db: Database, personId: string, email: string) {
+  const [contact] = await db
+    .select({ id: persons.id })
+    .from(persons)
+    .where(and(sql`lower(${persons.email}) = lower(${email})`, sql`${persons.id} <> ${personId}`))
+    .limit(1);
+  if (contact) return true;
+  const [notification] = await db
+    .select({ id: admissions.id })
+    .from(admissions)
+    .where(and(sql`lower(${admissions.notificationEmail}) = lower(${email})`, sql`${admissions.personId} <> ${personId}`))
+    .limit(1);
+  return !!notification;
+}
+
+export type AccessView = {
+  state: AccountState;
+  /** What is missing to invite: the DNI (it is the login) and an email (where the link goes). */
+  missing: "dni" | "email" | null;
+  destination: string | null;
+  emailShared: boolean;
+  lastSentAt: Date | null;
+  link: "live" | "expired" | "used" | "revoked" | null;
+  linkExpiresAt: Date | null;
+  activatedAt: Date | null;
+};
+
+const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+async function accessView(db: Database, m: { memberId: string; personId: string; hasDni: boolean; accountStatus: string | null; to: string }, now: Date): Promise<AccessView> {
+  const links = await db
+    .select({ createdAt: oneTimeTokens.createdAt, expiresAt: oneTimeTokens.expiresAt, usedAt: oneTimeTokens.usedAt, revokedAt: oneTimeTokens.revokedAt })
+    .from(oneTimeTokens)
+    .where(and(eq(oneTimeTokens.kind, ACTIVATION_KIND), eq(oneTimeTokens.subjectId, m.memberId)))
+    .orderBy(desc(oneTimeTokens.createdAt));
+  const last = links[0];
+  const validEmail = EMAIL_FORMAT.test(m.to);
+  return {
+    state: accountOf(m.accountStatus),
+    missing: !m.hasDni ? "dni" : !validEmail ? "email" : null,
+    destination: validEmail ? maskEmail(m.to) : null,
+    emailShared: validEmail ? await emailUsedElsewhere(db, m.personId, m.to) : false,
+    lastSentAt: last?.createdAt ?? null,
+    link: !last ? null : last.usedAt ? "used" : last.revokedAt ? "revoked" : last.expiresAt <= now ? "expired" : "live",
+    linkExpiresAt: last?.expiresAt ?? null,
+    activatedAt: links.find((l) => l.usedAt)?.usedAt ?? null,
+  };
+}
+
 export const categoryLabel = (c: string | null) => (c ? (categoryOptions.find((o) => o.value === c)?.label ?? c) : null);
 
 // ---------- Read ----------
@@ -136,6 +194,11 @@ export async function getMemberProfile(db: Database, rings: Keyrings, id: string
     .limit(1);
   const reprocann = await getReprocann(db, rings.field, id);
   const credential = currentCredential(reprocann?.documents ?? []);
+  const access = await accessView(
+    db,
+    { memberId: id, personId: m.member.personId, hasDni: !!dni, accountStatus: m.accountStatus, to: deliveryEmail({ notificationEmail: m.notificationEmail, email: m.person.email }) },
+    new Date(),
+  );
 
   return {
     id,
@@ -167,6 +230,7 @@ export async function getMemberProfile(db: Database, rings: Keyrings, id: string
       legajo: legajoOf(m.member),
     },
     account: accountOf(m.accountStatus),
+    access,
     fee: { feeEnrollmentDate: fee?.feeEnrollmentDate ?? null, paymentMethod: fee?.paymentMethod ?? null },
     notes,
     reprocann,
@@ -358,30 +422,27 @@ export async function addMemberNote(db: Database, actorUserId: string, memberId:
 }
 
 /**
- * The admin explicitly invites a member to activate the digital account: creates the account if
- * the member has none (e.g. imported), or sends a new link if it is pending. Never automatic.
+ * The admin explicitly invites a member to activate the digital account (one at a time, never
+ * automatic): through the same mechanism as «Ya soy socio/a», it creates or links the member's one
+ * account and sends a single-use link. If another record uses the same email, the admin has to
+ * confirm it first: email is not identity, so it is never resolved silently.
  */
-export async function inviteToActivate(db: Database, deps: Deps, actorUserId: string, memberId: string, now = new Date()) {
+export async function inviteToActivate(db: Database, deps: Deps, actorUserId: string, memberId: string, opts: { confirmSharedEmail?: boolean; now?: Date } = {}) {
   const [m] = await db
-    .select({ personId: members.personId, userId: members.userId, memberNumber: members.memberNumber, origin: members.origin, name: persons.fullName, email: persons.email, notificationEmail: admissions.notificationEmail, accountStatus: user.status })
+    .select({ personId: members.personId, origin: members.origin, email: persons.email, notificationEmail: admissions.notificationEmail })
     .from(members)
     .innerJoin(persons, eq(persons.id, members.personId))
-    .leftJoin(user, eq(user.id, members.userId))
     .leftJoin(admissions, eq(admissions.id, members.admissionId))
     .where(eq(members.id, memberId));
   if (!m) throw new MemberProfileError("El socio no existe.");
   const to = deliveryEmail(m);
-  if (!to) throw new MemberProfileError("Cargá primero el email de contacto.");
-  if (m.accountStatus === "active") throw new MemberProfileError("La cuenta ya está activa.");
-  if (m.accountStatus === "disabled") throw new MemberProfileError("La cuenta está deshabilitada.");
-  const [identity] = await db.select({ id: personIdentities.personId }).from(personIdentities).where(eq(personIdentities.personId, m.personId));
-  if (!identity) throw new MemberProfileError("Cargá primero el DNI: es con lo que va a ingresar.");
-  let userId = m.userId;
-  if (!userId) {
-    userId = await createMemberAccount(db, { memberId, personId: m.personId, name: m.name });
-    await audit(db, { actorUserId, action: "member.account_created", entityType: "member", entityId: memberId, metadata: { memberNumber: m.memberNumber } });
+  if (to && !opts.confirmSharedEmail && (await emailUsedElsewhere(db, m.personId, to)))
+    throw new MemberProfileError("Ese email también figura en otro registro del padrón. Confirmá con la persona que es el suyo antes de enviar la invitación.");
+  try {
+    // A member from the register is invited as such; an admitted member gets their approval link again.
+    return await grantMemberAccess(db, deps, actorUserId, memberId, { to, wording: m.origin === "legacy" ? "invitation" : "approval", now: opts.now, skipRepeat: true });
+  } catch (e) {
+    if (e instanceof MemberAccessError) throw new MemberProfileError(e.message);
+    throw e;
   }
-  const sent = await sendActivation(db, deps, { memberId, userId, memberNumber: m.memberNumber, firstName: m.name.split(/\s+/)[0], to }, actorUserId, now, m.origin === "legacy" ? "existing" : "approval");
-  await audit(db, { actorUserId, action: "member.activation_sent", entityType: "member", entityId: memberId, metadata: { memberNumber: m.memberNumber, emailed: sent.emailed } });
-  return sent;
 }
