@@ -91,11 +91,20 @@ describe("designed emails", () => {
   it("carry an HTML version with the same content as the plain text", () => {
     const url = "https://amaridul.test/qr/activar#t=abc";
     const m = emailTemplates.admission_approved({ name: "Persona", memberNumber: "AD-0001", url, expiresAt: new Date("2026-10-20T13:54:00Z") });
-    expect(m.html).toContain("AD-0001");
     expect(m.html).toContain(`href="${url}"`);
     expect(m.html).toContain("cid:amaridul-lockup");
     expect(m.text).toContain(url);
-    expect(m.text).toContain("AD-0001");
+  });
+
+  it("never show a member number: numbers are not definitive yet", () => {
+    const url = "https://amaridul.test/qr/activar#t=abc";
+    const approved = emailTemplates.admission_approved({ name: "Persona", memberNumber: "AD-0001", url, expiresAt: new Date("2026-10-20T13:54:00Z") });
+    const invited = emailTemplates.existing_member_access({ name: "Persona", memberNumber: "H-0022", url, expiresAt: new Date("2026-10-20T13:54:00Z"), variant: "invited" });
+    const verified = emailTemplates.existing_member_access({ name: "Persona", memberNumber: "H-0022", url, expiresAt: new Date("2026-10-20T13:54:00Z"), variant: "verified" });
+    for (const m of [approved, invited, verified]) {
+      expect(`${m.subject} ${m.text} ${m.html}`).not.toMatch(/AD-0001|H-0022|número de socio/i);
+      expect(m.text).toContain(url);
+    }
   });
 
   it("escapes what people typed", () => {

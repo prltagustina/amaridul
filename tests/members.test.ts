@@ -105,7 +105,8 @@ describe("from approval to the member portal", () => {
     expect(await ctx.db.select().from(account).where(eq(account.userId, u.id))).toHaveLength(0);
 
     expect(mail.sent[0].to).toBe("persona.99000301@example.com");
-    expect(mail.sent[0].text).toContain(memberNumber);
+    // Numbers are not definitive yet: the email leaves it out (the member page shows it).
+    expect(mail.sent[0].text).not.toContain(memberNumber);
     expect(mail.sent[0].text).toContain(`${baseURL}/qr/activar#t=`);
     expect(await memberEmailOf(ctx.db, u.id)).toBe("persona.99000301@example.com");
 

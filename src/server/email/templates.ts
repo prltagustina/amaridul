@@ -81,20 +81,20 @@ export const emailTemplates = {
       ],
     ),
 
+  // Member numbers are not definitive yet (2026-11): no email shows one, the member page does.
   admission_approved: (p: { name: string; memberNumber: string; url: string; expiresAt: Date }): Rendered =>
     email(
       "Tu admisión fue aprobada",
       `Hola, ${p.name}:`,
       {
         tone: "member",
-        preheader: `Te damos la bienvenida a Amarí Dul. Tu número de socio es ${p.memberNumber}.`,
+        preheader: "Te damos la bienvenida a Amarí Dul. Activá tu cuenta de socio.",
         title: "Tu admisión fue aprobada",
         tab: "Socios",
         reason: "Recibís este email porque la Comisión Directiva aprobó tu solicitud de admisión.",
       },
       [
         { kind: "p", text: "La Comisión Directiva aprobó tu admisión. ¡Te damos la bienvenida a Amarí Dul!" },
-        { kind: "fact", label: "Tu número de socio", value: p.memberNumber, mono: true },
         { kind: "p", text: "Para entrar a tu espacio, activá tu cuenta creando una contraseña:" },
         { kind: "button", label: "Activar mi cuenta", url: p.url },
         { kind: "fact", label: "El link vence el", value: longDate.format(p.expiresAt) },
@@ -157,7 +157,7 @@ export const emailTemplates = {
       ],
     ),
 
-  // A historical member may not have a number yet (imported register): the line is left out.
+  // Member numbers are not definitive yet (2026-11): the email never shows one.
   // "verified": after their «Ya soy socio/a» was checked. "invited": straight from the register.
   existing_member_access: (p: { name: string; memberNumber: string | null; url: string; expiresAt: Date; variant?: "verified" | "invited" }): Rendered =>
     email(
@@ -181,7 +181,6 @@ export const emailTemplates = {
               ? "La asociación habilitó tu acceso digital de socio: tu cuenta ya está lista. Solo falta que crees tu contraseña."
               : "Verificamos tus datos con el registro de Amarí Dul. Ya podés activar tu acceso digital de socio.",
         },
-        ...(p.memberNumber ? [{ kind: "fact" as const, label: "Tu número de socio", value: p.memberNumber, mono: true }] : []),
         { kind: "p", text: "Para entrar a tu espacio, activá tu cuenta creando una contraseña:" },
         { kind: "button", label: "Activar mi cuenta", url: p.url },
         { kind: "fact", label: "El link vence el", value: longDate.format(p.expiresAt) },
