@@ -1,0 +1,1 @@
+ALTER TYPE "public"."admission_category" ADD VALUE 'activo_paciente';

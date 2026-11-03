@@ -57,7 +57,8 @@ export const preAdmissionNotes = pgTable(
 );
 
 export const admissionStatus = pgEnum("admission_status", ["recibida", "comision", "aprobada", "rechazada"]);
-export const admissionCategory = pgEnum("admission_category", ["activo", "adherente", "paciente"]);
+// "activo_paciente": a Comisión Directiva member who is also a patient. Only the association assigns it.
+export const admissionCategory = pgEnum("admission_category", ["activo", "adherente", "paciente", "activo_paciente"]);
 
 /**
  * Formal admission request, sent from the invitation link. The person (name, contact) lives in

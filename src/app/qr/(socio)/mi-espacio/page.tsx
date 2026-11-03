@@ -8,6 +8,7 @@ import { DevStateBar } from "@/components/ui/dev-state-bar";
 import { Alert, DevTag, LoadingBlock, StatusBadge } from "@/components/ui/display";
 import { TabbedCard } from "@/components/ui/technical";
 import { demoMember } from "@/demo/fixtures";
+import { isPatientCategory } from "@/demo/content";
 import { currentMember } from "@/server/member-session";
 import type { Tone } from "@/components/ui/display";
 
@@ -36,7 +37,7 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
           fee: "A confirmar por la asociación",
           procedures: [
             { label: "Alta asociativa", status: "Completa", tone: "success" as Tone },
-            ...(m.category === "paciente"
+            ...(isPatientCategory(m.category)
               ? [
                   { label: "Evaluación médica", status: "Pendiente", tone: "warning" as Tone },
                   { label: "Vinculación REPROCANN", status: "Pendiente", tone: "warning" as Tone },

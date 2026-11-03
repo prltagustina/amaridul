@@ -91,7 +91,7 @@ export const institutionalInput = z
   .object({
     numberMode: z.enum(["historic", "next"]),
     memberNumber: z.string().trim().max(30).optional().default(""),
-    category: z.enum(["activo", "adherente", "paciente"]),
+    category: z.enum(["activo", "activo_paciente", "adherente", "paciente"]),
     since: z.union([z.iso.date().refine((d) => d <= today()), z.literal("")]),
     minutesReference: z.string().trim().max(200).optional().default(""),
     status: z.enum(["activo", "suspendido", "baja"]),
@@ -109,7 +109,7 @@ export const linkInput = z.object({
    * redirect that member's access.
    */
   updateContact: z.boolean().optional().default(false),
-  category: z.enum(["activo", "adherente", "paciente"]),
+  category: z.enum(["activo", "activo_paciente", "adherente", "paciente"]),
   since: z.union([z.iso.date().refine((d) => d <= today()), z.literal("")]),
   minutesReference: z.string().trim().max(200).optional().default(""),
   status: z.enum(["activo", "suspendido", "baja"]),

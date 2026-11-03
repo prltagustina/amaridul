@@ -21,7 +21,7 @@ export const decisionInput = z
     decision: z.enum(["aprobada", "rechazada", "diferida"]),
     meetingDate: z.iso.date().refine((v) => new Date(v) <= new Date()),
     minutes: z.string().trim().min(1).max(200),
-    category: z.union([z.enum(["activo", "adherente", "paciente"]), z.literal("")]),
+    category: z.union([z.enum(["activo", "activo_paciente", "adherente", "paciente"]), z.literal("")]),
   })
   .superRefine((v, ctx) => {
     if (v.decision === "aprobada" && !v.category) ctx.addIssue({ code: "custom", path: ["category"], message: "required" });
@@ -257,7 +257,7 @@ export async function recordDecision(db: Database, deps: Deps, actorUserId: stri
     return { decision: "rechazada" as const };
   }
 
-  const category = input.category as "activo" | "adherente" | "paciente";
+  const category = input.category as "activo" | "activo_paciente" | "adherente" | "paciente";
   const created = await db.transaction(async (tx) => {
     const t = tx as unknown as Database;
     const ok = await t

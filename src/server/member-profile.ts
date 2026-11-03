@@ -264,7 +264,7 @@ export const contactInput = z.object({
   postalCode: optionalText(10),
 });
 export const membershipInput = z.object({
-  category: z.union([z.enum(["activo", "adherente", "paciente"]), z.literal("")]).transform((v) => v || null),
+  category: z.union([z.enum(["activo", "activo_paciente", "adherente", "paciente"]), z.literal("")]).transform((v) => v || null),
   since: pastDate,
   status: z.enum(["activo", "suspendido", "baja"]),
   minutesReference: optionalText(200),

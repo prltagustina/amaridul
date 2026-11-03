@@ -76,12 +76,23 @@ export const provinces = [
   "Tucumán",
 ] as const;
 
-/** Statutory categories open to enrolment. Honorario is designated by the association, not requested. */
+/**
+ * Member categories. "Activo" is only for members of the Comisión Directiva, assigned by the
+ * association; they can also be patients ("Activo y paciente"), which is what dispensing will look
+ * at. Honorario is designated by the association, not requested.
+ */
 export const categoryOptions = [
-  { value: "activo", label: "Activo", description: "Ingreso con derechos y obligaciones asociativas." },
+  { value: "activo", label: "Activo", description: "Integrante de la Comisión Directiva." },
+  { value: "activo_paciente", label: "Activo y paciente", description: "Integrante de la Comisión Directiva que además es paciente." },
   { value: "adherente", label: "Adherente", description: "Participación comunitaria conforme al estatuto." },
   { value: "paciente", label: "Paciente", description: "Requiere documentación y circuito sanitario adicionales." },
 ] as const;
+
+/** What a person can ask for in the formal admission: never "activo", which only the association assigns. */
+export const requestableCategories = categoryOptions.filter((c) => c.value === "adherente" || c.value === "paciente");
+
+/** Patients, whatever else they are: what dispensing will look at once it exists. */
+export const isPatientCategory = (c: string | null | undefined) => c === "paciente" || c === "activo_paciente";
 
 export const membershipFee = {
   amount: "$ —",

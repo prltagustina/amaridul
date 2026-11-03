@@ -8,7 +8,7 @@ import { Alert, Card, DevTag, LoadingBlock } from "@/components/ui/display";
 import { Dialog } from "@/components/ui/dialog";
 import { Select, TextField, Textarea } from "@/components/ui/field";
 import { StepIndicator, type StepStatus } from "@/components/ui/steps";
-import { categoryOptions, documents, membershipFee, privacySummary, provinces, reprocannOptions } from "@/demo/content";
+import { documents, membershipFee, privacySummary, provinces, reprocannOptions, requestableCategories } from "@/demo/content";
 import { STEP_IDS, type StepId } from "./steps";
 import { openInvitation } from "../actions";
 import { ExpiredInvitation, InvalidInvitation } from "../invitation";
@@ -398,8 +398,8 @@ export default function AdmissionWizard({ initialStep, demoState, demo }: { init
             <RadioGroup
               name="categoria"
               legend="Categoría que solicitás"
-              hint="La categoría definitiva la aprueba la Comisión Directiva. La categoría honoraria la designa la asociación."
-              options={categoryOptions}
+              hint="La categoría definitiva la aprueba la Comisión Directiva. La categoría activa (Comisión Directiva) y la honoraria las designa la asociación."
+              options={requestableCategories}
               value={data.categoria}
               onChange={(v) => set("categoria", v)}
               error={errors.categoria}
@@ -618,7 +618,7 @@ export default function AdmissionWizard({ initialStep, demoState, demo }: { init
 }
 
 function Summary({ data, onEdit }: { data: Data; onEdit: (id: StepId) => void }) {
-  const category = categoryOptions.find((c) => c.value === data.categoria)?.label ?? "—";
+  const category = requestableCategories.find((c) => c.value === data.categoria)?.label ?? "—";
   const yes = (b: boolean) => (b ? "Aceptado" : "Pendiente");
   const rows: [StepId, ReactNode][] = [
     ["A", `${data.nombres} ${data.apellidos} · DNI ${data.dni.replace(/\D/g, "").replace(/(\d+)(\d{3})(\d{3})$/, "$1.$2.$3")} · ${data.localidad}, ${data.provincia}`],

@@ -85,6 +85,13 @@
       "when": 1792113570464,
       "tag": "0011_reprocann_sin_informar",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793724125423,
+      "tag": "0012_categoria_activo_paciente",
+      "breakpoints": true
     }
   ]
 }

@@ -50,7 +50,8 @@ export const admissionInput = z
       .max(40)
       .refine((v) => v.replace(/\D/g, "").length >= 8),
     emailNotificaciones: z.union([email, z.literal("")]),
-    categoria: z.enum(["activo", "adherente", "paciente"]),
+    // "activo" is only for the Comisión Directiva: the association assigns it, nobody requests it.
+    categoria: z.enum(["adherente", "paciente"]),
     interes: z.string().trim().max(2000),
     obligaciones: accepted,
     pacienteAcompanamiento: z.boolean(),
