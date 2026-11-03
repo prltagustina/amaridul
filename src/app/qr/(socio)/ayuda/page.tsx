@@ -1,33 +1,48 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, ExternalLink, MessageCircle, Upload } from "lucide-react";
+import { ArrowRight, ExternalLink, MessageCircle, PlayCircle, Upload } from "lucide-react";
 import { PageBand } from "@/components/brand/page-band";
 import { LinkButton } from "@/components/ui/button";
 import { DevTag } from "@/components/ui/display";
 import { TabbedCard } from "@/components/ui/technical";
+import { CONTACT } from "@/lib/constants";
 import { localDemo } from "@/lib/features";
 import { FEE_PAGE } from "@/lib/fee-payment";
-import { REPROCANN_OFFICIAL_SITE } from "@/lib/reprocann-help";
-import { officialWhatsAppLink, UPDATE_DATA_MESSAGE } from "@/lib/whatsapp";
+import { LINK_CODE_STEPS, LINK_CODE_VIDEO, REPROCANN_OFFICIAL_SITE } from "@/lib/reprocann-help";
+import { MEMBER_QUESTION_MESSAGE, officialWhatsAppLink, UPDATE_DATA_MESSAGE } from "@/lib/whatsapp";
 import { currentMember } from "@/server/member-session";
 
 export const metadata: Metadata = { title: "Ayuda | Amarí Dul" };
+
+const outline = "inline-flex min-h-11 items-center gap-2 !rounded-full border border-forest/60 px-5 text-[0.9375rem] font-medium !text-forest hover:bg-forest-soft";
+const textLink = "inline-flex min-h-11 items-center gap-1.5 font-medium !text-forest underline-offset-4 hover:underline";
 
 /** A question and where it is answered. */
 function Topic({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-3 py-5 first:pt-0 last:pb-0">
       <h3 className="text-lg font-title text-forest">{title}</h3>
-      <div className="text-[0.9375rem] leading-relaxed text-text-muted">{children}</div>
-      {action && <div>{action}</div>}
+      <div className="space-y-2 text-[0.9375rem] leading-relaxed text-text-muted">{children}</div>
+      {action && <div className="flex flex-wrap items-center gap-x-4 gap-y-2">{action}</div>}
     </div>
   );
 }
 
-/** Help for members: how to start the REPROCANN procedure, how to send a credential, the fee, the data. */
+function WhatsApp({ message, label }: { message: string; label: string }) {
+  const href = officialWhatsAppLink(message);
+  return href ? (
+    <a href={href} target="_blank" rel="noopener noreferrer" className={outline}>
+      <MessageCircle aria-hidden className="size-4" strokeWidth={1.5} /> {label}
+    </a>
+  ) : null;
+}
+
+/**
+ * Help for members, by situation: starting the REPROCANN procedure, sending the credential,
+ * finding the link code, the fee, their data and how to reach the association.
+ */
 export default async function AyudaPage() {
   await currentMember();
-  const whatsapp = officialWhatsAppLink(UPDATE_DATA_MESSAGE);
   const demo = localDemo();
   return (
     <main>
@@ -36,21 +51,19 @@ export default async function AyudaPage() {
         <div className="admin-column grid gap-x-6 gap-y-8 lg:grid-cols-2">
           <TabbedCard tab="REPROCANN" tone="sand" fill bodyClassName="divide-y divide-mist-line">
             <Topic
-              title="Necesito iniciar mi trámite"
+              title="Todavía no tengo REPROCANN"
               action={
-                <a
-                  href={REPROCANN_OFFICIAL_SITE}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-11 items-center gap-2 !rounded-full border border-forest/60 px-5 text-[0.9375rem] font-medium !text-forest hover:bg-forest-soft"
-                >
-                  Ir al sitio oficial de REPROCANN <ExternalLink aria-hidden className="size-4" strokeWidth={1.5} />
-                  <span className="sr-only">(se abre en otra pestaña)</span>
-                </a>
+                <>
+                  <a href={REPROCANN_OFFICIAL_SITE} target="_blank" rel="noopener noreferrer" className={outline}>
+                    Ir al sitio oficial <ExternalLink aria-hidden className="size-4" strokeWidth={1.5} />
+                    <span className="sr-only">(se abre en otra pestaña)</span>
+                  </a>
+                  <WhatsApp message={MEMBER_QUESTION_MESSAGE} label="Consultar por WhatsApp" />
+                </>
               }
             >
-              <p>El trámite se hace en el sitio oficial del Registro del Programa de Cannabis (REPROCANN), del Ministerio de Salud de la Nación.</p>
-              {demo && <DevTag className="dev-only mt-2">Vista local · faltan el instructivo y el video de la asociación</DevTag>}
+              <p>El trámite se hace en el sitio oficial del Registro del Programa de Cannabis (REPROCANN), del Ministerio de Salud de la Nación, con tu cuenta de Mi Argentina.</p>
+              <p>Si no sabés por dónde empezar, escribinos y te orientamos.</p>
             </Topic>
             <Topic
               title="Ya tengo mi credencial: quiero cargarla"
@@ -60,7 +73,23 @@ export default async function AyudaPage() {
                 </LinkButton>
               }
             >
-              <p>Subí el PDF o una foto nítida. La asociación la revisa: hasta entonces queda «en revisión».</p>
+              <p>Subí el PDF o una foto nítida. La asociación la revisa: hasta entonces figura «en revisión».</p>
+            </Topic>
+            <Topic
+              title="¿Dónde encuentro mi código de vinculación?"
+              action={
+                <a href={LINK_CODE_VIDEO} target="_blank" rel="noopener noreferrer" className={textLink}>
+                  <PlayCircle aria-hidden className="size-5" strokeWidth={1.5} /> Ver el video (menos de 1 minuto)
+                  <span className="sr-only">(se abre en otra pestaña)</span>
+                </a>
+              }
+            >
+              <p>Si la asociación te lo pide, lo encontrás así:</p>
+              <ol className="list-decimal space-y-1 pl-5 marker:text-forest">
+                {LINK_CODE_STEPS.map((s) => (
+                  <li key={s}>{s}</li>
+                ))}
+              </ol>
             </Topic>
           </TabbedCard>
 
@@ -68,37 +97,34 @@ export default async function AyudaPage() {
             <Topic
               title="Pagar la cuota social"
               action={
-                <Link href={FEE_PAGE} className="inline-flex min-h-11 items-center gap-1.5 font-medium !text-forest underline-offset-4 hover:underline">
-                  Ver los datos de pago <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
+                <Link href={FEE_PAGE} className={textLink}>
+                  Ver cuánto es y cómo pagar <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
                 </Link>
               }
             >
-              <p>Los datos de la cuenta de la asociación están en «Administración de cuota».</p>
+              <p>Elegí si la pagás mes a mes, por trimestre o por semestre, y transferí a la cuenta de la asociación. Todo está en «Administración de cuota».</p>
             </Topic>
-            <Topic
-              title="Actualizar mis datos"
-              action={
-                whatsapp ? (
-                  <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 !rounded-full border border-forest/60 px-5 text-[0.9375rem] font-medium !text-forest hover:bg-forest-soft">
-                    <MessageCircle aria-hidden className="size-4" strokeWidth={1.5} /> Solicitar actualización por WhatsApp
-                  </a>
-                ) : (
-                  demo && <DevTag className="dev-only">Vista local · falta el WhatsApp oficial (AD-003)</DevTag>
-                )
-              }
-            >
+            <Topic title="Actualizar mis datos" action={<WhatsApp message={UPDATE_DATA_MESSAGE} label="Solicitar actualización por WhatsApp" />}>
               <p>Si cambió tu domicilio, tu email u otro dato, avisale a la asociación para que lo actualice.</p>
+              {!CONTACT.whatsapp && demo && <DevTag className="dev-only">Vista local · falta el WhatsApp oficial (AD-003)</DevTag>}
             </Topic>
             <Topic
               title="Comprar productos"
               action={
-                <Link href="/qr/productos" className="inline-flex min-h-11 items-center gap-1.5 font-medium !text-forest underline-offset-4 hover:underline">
+                <Link href="/qr/productos" className={textLink}>
                   Ver los productos <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
                 </Link>
               }
             >
-              <p>Todavía no se puede comprar desde tu cuenta: te vamos a avisar cuando esté disponible. Mientras tanto podés ver lo que elabora la asociación.</p>
+              <p>Todavía no se puede comprar desde tu cuenta: te vamos a avisar cuando esté disponible. Mientras tanto podés ver lo que elabora la asociación, con su análisis.</p>
             </Topic>
+            {CONTACT.whatsapp && (
+              <Topic title="Escribirle a la asociación" action={<WhatsApp message={MEMBER_QUESTION_MESSAGE} label="Escribir por WhatsApp" />}>
+                <p>
+                  Por cualquier otra consulta, escribinos al <span className="whitespace-nowrap text-forest">{CONTACT.whatsapp}</span>.
+                </p>
+              </Topic>
+            )}
           </TabbedCard>
         </div>
       </div>

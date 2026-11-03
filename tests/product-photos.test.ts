@@ -151,7 +151,8 @@ describe("de la administración al catálogo", () => {
 
   it("never carries prices, stock, lots or internal data", async () => {
     const [item] = await listCatalog(ctx.db);
-    expect(Object.keys(item).sort()).toEqual(["chemotype", "cultivatedOn", "cultivation", "description", "id", "name", "photo", "type", "variety"]);
+    expect(Object.keys(item).sort()).toEqual(["chemotype", "cultivatedOn", "cultivation", "description", "id", "kind", "name", "photo", "sheet", "type", "variety"]);
+    expect(Object.keys(item.sheet).sort()).toEqual(["analyzedOn", "cannabinoids", "cbd", "dropsPerMl", "harvestedOn", "hasCertificate", "labName", "thc", "unit"]);
   });
 });
 

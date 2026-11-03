@@ -113,6 +113,20 @@
       "when": 1793733863153,
       "tag": "0015_recordatorio_cuota",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1793737016106,
+      "tag": "0016_forma_de_pago",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793748680476,
+      "tag": "0017_ficha_tecnica",
+      "breakpoints": true
     }
   ]
 }

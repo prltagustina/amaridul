@@ -145,7 +145,7 @@ describe("catálogo para socios", () => {
     const catalog = await listCatalog(ctx.db);
     expect(catalog.map((p) => p.name)).toContain("Aceite Ficticio Activo");
     expect(catalog.map((p) => p.name)).not.toContain("Crema Ficticia Oculta");
-    expect(Object.keys(catalog[0]).sort()).toEqual(["chemotype", "cultivatedOn", "cultivation", "description", "id", "name", "photo", "type", "variety"]);
+    expect(Object.keys(catalog[0]).sort()).toEqual(["chemotype", "cultivatedOn", "cultivation", "description", "id", "kind", "name", "photo", "sheet", "type", "variety"]);
     expect(catalog.find((p) => p.name === "Aceite Ficticio Activo")).toMatchObject({ type: "Aceite", cultivation: "Exterior", chemotype: "1", photo: null, variety: g1.name ? `${g1.code} · ${g1.name}` : g1.code });
   });
 });

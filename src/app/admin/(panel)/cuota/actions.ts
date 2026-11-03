@@ -5,7 +5,7 @@ import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
 import { ReminderError, saveReminderSettings, settingsInput } from "@/server/fee-reminders";
 
-export type SettingsValues = { enabled: boolean; frequency: string; dayOfMonth: string; hour: string };
+export type SettingsValues = { enabled: boolean; dayOfMonth: string; hour: string };
 export type SettingsResult = { ok: true } | { ok: false; error: string; fieldErrors?: Partial<Record<keyof SettingsValues, string>> };
 
 export async function saveReminderSettingsAction(values: SettingsValues): Promise<SettingsResult> {

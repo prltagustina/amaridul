@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
 import { createProduct, deleteProduct, DuplicateProductError, productInput, ProductNotFoundError, renameVariety, UnknownVarietyError, updateProduct, varietyNameInput } from "@/server/products";
+import { ProductSheetError, sheetInput, updateProductSheet } from "@/server/product-sheet";
 
 export type ProductFormValues = { name: string; type: string; varietyId: string; cultivation: string; chemotype: string; cultivatedOn: string; description: string; status: string };
 export type ProductActionResult = { ok: true } | { ok: false; error: string; fieldErrors?: Partial<Record<keyof ProductFormValues, string>> };
@@ -76,6 +77,38 @@ export async function deleteProductAction(id: string): Promise<{ ok: true } | { 
     if (e instanceof ProductNotFoundError) return { ok: false, error: "El producto ya no existe. Recargá la página." };
     console.error("Product delete failed:", e instanceof Error ? e.message : e);
     return { ok: false, error: "No pudimos eliminar el producto. Probá de nuevo." };
+  }
+  revalidatePath("/admin/productos");
+  return { ok: true };
+}
+
+export type SheetFormValues = {
+  harvestedOn: string;
+  labName: string;
+  analyzedOn: string;
+  compositionUnit: string;
+  thc: string;
+  cbd: string;
+  dropsPerMl: string;
+  cannabinoids: { compound: string; value: string }[];
+};
+
+/** The product's technical sheet: origin, composition and the lab's cannabinoid profile. */
+export async function saveProductSheetAction(id: string, values: SheetFormValues): Promise<{ ok: true } | { ok: false; error: string; fieldErrors?: Partial<Record<keyof SheetFormValues, string>> }> {
+  const { user } = await requireAdmin();
+  const parsed = sheetInput.safeParse(values);
+  if (!parsed.success) {
+    const fieldErrors: Partial<Record<keyof SheetFormValues, string>> = {};
+    for (const issue of parsed.error.issues) fieldErrors[issue.path[0] as keyof SheetFormValues] ??= issue.message;
+    return { ok: false, error: "Revisá los datos marcados.", fieldErrors };
+  }
+  try {
+    await updateProductSheet(await getDb(), user.id, String(id), parsed.data);
+  } catch (e) {
+    if (e instanceof ProductSheetError) return { ok: false, error: e.message, fieldErrors: { compositionUnit: e.message } };
+    if (e instanceof ProductNotFoundError) return { ok: false, error: "El producto ya no existe. Recargá la página." };
+    console.error("Product sheet save failed:", e instanceof Error ? e.message : e);
+    return { ok: false, error: "No pudimos guardar la ficha. Probá de nuevo." };
   }
   revalidatePath("/admin/productos");
   return { ok: true };

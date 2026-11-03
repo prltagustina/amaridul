@@ -355,14 +355,39 @@ export function AccountBlock({ id, access }: { id: string; access: Access }) {
 
 // ---------- F. Cuota ----------
 
-export function FeeBlock({ id, data }: { id: string; data: { feeEnrollmentDate: string | null; paymentMethod: string | null } }) {
+const PLAN_OPTIONS = [
+  { value: "mensual", label: "Mensual" },
+  { value: "trimestral", label: "Trimestral" },
+  { value: "semestral", label: "Semestral" },
+];
+
+export function FeeBlock({
+  id,
+  data,
+}: {
+  id: string;
+  data: { feeEnrollmentDate: string | null; paymentMethod: string | null; plan: string | null; planChosenAt: string | null; planByMember: boolean };
+}) {
   const a = useBlockAction();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ feeEnrollmentDate: data.feeEnrollmentDate ?? "", paymentMethod: data.paymentMethod ?? "" });
+  const initial = () => ({ feeEnrollmentDate: data.feeEnrollmentDate ?? "", paymentMethod: data.paymentMethod ?? "", plan: data.plan ?? "" });
+  const [form, setForm] = useState(initial);
+  const planLabel = PLAN_OPTIONS.find((o) => o.value === data.plan)?.label;
   return (
-    <Block title="Administración de cuota" onEdit={() => (setForm({ feeEnrollmentDate: data.feeEnrollmentDate ?? "", paymentMethod: data.paymentMethod ?? "" }), a.setError(""), setOpen(true))} notice={a.notice}>
+    <Block title="Administración de cuota" onEdit={() => (setForm(initial()), a.setError(""), setOpen(true))} notice={a.notice}>
       <DetailList
         items={[
+          {
+            label: "Forma de pago",
+            value: planLabel ? (
+              <span>
+                {planLabel}
+                {data.planChosenAt && <span className="block text-xs text-text-muted">{`${data.planByMember ? "La eligió el socio" : "La cargó la administración"} el ${day(data.planChosenAt)}`}</span>}
+              </span>
+            ) : (
+              shown(null)
+            ),
+          },
           { label: "Alta en la cuota", value: shown(day(data.feeEnrollmentDate)) },
           { label: "Medio de pago habitual", value: shown(data.paymentMethod) },
         ]}
@@ -370,6 +395,16 @@ export function FeeBlock({ id, data }: { id: string; data: { feeEnrollmentDate: 
       <p className="text-small text-text-muted">Datos administrativos. Los pagos y saldos se van a registrar en la etapa de finanzas.</p>
       <Dialog open={open} onClose={() => setOpen(false)} title="Administración de cuota" confirmLabel={a.pending ? "Guardando…" : "Guardar"} confirmDisabled={a.pending} onConfirm={() => a.run(() => saveFee(id, form), () => setOpen(false))}>
         {a.error && <Alert tone="error" live>{a.error}</Alert>}
+        <Select
+          id="f-plan"
+          label="Forma de pago"
+          optional
+          placeholder="Sin elegir"
+          options={PLAN_OPTIONS}
+          value={form.plan}
+          onChange={(e) => setForm((f) => ({ ...f, plan: e.target.value }))}
+          hint="Mensual: recibe el recordatorio cada mes. Trimestral, semestral o sin elegir: cada tres meses."
+        />
         <div className="grid gap-5 sm:grid-cols-2">
           <TextField id="f-date" type="date" label="Alta en la cuota" optional max={today()} value={form.feeEnrollmentDate} onChange={(e) => setForm((f) => ({ ...f, feeEnrollmentDate: e.target.value }))} />
           <TextField id="f-method" label="Medio de pago habitual" optional value={form.paymentMethod} onChange={(e) => setForm((f) => ({ ...f, paymentMethod: e.target.value }))} maxLength={60} />

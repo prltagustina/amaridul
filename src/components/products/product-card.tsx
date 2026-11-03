@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { PhotoPlaceholder } from "@/components/brand/placeholders";
-import { TechBand } from "@/components/ui/technical";
+import { Chip, TechBand } from "@/components/ui/technical";
 import type { CatalogItem } from "@/server/products";
 
 const day = (iso: string | null) => (iso ? iso.split("-").reverse().join("/") : null);
@@ -54,6 +54,7 @@ export function ProductCard({ product }: { product: CatalogItem }) {
           <PhotoPlaceholder label="Foto pendiente" className="aspect-[4/3] !rounded-[14px]" />
         )}
         <FactList facts={productFacts(product).filter((f) => f.label !== "Tipo")} className="grid grid-cols-2 content-start gap-x-5 gap-y-3 px-1" />
+        <Composition product={product} />
         {product.description && <p className="line-clamp-3 px-1 text-small leading-relaxed text-forest/85">{product.description}</p>}
         <p aria-hidden className="mt-auto flex items-center gap-1.5 px-1 pt-1 text-[0.9375rem] font-medium text-forest">
           Ver ficha <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" strokeWidth={1.5} />
@@ -63,6 +64,30 @@ export function ProductCard({ product }: { product: CatalogItem }) {
         <span className="sr-only">Ver la ficha de {product.name}</span>
       </Link>
     </article>
+  );
+}
+
+const UNIT = { porcentaje: "%", mg_ml: "mg/ml", mg_g: "mg/g" } as const;
+
+/** THC and CBD as chips, when the association loaded them. */
+function Composition({ product }: { product: CatalogItem }) {
+  const { thc, cbd, unit } = product.sheet;
+  if (thc === null && cbd === null) return null;
+  const u = unit ? UNIT[unit] : "";
+  const n = (x: number) => x.toLocaleString("es-AR", { maximumFractionDigits: 2 });
+  return (
+    <div className="flex flex-wrap gap-2 px-1">
+      {thc !== null && (
+        <Chip tone="green">
+          THC ~{n(thc)} {u}
+        </Chip>
+      )}
+      {cbd !== null && (
+        <Chip tone="green">
+          CBD ~{n(cbd)} {u}
+        </Chip>
+      )}
+    </div>
   );
 }
 

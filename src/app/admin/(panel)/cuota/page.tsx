@@ -5,7 +5,7 @@ import { localDemo } from "@/lib/features";
 import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
 import { emailTemplates } from "@/server/email/templates";
-import { FREQUENCIES, getReminderSettings, listReminderSends, reminderAudience, remindersAllowed, schedule } from "@/server/fee-reminders";
+import { getReminderSettings, listReminderSends, reminderAudience, remindersAllowed, schedule } from "@/server/fee-reminders";
 import { AdminPageHeader } from "../../ui";
 import { SettingsForm } from "./settings-form";
 
@@ -24,7 +24,7 @@ export default async function RecordatorioCuotaPage() {
   const [settings, audience, sends] = await Promise.all([getReminderSettings(db), reminderAudience(db), listReminderSends(db)]);
   const allowed = remindersAllowed();
   const next = schedule(settings, new Date());
-  const preview = emailTemplates.fee_reminder({ name: "Nombre", url: "https://amaridul.com/qr/cuota" });
+  const preview = emailTemplates.fee_reminder({ name: "Nombre", url: "https://amaridul.com/qr/cuota", plan: null });
   const on = allowed && settings.enabled;
 
   return (
@@ -42,17 +42,23 @@ export default async function RecordatorioCuotaPage() {
                 Se puede dejar configurado, pero no sale ningún email. Se habilita cuando la asociación defina el recordatorio.
               </Alert>
             ) : (
-              <p className="text-small text-text-muted">{on ? `Período actual ${next.period}: ${next.due ? "ya corresponde enviarlo" : `sale desde el ${next.from}`}.` : "Apagado: no sale ningún email."}</p>
+              <p className="text-small text-text-muted">
+                {on
+                  ? `Mensual (${next.mensual.period}): ${next.mensual.due ? "ya corresponde" : `desde el ${next.mensual.from}`}. Cada tres meses (${next.trimestral.period}): ${next.trimestral.due ? "ya corresponde" : `desde el ${next.trimestral.from}`}.`
+                  : "Apagado: no sale ningún email."}
+              </p>
             )}
-            <p className="text-small text-text-muted">
-              Hoy lo recibirían {audience.withEmail} {audience.withEmail === 1 ? "socio activo" : "socios activos"} con email
-              {audience.withoutEmail ? `; ${audience.withoutEmail} sin email registrado no lo recibirían` : ""}.
-            </p>
-            <SettingsForm
-              allowed={allowed}
-              frequencies={FREQUENCIES}
-              initial={{ enabled: settings.enabled, frequency: settings.frequency, dayOfMonth: String(settings.dayOfMonth), hour: String(settings.hour) }}
-            />
+            <div className="space-y-1.5 text-small text-text-muted">
+              <p>
+                <span className="font-medium text-forest">Una vez por mes</span> a quienes eligieron pagar mes a mes, y <span className="font-medium text-forest">cada tres meses</span> al resto (trimestral, semestral o sin elegir), para que nadie pase más de tres meses sin aviso.
+              </p>
+              <p>
+                Hoy lo recibirían {audience.monthly} cada mes y {audience.threeMonthly} cada tres meses.
+                {audience.withoutEmail ? ` ${audience.withoutEmail} sin email registrado no lo recibirían.` : ""}
+                {audience.withoutPlan ? ` ${audience.withoutPlan} todavía no eligieron su forma de pago.` : ""}
+              </p>
+            </div>
+            <SettingsForm allowed={allowed} initial={{ enabled: settings.enabled, dayOfMonth: String(settings.dayOfMonth), hour: String(settings.hour) }} />
           </Card>
 
           <Card className="space-y-4">
@@ -66,7 +72,18 @@ export default async function RecordatorioCuotaPage() {
               <span className="text-text-muted">Asunto:</span> {preview.subject}
             </p>
             <pre className="max-h-[28rem] overflow-auto !rounded-control border border-border bg-surface-sunken p-4 font-sans text-small leading-relaxed whitespace-pre-wrap">{preview.text}</pre>
-            <p className="text-small text-text-muted">Con un socio ficticio («Nombre»). Nada de esto se envía.</p>
+            <p className="text-small text-text-muted">
+              Con un socio ficticio («Nombre») que todavía no eligió su forma de pago. Con una forma elegida:{" "}
+              {(["mensual", "trimestral", "semestral"] as const).map((p, i) => (
+                <span key={p}>
+                  {i ? " · " : ""}
+                  <a href={`/admin/cuota/vista-previa?plan=${p}`} target="_blank" rel="noopener" className="!text-forest underline underline-offset-2">
+                    {p}
+                  </a>
+                </span>
+              ))}
+              . Nada de esto se envía.
+            </p>
           </Card>
         </div>
 

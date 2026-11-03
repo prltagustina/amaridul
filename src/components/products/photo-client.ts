@@ -69,3 +69,26 @@ export async function removePhoto(productId: string): Promise<void> {
   }
   await answer(res, "No pudimos quitar la foto. Probá de nuevo.");
 }
+
+/** The lab certificate: a PDF of up to 8 MB, sent as it is (the server checks it again). */
+export async function uploadCertificate(productId: string, file: File): Promise<void> {
+  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) throw new Error("El certificado tiene que ser un PDF.");
+  if (file.size > 8 * 1024 * 1024) throw new Error("El certificado pesa más de 8 MB.");
+  let res: Response;
+  try {
+    res = await fetch(`/admin/productos/${productId}/certificado`, { method: "PUT", headers: { "Content-Type": "application/pdf" }, body: file });
+  } catch {
+    throw new Error("No pudimos enviar el certificado. Revisá tu conexión y probá de nuevo.");
+  }
+  await answer(res, "No pudimos guardar el certificado. Probá de nuevo.");
+}
+
+export async function removeCertificate(productId: string): Promise<void> {
+  let res: Response;
+  try {
+    res = await fetch(`/admin/productos/${productId}/certificado`, { method: "DELETE" });
+  } catch {
+    throw new Error("No pudimos quitar el certificado. Revisá tu conexión y probá de nuevo.");
+  }
+  await answer(res, "No pudimos quitar el certificado. Probá de nuevo.");
+}

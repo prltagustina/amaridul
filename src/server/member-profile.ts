@@ -24,6 +24,7 @@ import { audit } from "@/server/audit/log";
 import { dniLookupCandidates, maskDni, normalizeDni } from "@/server/crypto/dni";
 import { readPersonDni, setPersonDni, type Keyrings } from "@/server/identity/person-identity";
 import { ACTIVATION_KIND, deliveryEmail, grantMemberAccess, MemberAccessError, memberNumberTaken, type Deps } from "@/server/members";
+import { feePlanInput, memberFeePlan, setFeePlan } from "@/server/fee-plan";
 import { getReprocann } from "@/server/reprocann";
 import { credentialStatus, credentialValidity, currentCredential, todayInArgentina } from "@/lib/credential-validity";
 import { categoryOptions, provinces } from "@/demo/content";
@@ -179,6 +180,7 @@ export async function getMemberProfile(db: Database, rings: Keyrings, id: string
 
   const dni = m.hasIdentity ? await readPersonDni(db, rings, m.member.personId) : null;
   const [fee] = await db.select().from(memberFeeSettings).where(eq(memberFeeSettings.memberId, id));
+  const feePlan = await memberFeePlan(db, id);
   const notes = await db
     .select({ id: memberNotes.id, body: memberNotes.body, source: memberNotes.source, createdAt: memberNotes.createdAt, author: user.name })
     .from(memberNotes)
@@ -232,7 +234,7 @@ export async function getMemberProfile(db: Database, rings: Keyrings, id: string
     },
     account: accountOf(m.accountStatus),
     access,
-    fee: { feeEnrollmentDate: fee?.feeEnrollmentDate ?? null, paymentMethod: fee?.paymentMethod ?? null },
+    fee: { feeEnrollmentDate: fee?.feeEnrollmentDate ?? null, paymentMethod: fee?.paymentMethod ?? null, plan: feePlan.plan, planChosenAt: feePlan.chosenAt ? todayInArgentina(feePlan.chosenAt) : null, planByMember: feePlan.byMember },
     notes,
     reprocann,
     credential: credential ? { ...credential, validity: credentialValidity(credential, today) } : null,
@@ -276,6 +278,10 @@ export const membershipInput = z.object({
 export const feeInput = z.object({
   feeEnrollmentDate: pastDate,
   paymentMethod: optionalText(60),
+  plan: z
+    .union([feePlanInput, z.literal("")])
+    .optional()
+    .transform((v) => v || null),
 });
 export const memberNumberInput = z
   .string()
@@ -401,8 +407,10 @@ export async function changeDni(db: Database, rings: Keyrings, actorUserId: stri
   });
 }
 
-export async function updateFee(db: Database, actorUserId: string, memberId: string, input: z.infer<typeof feeInput>) {
+export async function updateFee(db: Database, actorUserId: string, memberId: string, { plan, ...input }: z.infer<typeof feeInput>) {
   await personOf(db, memberId);
+  // The plan has its own record of who chose it (the member or an admin).
+  if (plan !== (await memberFeePlan(db, memberId)).plan) await setFeePlan(db, actorUserId, memberId, plan);
   await db.transaction(async (tx) => {
     const t = tx as unknown as Database;
     const [before] = await t.select({ feeEnrollmentDate: memberFeeSettings.feeEnrollmentDate, paymentMethod: memberFeeSettings.paymentMethod }).from(memberFeeSettings).where(eq(memberFeeSettings.memberId, memberId));

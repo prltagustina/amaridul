@@ -22,6 +22,6 @@ export const SHARE_IMAGE = {
 /** Confirmed contact channels. Empty means pending: hidden in production, flagged locally. */
 export const CONTACT: { instagram: string; whatsapp: string; email: string } = {
   instagram: "",
-  whatsapp: "",
+  whatsapp: "+54 9 3425 32-7400",
   email: "",
 };

@@ -1,7 +1,7 @@
 // Every email has a designed HTML version (see layout.ts) and a plain-text one for clients that
 // do not show HTML. Copy is provisional, consistent with the site: replace it with the approved
 // text. Lila while joining (Sumate, invitation, formal request), green once a member.
-import { FEE_PAYMENT } from "@/lib/fee-payment";
+import { FEE_PAYMENT, FEE_PLANS, monthlyFee, periodLabel, pesos } from "@/lib/fee-payment";
 import { renderEmail, type EmailBlock, type EmailLayout } from "./layout";
 
 
@@ -20,6 +20,14 @@ function plain(greeting: string, blocks: EmailBlock[]): string {
     if (b.kind === "button") lines.push(`${b.label}:`, b.url, "");
   }
   return [...lines, SIGNATURE].join("\n");
+}
+
+/** The fee in one sentence: the member's plan, or the three options while they have not chosen. */
+function feeLine(plan: "mensual" | "trimestral" | "semestral" | null): string {
+  const chosen = FEE_PLANS.find((x) => x.id === plan);
+  if (chosen) return `Te recordamos la cuota social: elegiste pagarla ${chosen.months === 1 ? "mes a mes" : chosen.months === 3 ? "por trimestre" : "por semestre"}, ${pesos(chosen.amount)} ${periodLabel(chosen.months)}.`;
+  const [, quarter, half] = FEE_PLANS;
+  return `Te recordamos la cuota social: ${pesos(monthlyFee)} por mes. Podés pagarla mes a mes, por trimestre (${pesos(quarter.amount)}) o por semestre (${pesos(half.amount)}), y elegir cómo en tu espacio.`;
 }
 
 function email(subject: string, greeting: string, l: Omit<EmailLayout, "blocks">, blocks: EmailBlock[]): Rendered {
@@ -209,9 +217,10 @@ export const emailTemplates = {
 
   /**
    * A general notice to every active member: the system records no payments, so it never says
-   * that someone owes, how much or until when. The payment data come from the one shared source.
+   * that someone owes or until when. It names the plan the member chose, or the three options.
+   * The amounts and payment data come from the one shared source.
    */
-  fee_reminder: (p: { name: string; url: string }): Rendered =>
+  fee_reminder: (p: { name: string; url: string; plan: "mensual" | "trimestral" | "semestral" | null }): Rendered =>
     email(
       "Recordatorio: cuota social de Amarí Dul",
       `Hola, ${p.name}:`,
@@ -223,7 +232,8 @@ export const emailTemplates = {
         reason: "Recibís este email porque sos socio/a de Amarí Dul. Es un aviso general, igual para todos los socios.",
       },
       [
-        { kind: "p", text: "Te recordamos que podés pagar la cuota social con una transferencia a la cuenta de la asociación:" },
+        { kind: "p", text: feeLine(p.plan) },
+        { kind: "p", text: "Se paga con una transferencia a la cuenta de la asociación:" },
         { kind: "fact", label: "Titular", value: FEE_PAYMENT.holder },
         { kind: "fact", label: "Plataforma", value: FEE_PAYMENT.platform },
         { kind: "fact", label: "Alias", value: FEE_PAYMENT.alias, mono: true },

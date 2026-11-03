@@ -22,6 +22,17 @@ export default async function ProductosPage() {
     description: p.description,
     status: p.status,
     photo: p.photo,
+    sheet: {
+      harvestedOn: p.harvestedOn ?? "",
+      labName: p.labName ?? "",
+      analyzedOn: p.analyzedOn ?? "",
+      compositionUnit: p.compositionUnit ?? "",
+      thc: p.thc === null ? "" : Number(p.thc).toLocaleString("es-AR", { maximumFractionDigits: 2, useGrouping: false }),
+      cbd: p.cbd === null ? "" : Number(p.cbd).toLocaleString("es-AR", { maximumFractionDigits: 2, useGrouping: false }),
+      dropsPerMl: p.dropsPerMl === null ? "" : String(p.dropsPerMl),
+      cannabinoids: p.cannabinoids ?? [],
+      hasCertificate: p.hasCertificate,
+    },
   }));
   const varietyRows: VarietyRow[] = varieties.map((v) => ({ id: v.id, code: v.code, name: v.name, label: varietyLabel(v) }));
   return (

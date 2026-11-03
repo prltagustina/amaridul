@@ -4,7 +4,7 @@ import { ArrowRight, LifeBuoy, MessageCircle, Upload } from "lucide-react";
 import { readState } from "@/lib/demo";
 import { localDemo } from "@/lib/features";
 import { credentialStatus, expiryLine, type CredentialStatus } from "@/lib/credential-validity";
-import { FEE_PAGE, FEE_PAYMENT } from "@/lib/fee-payment";
+import { FEE_PAGE, FEE_PAYMENT, FEE_PLANS, monthlyFee, periodLabel, pesos } from "@/lib/fee-payment";
 import { officialWhatsAppLink, UPDATE_DATA_MESSAGE } from "@/lib/whatsapp";
 import { PageBand } from "@/components/brand/page-band";
 import { LinkButton } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { demoMember } from "@/demo/fixtures";
 import { getDb } from "@/server/db";
 import { getKeyrings } from "@/server/crypto";
 import { currentMember } from "@/server/member-session";
+import { memberFeePlan } from "@/server/fee-plan";
 import { memberReprocann } from "@/server/member-portal";
 import { listCatalog } from "@/server/products";
 
@@ -51,8 +52,8 @@ function credentialTask(status: CredentialStatus, managedByAssociation: boolean,
 }
 
 // Only for reviewing the screens locally without a session: a fictitious member.
-type CredentialSummary = { status: CredentialStatus; managedByAssociation: boolean; reason: string | null; documents: number; products: number };
-const DEMO: CredentialSummary = { status: credentialStatus({ reviewStatus: "pendiente", expiresOn: "2027-03-01" }), managedByAssociation: false, reason: null, documents: 1, products: 2 };
+type CredentialSummary = { status: CredentialStatus; managedByAssociation: boolean; reason: string | null; documents: number; products: number; plan: string | null };
+const DEMO: CredentialSummary = { status: credentialStatus({ reviewStatus: "pendiente", expiresOn: "2027-03-01" }), managedByAssociation: false, reason: null, documents: 1, products: 2, plan: null };
 
 export default async function MiEspacioPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const state = await readState(searchParams, STATES);
@@ -88,6 +89,7 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
       reason: reprocann?.credential?.memberMessage ?? null,
       documents: reprocann?.documents.filter((d) => !d.replaced).length ?? 0,
       products: (await listCatalog(db)).length,
+      plan: (await memberFeePlan(db, m.id)).plan,
     };
   }
   const task = credentialTask(credential.status, credential.managedByAssociation, credential.reason);
@@ -194,16 +196,23 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
 
               <TabbedCard tab="Cuota" fill bodyClassName="gap-5">
                 <p className="text-xl font-title text-forest">Administración de cuota</p>
-                <p className="text-[0.9375rem] leading-relaxed text-text-muted">Pagás la cuota social con una transferencia a la cuenta de {FEE_PAYMENT.platform} de la asociación.</p>
+                <p className="text-[0.9375rem] leading-relaxed text-text-muted">
+                  La cuota social es de {pesos(monthlyFee)} por mes. Se paga por transferencia a la cuenta de {FEE_PAYMENT.platform} de la asociación.
+                </p>
                 <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-2 text-[0.9375rem]">
+                  <dt className="text-small text-text-muted">Tu forma de pago</dt>
+                  <dd className="text-forest">
+                    {(() => {
+                      const p = FEE_PLANS.find((x) => x.id === credential.plan);
+                      return p ? `${p.label} · ${pesos(p.amount)} ${periodLabel(p.months)}` : <span className="text-text-muted">Todavía no la elegiste</span>;
+                    })()}
+                  </dd>
                   <dt className="text-small text-text-muted">Alias</dt>
                   <dd className="font-mono tracking-wide break-all text-forest">{FEE_PAYMENT.alias}</dd>
-                  <dt className="text-small text-text-muted">Titular</dt>
-                  <dd className="text-forest">{FEE_PAYMENT.holder}</dd>
                 </dl>
                 <CardFoot>
                   <LinkButton href={FEE_PAGE} variant="secondary" full>
-                    Ver datos de pago
+                    {credential.plan ? "Ver datos de pago" : "Elegir forma de pago"}
                   </LinkButton>
                 </CardFoot>
               </TabbedCard>

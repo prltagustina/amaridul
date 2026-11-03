@@ -15,10 +15,10 @@ Actualizado: 3/11/2026, 17 h. Etapa 1 **abierta**. Bloques del cierre: **A** por
 | ID | Tema | Estado | Falta |
 |---|---|---|---|
 | A | Credencial REPROCANN | **Publicado el 3/11, con la carga de archivos apagada.** No validado con el almacenamiento real. Detalle en «Credenciales». | Validar la carga real y activar `REPROCANN_UPLOADS`. Criterios de AD-012. «Sin REPROCANN activo no hay dispensa» no se aplica: no hay dispensa (AD-006). |
-| B | Productos en el portal | **Publicado el 3/11**: catálogo con foto, ficha del producto y carga de fotos desde administración (migración `0014`). | Los **2 productos activos** (FLORES-CC y FLORES-EX) tienen desde el 3/11 una **descripción provisoria** (solo variedad y cultivo) y una **imagen ilustrativa** rotulada así, no una foto real. Reemplazarlas por las de la asociación. |
-| C | Difusión por correo | **Recordatorio de cuota publicado el 3/11, apagado** (migración `0015`). No hay plataforma de campañas (fuera de alcance). | Definiciones de la sección «Cuota». |
-| D | Cuotas y Mercado Pago | **Publicado el 3/11**: «Administración de cuota» con los datos de pago. Sin montos, deudas ni vencimientos. | Acreditación automática y débito o suscripción: pendientes. Registro de pagos: propuesto, no implementado. |
-| E | Socios existentes y padrón | **Publicado el 28/10.** Acceso digital desde la ficha y «Ya soy socio/a». Categoría «Activo y paciente» publicada el 3/11. | **Revisión de duplicados en producción (pendiente).** Un integrante de la Comisión todavía no está en el padrón: volver a importar su fila (ya tiene DNI en la planilla) y después asignarle «Activo y paciente». A otro socio le falta el DNI en la planilla (ya está importado). |
+| B | Productos en el portal | **Publicado el 3/11**: catálogo con foto y ficha del producto (migración `0014`). **Local, para publicar**: ficha técnica con **Origen, Composición y Análisis** (cosecha, laboratorio, THC/CBD, perfil de cannabinoides y certificado PDF) que carga la administración y ve el socio, como la ficha del lote (migración `0017`). | Los **2 productos activos** (FLORES-CC y FLORES-EX) tienen una **descripción provisoria** (solo variedad y cultivo) y **fotos reales de flores de cannabis de Wikimedia Commons** (CC0 y dominio público), rotuladas «Imagen ilustrativa» porque no son de los productos de la asociación. Falta cargar su ficha técnica y reemplazar fotos y textos por los de la asociación. |
+| C | Difusión por correo | **Recordatorio de cuota publicado el 3/11, apagado** (migración `0015`). Regla definida el 3/11: **una vez por mes a quien paga mes a mes, cada tres meses al resto**. No hay plataforma de campañas (fuera de alcance). | Encenderlo: confirmación, `FEE_REMINDERS=on`, `CRON_SECRET` y la programación diaria en `vercel.json`. |
+| D | Cuotas y Mercado Pago | **Publicado el 3/11**: «Administración de cuota» con los datos de pago. **Local, para publicar**: los montos (mensual $ 5.000, trimestral $ 15.000, semestral $ 30.000) y la **forma de pago que elige cada socio** (o carga la administración), migración `0016`. Sin deudas ni vencimientos. | Acreditación automática y débito o suscripción: pendientes. Registro de pagos: propuesto, no implementado. |
+| E | Socios existentes y padrón | **Publicado el 28/10.** Acceso digital desde la ficha y «Ya soy socio/a». Categoría «Activo y paciente» publicada el 3/11. | **Revisión de duplicados en producción (pendiente).** Un integrante de la Comisión todavía no está en el padrón: importar su fila (archivo de una fila, ya con DNI y email) desde Socios → Importar y después asignarle «Activo y paciente». A otro socio le falta el DNI en la planilla (ya está importado). |
 
 ## Planilla compartida (AD-001 a AD-014)
 
@@ -26,7 +26,7 @@ Actualizado: 3/11/2026, 17 h. Etapa 1 **abierta**. Bloques del cierre: **A** por
 |---|---|---|---|---|---|
 | AD-001 | Slogan en la vista previa del enlace | — | Resuelto | **Publicado**: imagen sin slogan, idéntica a la del repositorio (`78fa075`). | — |
 | AD-002 | Preguntas frecuentes | Lucía | Pendiente | La sección pública existe sin respuestas. El portal suma «Ayuda» (ver más abajo). | **Dependencia**: textos de Lucía. |
-| AD-003 | Correo de contacto y WhatsApp | Lucía | Pendiente | Sin canales cargados. «Solicitar actualización por WhatsApp» está preparado: en local se ve como vista previa sin número; publicado no aparece. | **Dependencia**: número oficial con código de país y área, y correo. Se cargan en `CONTACT` (`src/lib/constants.ts`). |
+| AD-003 | Correo de contacto y WhatsApp | Lucía | En proceso | **WhatsApp cargado el 3/11** («por ahora»): +54 9 3425 32-7400, en `CONTACT`. Con él aparecen «Solicitar actualización por WhatsApp», las consultas en Ayuda y Cuota, «¿Dudas? Escribinos por WhatsApp» en `/qr` y la sección pública «Contacto». | **Dependencia**: correo de contacto. |
 | AD-004 | Texto de «Quiénes somos» | Lucía | Pendiente | La sección existe. | **Dependencia**: texto de Lucía. |
 | AD-005 | Revisión de los 9 pasos del alta formal | Ambas | Pendiente | 9 pasos, de A a I. | Revisarlos juntas. |
 | AD-006 | REPROCANN activo al aceptar el alta | Decisión | Pendiente | El alta no exige REPROCANN y no hay dispensa. | Decidir si es condición del alta o de la dispensa. |
@@ -146,26 +146,31 @@ Actualizado: 3/11/2026, 17 h. Etapa 1 **abierta**. Bloques del cierre: **A** por
 - Las pruebas comprueban los dígitos verificadores del CUIT y del CVU, y que el CVU conserva sus ceros iniciales.
 - **Link de pago**: ninguno hasta que Luci lo envíe. Nunca se arma a partir del alias.
 
-**«Administración de cuota»** (`/qr/cuota`, implementado y probado en local): titular, plataforma, alias, CVU y CUIT; botones para copiar el alias y el CVU, que confirman y lo anuncian al lector de pantalla. Si el navegador no deja copiar, dejan el dato seleccionado para copiarlo a mano. Sin monto, deuda, vencimiento ni «al día»: «Por ahora el sistema no registra pagos».
+**«Administración de cuota»** (`/qr/cuota`): la cuota ($ 5.000 por mes) y las tres formas de pago (mensual $ 5.000, trimestral $ 15.000, semestral $ 30.000). El socio elige la suya y la guarda; la administración también puede cargarla desde la ficha del socio, y la ficha dice quién la eligió. Debajo, titular, plataforma, alias, CVU y CUIT, con botones para copiar el alias y el CVU (confirman y lo anuncian al lector de pantalla; si el navegador no deja copiar, dejan el dato seleccionado). Sin deuda, vencimiento ni «al día»: «Por ahora el sistema no registra pagos».
 
 **Recordatorio automático** (implementado y probado en local; **apagado**):
-- **Correo**: aviso general, igual para todos. Datos de pago, «Si ya la pagaste, no hace falta que hagas nada», enlace a «Administración de cuota» y «Este aviso no indica que tengas una deuda». Vista previa en administración: Padrón → Recordatorio de cuota.
-- **Programación**: mensual o trimestral, desde un día (1 a 28) y una hora, en hora de Argentina. Trimestral sale en el primer mes del trimestre.
-- **Destinatarios propuestos**: socios con membresía activa y email (hoy, sin registro de pagos, no se puede excluir a quien ya pagó). Sin email: «Omitido».
+- **Correo**: aviso general. Nombra la forma de pago elegida con su monto, o las tres opciones si todavía no eligió. Datos de pago, «Si ya la pagaste, no hace falta que hagas nada», enlace a «Administración de cuota» y «Este aviso no indica que tengas una deuda». Vista previa en administración (Padrón → Recordatorio de cuota), también por forma de pago.
+- **Regla (3/11)**: **una vez por mes** a quien eligió pagar mes a mes; **cada tres meses** al resto (trimestral, semestral o sin elegir), para que nadie pase más de tres meses sin aviso. Sale desde un día (1 a 28) y una hora configurables, en hora de Argentina; el de cada tres meses, en el primer mes del trimestre.
+- **Destinatarios**: socios con membresía activa y email (sin registro de pagos, no se puede excluir a quien ya pagó). Sin email: «Omitido».
 - **Registro**: por socio y período, a qué email (enmascarado), resultado, intentos y fecha.
 - **Sin duplicados**: un registro por socio y período, creado antes de enviar. Cada ejecución toma los registros de a uno (dos ejecuciones a la vez no toman el mismo), y el correo lleva una clave que el proveedor usa para descartar un reenvío. Un fallo se reintenta después de una hora, hasta 3 veces. Un envío que quedó a medias se retoma con la misma clave.
 - **Doble llave para encenderlo**: `FEE_REMINDERS=on` en el entorno y activarlo en administración. Sin la primera, la casilla está deshabilitada. La ejecución programada (`/api/cron/recordatorio-cuota`) existe, pero **no está programada**: haría falta una entrada en `vercel.json` y `CRON_SECRET`. Sin el secreto responde 404.
 - Las pruebas usan un buzón en memoria: no se envió ningún correo real.
 
-**Pendiente de definir con Luci**: monto y período que cubre; si «trimestral» es el período pagado o la frecuencia del aviso; fechas; destinatarios; registro de pagos; link de Mercado Pago. La cuota queda separada de la compra de productos.
+**Definido el 3/11**: montos, formas de pago a elección de cada socio y la regla del recordatorio. **Pendiente**: registro de pagos, link de Mercado Pago y la confirmación para encender el recordatorio. La cuota queda separada de la compra de productos.
 
 **Registro de pagos mínimo (propuesta)**: una tabla de pagos por socio y período (fecha, medio, quién lo registró, nota), cargada a mano por administración. El recordatorio omitiría a quien tenga el período pagado. La acreditación automática con Mercado Pago, el débito y la suscripción quedan para después.
 
 ## Ayuda y contacto
 
-- **«Necesito iniciar mi trámite»**: lleva al sitio oficial https://reprocann.msal.gob.ar/home (comprobado el 3/11: responde y se titula «Reprocann»). No se publican requisitos ni pasos que no se pudieron verificar.
-- **«Ya tengo mi credencial: quiero cargarla»**: lleva a la carga en `/qr/reprocann`.
-- **Falta**: el instructivo y el video de Luci (no los tenemos), y el WhatsApp oficial (AD-003). El botón «Solicitar actualización por WhatsApp» está listo con el mensaje «Hola, soy socio/a de Amarí Dul y necesito actualizar mis datos. ¿Me ayudan?», sin DNI, datos médicos ni documentos. Sin número oficial no se muestra.
+- **Ayuda del portal**, por situación:
+  - «Todavía no tengo REPROCANN»: el sitio oficial https://reprocann.msal.gob.ar/home (comprobado el 3/11) y la consulta por WhatsApp.
+  - «Ya tengo mi credencial: quiero cargarla»: la carga en `/qr/reprocann`.
+  - «¿Dónde encuentro mi código de vinculación?»: tres pasos y el video que compartió la asociación (28 segundos, en Drive con acceso por enlace). **Es de un profesional externo y termina invitando a escribirle a él**; los datos personales que aparecen están difuminados.
+  - Cuota, actualizar datos, compras y «Escribirle a la asociación» por WhatsApp.
+- **Inicio público (`/qr`, «Cómo sumarte»)**: cuatro situaciones (quiero asociarme; todavía no tengo REPROCANN; ya soy socio/a y no tengo cuenta; ya tengo mi cuenta), los tres pasos de la admisión con la aclaración de que no hace falta tener REPROCANN para empezar la preadmisión (la preadmisión ya pregunta por él) y «¿Dudas? Escribinos por WhatsApp».
+- Los mensajes de WhatsApp no llevan DNI, datos médicos ni documentos.
+- **Falta**: un instructivo propio de la asociación para iniciar el trámite, si lo quieren.
 
 ## Trazabilidad: qué falta para que funcione de punta a punta
 
@@ -188,6 +193,8 @@ Oculta para socios (ver A). Cuando se retome:
 | `0013` | Archivos de credenciales por hoja, mensaje para el socio y reemplazos. Es la que el pedido llama «0012»: se renumeró porque la `0012` publicada es la de categorías. El SQL no cambió. | **Publicada el 3/11.** |
 | `0014` | Fotos de productos. | **Publicada el 3/11.** |
 | `0015` | Recordatorio de cuota: configuración y registro de envíos. | **Publicada el 3/11.** |
+| `0016` | Forma de pago de cada socio (mensual, trimestral o semestral), con quién la eligió y cuándo. | Local, para publicar. |
+| `0017` | Ficha técnica del producto (cosecha, laboratorio, análisis, THC/CBD, perfil) y certificado PDF. | Local, para publicar. |
 
 **Compatibilidad**: las tres solo agregan tablas, columnas y tipos, sin borrar ni transformar datos. La versión publicada sigue funcionando con ellas aplicadas.
 

@@ -1,4 +1,5 @@
 import { CONTACT } from "@/lib/constants";
+import { officialWhatsAppLink, PUBLIC_QUESTION_MESSAGE } from "@/lib/whatsapp";
 import { EditorialSection } from "@/components/brand/editorial-section";
 import { DevTag } from "@/components/ui/display";
 
@@ -18,7 +19,11 @@ export default function Contact({ demo = false }: { demo?: boolean }) {
           <div key={label} className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-5">
             <dt className="text-eyebrow text-arena-700">{label}</dt>
             <dd className="font-display text-[1.375rem] leading-tight break-words text-foreground">
-              {value || (
+              {value && label === "WhatsApp" && officialWhatsAppLink(PUBLIC_QUESTION_MESSAGE) ? (
+                <a href={officialWhatsAppLink(PUBLIC_QUESTION_MESSAGE)!} target="_blank" rel="noopener noreferrer" className="!text-foreground underline decoration-arena-400 underline-offset-4 hover:decoration-foreground">
+                  {value}
+                </a>
+              ) : value || (
                 <>
                   <span className="text-text-muted">Por confirmar</span> <DevTag>Dato pendiente</DevTag>
                 </>

@@ -1,7 +1,7 @@
 // The member register around `members`: number history, internal notes, fee metadata and the
 // historical-register import runs. Each table owns its own data; nothing is copied from persons.
 import { sql } from "drizzle-orm";
-import { date, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { date, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { members } from "./admissions";
 
@@ -43,9 +43,13 @@ export const memberNotes = pgTable(
   (t) => [index("member_notes_member_idx").on(t.memberId)],
 );
 
+/** How often a member chooses to pay the fee (monthly, quarterly or every six months). */
+export const feePlan = pgEnum("fee_plan", ["mensual", "trimestral", "semestral"]);
+
 /**
- * Administrative fee metadata from the historical register (when the member joined the fee and
- * the usual payment method). Not payments, balances nor debts: those belong to the finance stage.
+ * Administrative fee metadata: from the historical register (when the member joined the fee and
+ * the usual payment method) and how often they chose to pay, by themselves or through the admin.
+ * Not payments, balances nor debts: those belong to the finance stage.
  */
 export const memberFeeSettings = pgTable("member_fee_settings", {
   memberId: uuid("member_id")
@@ -53,6 +57,10 @@ export const memberFeeSettings = pgTable("member_fee_settings", {
     .references(() => members.id, { onDelete: "restrict" }),
   feeEnrollmentDate: date("fee_enrollment_date"),
   paymentMethod: text("payment_method"),
+  plan: feePlan("plan"),
+  /** Who set the plan last (the member's own account or an admin), and when. */
+  planChosenBy: uuid("plan_chosen_by").references(() => user.id, { onDelete: "set null" }),
+  planChosenAt: timestamp("plan_chosen_at", tz),
   updatedBy: uuid("updated_by").references(() => user.id, { onDelete: "restrict" }),
   updatedAt: timestamp("updated_at", tz).notNull().defaultNow(),
 });

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ImagePlus, Package, Pencil, Plus, Trash2 } from "lucide-react";
+import { FlaskConical, ImagePlus, Package, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataList } from "@/components/ui/data-list";
 import { Alert, Card, EmptyState, StatusBadge } from "@/components/ui/display";
@@ -10,7 +10,8 @@ import { Dialog } from "@/components/ui/dialog";
 import { Select, TextField, Textarea } from "@/components/ui/field";
 import { PHOTO_ACCEPT, preparePhoto, removePhoto, uploadPhoto, type PreparedPhoto } from "@/components/products/photo-client";
 import { AdminPageHeader } from "../../ui";
-import { createProductAction, deleteProductAction, renameVarietyAction, updateProductAction, type ProductFormValues } from "./actions";
+import { createProductAction, deleteProductAction, renameVarietyAction, updateProductAction, type ProductFormValues, type SheetFormValues } from "./actions";
+import { SheetDialog } from "./sheet-dialog";
 
 type Option = { value: string; label: string };
 export type ProductRow = {
@@ -28,6 +29,7 @@ export type ProductRow = {
   description: string | null;
   status: "activo" | "inactivo";
   photo: { version: string; width: number; height: number } | null;
+  sheet: SheetFormValues & { hasCertificate: boolean };
 };
 export type VarietyRow = { id: string; code: string; name: string | null; label: string };
 
@@ -57,6 +59,7 @@ export default function ProductsManager({ rows, varieties, options }: { rows: Pr
   const [deleting, setDeleting] = useState<ProductRow | null>(null);
   const [deleteError, setDeleteError] = useState("");
   const [photoOf, setPhotoOf] = useState<ProductRow | null>(null);
+  const [sheetOf, setSheetOf] = useState<ProductRow | null>(null);
   const [pending, startTransition] = useTransition();
 
   const open = (row: ProductRow | "new") => {
@@ -185,6 +188,9 @@ export default function ProductsManager({ rows, varieties, options }: { rows: Pr
                   <Button variant="secondary" shape="admin" className="min-h-9 min-w-9 px-0" onClick={() => open(r)} aria-label={`Editar ${r.name}`} title="Editar">
                     <Pencil aria-hidden className="size-4" strokeWidth={1.5} />
                   </Button>
+                  <Button variant="secondary" shape="admin" className="min-h-9 min-w-9 px-0" onClick={() => setSheetOf(r)} aria-label={`Ficha técnica de ${r.name}`} title="Ficha técnica">
+                    <FlaskConical aria-hidden className="size-4" strokeWidth={1.5} />
+                  </Button>
                   <Button
                     variant="danger"
                     shape="admin"
@@ -266,6 +272,17 @@ export default function ProductsManager({ rows, varieties, options }: { rows: Pr
       >
         {deleteError ? <Alert tone="error" live>{deleteError}</Alert> : <p className="text-body">Si solo dejó de ofrecerse, conviene marcarlo «Inactivo»: así conserva su historial.</p>}
       </Dialog>
+
+      <SheetDialog
+        key={`ficha-${sheetOf?.id ?? "ninguno"}`}
+        row={sheetOf}
+        onClose={() => setSheetOf(null)}
+        onSaved={(message) => {
+          setSheetOf(null);
+          setNotice(message);
+          router.refresh();
+        }}
+      />
 
       {/* Keyed by product: each one opens with a clean dialog. */}
       <PhotoDialog

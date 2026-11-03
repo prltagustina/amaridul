@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/choice";
 import { Alert } from "@/components/ui/display";
-import { Select, TextField } from "@/components/ui/field";
+import { TextField } from "@/components/ui/field";
 import { saveReminderSettingsAction, type SettingsValues } from "./actions";
 
-export function SettingsForm({ initial, allowed, frequencies }: { initial: SettingsValues; allowed: boolean; frequencies: { value: string; label: string }[] }) {
+export function SettingsForm({ initial, allowed }: { initial: SettingsValues; allowed: boolean }) {
   const router = useRouter();
   const [values, setValues] = useState(initial);
   const [errors, setErrors] = useState<Partial<Record<keyof SettingsValues, string>>>({});
@@ -46,15 +46,14 @@ export function SettingsForm({ initial, allowed, frequencies }: { initial: Setti
           {message.text}
         </Alert>
       )}
-      <div className="grid gap-5 sm:grid-cols-3">
-        <Select id="rem-frequency" label="Cada cuánto" options={frequencies} value={values.frequency} onChange={set("frequency")} error={errors.frequency} />
+      <div className="grid gap-5 sm:grid-cols-2">
         <TextField id="rem-day" type="number" inputMode="numeric" min={1} max={28} label="Desde el día" hint="Del 1 al 28." value={values.dayOfMonth} onChange={set("dayOfMonth")} error={errors.dayOfMonth} />
         <TextField id="rem-hour" type="number" inputMode="numeric" min={0} max={23} label="Desde la hora" hint="Hora de Argentina, de 0 a 23." value={values.hour} onChange={set("hour")} error={errors.hour} />
       </div>
       <Checkbox
         id="rem-enabled"
         label="Enviar el recordatorio automáticamente"
-        description={allowed ? "Sale una vez por período a los socios activos con email." : "No disponible en este entorno: el envío automático está apagado."}
+        description={allowed ? "Sale a los socios activos con email: cada mes o cada tres meses, según su forma de pago." : "No disponible en este entorno: el envío automático está apagado."}
         checked={values.enabled}
         disabled={!allowed}
         error={errors.enabled}

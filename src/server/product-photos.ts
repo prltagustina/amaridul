@@ -141,8 +141,11 @@ export function photoResponse(request: Request, photo: { bytes: Uint8Array; meta
 }
 
 /** Reads at most MAX_PHOTO_BYTES of a request body, whatever it claims. Null when it is larger. */
-export async function readPhotoBody(request: Request): Promise<Uint8Array | null> {
-  if (Number(request.headers.get("content-length") ?? 0) > MAX_PHOTO_BYTES) return null;
+export const readPhotoBody = (request: Request) => readLimitedBody(request, MAX_PHOTO_BYTES);
+
+/** Reads at most `max` bytes of a request body, whatever it claims. Null when it is larger. */
+export async function readLimitedBody(request: Request, max: number): Promise<Uint8Array | null> {
+  if (Number(request.headers.get("content-length") ?? 0) > max) return null;
   const reader = request.body?.getReader();
   if (!reader) return new Uint8Array();
   const chunks: Uint8Array[] = [];
@@ -151,7 +154,7 @@ export async function readPhotoBody(request: Request): Promise<Uint8Array | null
     const { done, value } = await reader.read();
     if (done) break;
     size += value.length;
-    if (size > MAX_PHOTO_BYTES) {
+    if (size > max) {
       await reader.cancel();
       return null;
     }

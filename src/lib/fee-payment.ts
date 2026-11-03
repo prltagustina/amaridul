@@ -1,7 +1,8 @@
 /**
  * How members pay the membership fee, exactly as the association gave it (2026-11). The one source
- * for the portal and the reminder email. Every value is text: the CVU keeps its leading zeros.
- * Amounts, due dates and whether someone is up to date are not in the system and are never shown.
+ * for the portal and the reminder email. Every account value is text: the CVU keeps its leading
+ * zeros. Each member chooses how often to pay (FEE_PLANS). Due dates, payments and whether someone
+ * is up to date are not in the system and are never shown.
  */
 export const FEE_PAYMENT = {
   holder: "Asociación Civil Amarí Dul",
@@ -15,6 +16,18 @@ export const FEE_PAYMENT = {
 } as const;
 
 export const FEE_PAGE = "/qr/cuota";
+
+/** The fee, by how often each member chooses to pay (2026-11-03): the same value per month. */
+export const FEE_PLANS = [
+  { id: "mensual", label: "Mensual", months: 1, amount: 5000 },
+  { id: "trimestral", label: "Trimestral", months: 3, amount: 15000 },
+  { id: "semestral", label: "Semestral", months: 6, amount: 30000 },
+] as const;
+
+/** «$ 5.000», as amounts are written in Argentina. */
+export const pesos = (n: number) => new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
+export const monthlyFee = FEE_PLANS[0].amount;
+export const periodLabel = (months: number) => (months === 1 ? "por mes" : `cada ${months} meses`);
 
 /** The CUIT's check digit (modulo 11), so a typo in the data above is caught by the tests. */
 export function validCuit(cuit: string): boolean {

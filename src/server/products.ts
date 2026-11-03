@@ -1,7 +1,7 @@
 import { and, asc, eq } from "drizzle-orm";
 import * as z from "zod";
 import type { Database } from "@/server/db/client";
-import { productPhotos, products, varieties } from "@/server/db/schema";
+import { productCertificates, productPhotos, products, varieties } from "@/server/db/schema";
 import { audit } from "@/server/audit/log";
 
 export type ProductType = (typeof products.$inferSelect)["type"];
@@ -73,7 +73,7 @@ export async function listVarieties(db: Database): Promise<Variety[]> {
   return db.select().from(varieties).orderBy(asc(varieties.code));
 }
 
-export type ProductWithVariety = Product & { variety: Pick<Variety, "code" | "name"> | null; photo: PhotoMeta | null };
+export type ProductWithVariety = Product & { variety: Pick<Variety, "code" | "name"> | null; photo: PhotoMeta | null; hasCertificate: boolean };
 
 /** What the pages need to show a photo: its size, and a version that changes with every new photo. */
 export type PhotoMeta = { version: string; width: number; height: number };
@@ -85,24 +85,38 @@ const photoOf = (ph: { sha256: string; width: number; height: number } | null) =
 
 export async function listProducts(db: Database): Promise<ProductWithVariety[]> {
   const rows = await db
-    .select({ p: products, code: varieties.code, vname: varieties.name, ph: photoColumns })
+    .select({ p: products, code: varieties.code, vname: varieties.name, ph: photoColumns, cert: productCertificates.productId })
     .from(products)
     .leftJoin(varieties, eq(varieties.id, products.varietyId))
     .leftJoin(productPhotos, eq(productPhotos.productId, products.id))
+    .leftJoin(productCertificates, eq(productCertificates.productId, products.id))
     .orderBy(asc(products.status), asc(products.name));
-  return rows.map((r) => ({ ...r.p, variety: r.code ? { code: r.code, name: r.vname } : null, photo: photoOf(r.ph) }));
+  return rows.map((r) => ({ ...r.p, variety: r.code ? { code: r.code, name: r.vname } : null, photo: photoOf(r.ph), hasCertificate: !!r.cert }));
 }
 
 export type CatalogItem = {
   id: string;
   name: string;
   type: string;
+  /** The raw type, for what only applies to some products (drops per ml for oils). */
+  kind: ProductType;
   variety: string | null;
   chemotype: string | null;
   cultivation: string | null;
   cultivatedOn: string | null;
   description: string | null;
   photo: PhotoMeta | null;
+  sheet: {
+    harvestedOn: string | null;
+    labName: string | null;
+    analyzedOn: string | null;
+    unit: "porcentaje" | "mg_ml" | "mg_g" | null;
+    thc: number | null;
+    cbd: number | null;
+    dropsPerMl: number | null;
+    cannabinoids: { compound: string; value: string }[];
+    hasCertificate: boolean;
+  };
 };
 
 /**
@@ -112,16 +126,18 @@ export type CatalogItem = {
  */
 export async function listCatalog(db: Database, onlyId?: string): Promise<CatalogItem[]> {
   const rows = await db
-    .select({ p: products, code: varieties.code, vname: varieties.name, ph: photoColumns })
+    .select({ p: products, code: varieties.code, vname: varieties.name, ph: photoColumns, cert: productCertificates.productId })
     .from(products)
     .leftJoin(varieties, eq(varieties.id, products.varietyId))
     .leftJoin(productPhotos, eq(productPhotos.productId, products.id))
+    .leftJoin(productCertificates, eq(productCertificates.productId, products.id))
     .where(onlyId ? and(eq(products.status, "activo"), eq(products.id, onlyId)) : eq(products.status, "activo"))
     .orderBy(asc(products.name));
-  return rows.map(({ p, code, vname, ph }) => ({
+  return rows.map(({ p, code, vname, ph, cert }) => ({
     id: p.id,
     name: p.name,
     type: productTypeLabel(p.type),
+    kind: p.type,
     variety: code ? varietyLabel({ code, name: vname }) : null,
     // "1", "2" or "3": shown under the label «Quimiotipo».
     chemotype: p.chemotype,
@@ -129,6 +145,17 @@ export async function listCatalog(db: Database, onlyId?: string): Promise<Catalo
     cultivatedOn: p.cultivatedOn,
     description: p.description,
     photo: photoOf(ph),
+    sheet: {
+      harvestedOn: p.harvestedOn,
+      labName: p.labName,
+      analyzedOn: p.analyzedOn,
+      unit: p.compositionUnit,
+      thc: p.thc === null ? null : Number(p.thc),
+      cbd: p.cbd === null ? null : Number(p.cbd),
+      dropsPerMl: p.dropsPerMl,
+      cannabinoids: p.cannabinoids ?? [],
+      hasCertificate: !!cert,
+    },
   }));
 }
 
