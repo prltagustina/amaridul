@@ -1,6 +1,6 @@
 # Amarí Dul — Seguimiento de la etapa 1
 
-Actualizado: 3/11/2026, tarde. Etapa 1 **abierta**. Bloques del cierre: **A** portal y catálogo, **B** credenciales, **C** cuota, **D** cierre. Todo lo nuevo de este documento está **local**: sin commit, push, deploy ni migraciones en producción. Se publica todo junto al cerrar el bloque (decisión del 3/11).
+Actualizado: 3/11/2026, 17 h. Etapa 1 **abierta**. Bloques del cierre: **A** portal y catálogo, **B** credenciales, **C** cuota, **D** cierre. **Publicado el 3/11** (`8bc4e3b` y `3c04d74`), con las migraciones `0013` a `0015` aplicadas en producción antes del deploy. Siguen **apagados**: la carga de archivos (`REPROCANN_UPLOADS`, hasta validarla) y el recordatorio de cuota (`FEE_REMINDERS`).
 
 **Fuentes**: los pedidos de Luci (A–E), el resumen de la planilla de seguimiento (no se pudo leer: pide sesión de Google; no se editó) y lo comprobado en código, en local y en producción en solo lectura.
 
@@ -14,10 +14,10 @@ Actualizado: 3/11/2026, tarde. Etapa 1 **abierta**. Bloques del cierre: **A** po
 
 | ID | Tema | Estado | Falta |
 |---|---|---|---|
-| A | Credencial REPROCANN | **Implementado y probado en local.** No validado con el almacenamiento real ni publicado. Detalle en «Credenciales». | Publicar con la migración `0013` y validar la carga real. Criterios de AD-012. «Sin REPROCANN activo no hay dispensa» no se aplica: no hay dispensa (AD-006). |
-| B | Productos en el portal | **Implementado y probado en local**: catálogo con foto, ficha del producto y carga de fotos desde administración (migración `0014`). | Publicar. En producción hay **2 productos activos** (FLORES-CC y FLORES-EX), **sin descripción ni foto**: hasta que se carguen, el catálogo muestra «Foto pendiente». |
-| C | Difusión por correo | **Recordatorio de cuota implementado y probado en local, apagado** (migración `0015`). No hay plataforma de campañas (fuera de alcance). | Definiciones de la sección «Cuota». |
-| D | Cuotas y Mercado Pago | **Implementado y probado en local**: «Administración de cuota» con los datos de pago. Sin montos, deudas ni vencimientos. | Acreditación automática y débito o suscripción: pendientes. Registro de pagos: propuesto, no implementado. |
+| A | Credencial REPROCANN | **Publicado el 3/11, con la carga de archivos apagada.** No validado con el almacenamiento real. Detalle en «Credenciales». | Validar la carga real y activar `REPROCANN_UPLOADS`. Criterios de AD-012. «Sin REPROCANN activo no hay dispensa» no se aplica: no hay dispensa (AD-006). |
+| B | Productos en el portal | **Publicado el 3/11**: catálogo con foto, ficha del producto y carga de fotos desde administración (migración `0014`). | Los **2 productos activos** (FLORES-CC y FLORES-EX) tienen desde el 3/11 una **descripción provisoria** (solo variedad y cultivo) y una **imagen ilustrativa** rotulada así, no una foto real. Reemplazarlas por las de la asociación. |
+| C | Difusión por correo | **Recordatorio de cuota publicado el 3/11, apagado** (migración `0015`). No hay plataforma de campañas (fuera de alcance). | Definiciones de la sección «Cuota». |
+| D | Cuotas y Mercado Pago | **Publicado el 3/11**: «Administración de cuota» con los datos de pago. Sin montos, deudas ni vencimientos. | Acreditación automática y débito o suscripción: pendientes. Registro de pagos: propuesto, no implementado. |
 | E | Socios existentes y padrón | **Publicado el 28/10.** Acceso digital desde la ficha y «Ya soy socio/a». Categoría «Activo y paciente» publicada el 3/11. | **Revisión de duplicados en producción (pendiente).** Un integrante de la Comisión todavía no está en el padrón: volver a importar su fila (ya tiene DNI en la planilla) y después asignarle «Activo y paciente». A otro socio le falta el DNI en la planilla (ya está importado). |
 
 ## Planilla compartida (AD-001 a AD-014)
@@ -40,7 +40,7 @@ Actualizado: 3/11/2026, tarde. Etapa 1 **abierta**. Bloques del cierre: **A** po
 | AD-014 | Roles: Director Médico, Director Agronómico, cultivo | — | Largo plazo | Un único rol de administración. | Junto con AD-012. |
 | — | Categoría «Activo» | — | Resuelto | **Publicado el 3/11** (migración `0012` aplicada y `141c5cf`): el alta formal ofrece Adherente o Paciente. «Activo» y «Activo y paciente» los asigna la asociación. 11 de las 12 personas de la Comisión ya figuran «Activo y paciente». | La persona que falta (ver E). Revisar con Luci las explicaciones de cada categoría. |
 | — | Número de socio en los correos | — | Resuelto | **Publicado el 3/11** (`ef39a59`): los correos no muestran el número, que todavía no es definitivo. El portal lo sigue mostrando. | Volver a mostrarlo cuando la numeración sea definitiva. |
-| — | Saludo del panel | — | Pedido 3/11 | **Local**: el inicio del panel saluda «Hola, Jefa» a la cuenta de Luci. La cuenta conserva su nombre, que es el que figura en el registro de cambios. | Publicar con el bloque. |
+| — | Saludo del panel | — | Resuelto | **Publicado el 3/11**: el inicio del panel saluda «Hola, Jefa» a la cuenta de Luci. La cuenta conserva su nombre, que es el que figura en el registro de cambios. | — |
 
 ## A. Portal y catálogo
 
@@ -185,19 +185,19 @@ Oculta para socios (ver A). Cuando se retome:
 | Número | Qué hace | Estado |
 |---|---|---|
 | `0012` | Agrega «Activo y paciente» a la categoría. | **Publicada el 3/11**, con autorización. |
-| `0013` | Archivos de credenciales por hoja, mensaje para el socio y reemplazos. Es la que el pedido llama «0012»: se renumeró porque la `0012` publicada es la de categorías. El SQL no cambió. | Local. |
-| `0014` | Fotos de productos. | Local. |
-| `0015` | Recordatorio de cuota: configuración y registro de envíos. | Local. |
+| `0013` | Archivos de credenciales por hoja, mensaje para el socio y reemplazos. Es la que el pedido llama «0012»: se renumeró porque la `0012` publicada es la de categorías. El SQL no cambió. | **Publicada el 3/11.** |
+| `0014` | Fotos de productos. | **Publicada el 3/11.** |
+| `0015` | Recordatorio de cuota: configuración y registro de envíos. | **Publicada el 3/11.** |
 
 **Compatibilidad**: las tres solo agregan tablas, columnas y tipos, sin borrar ni transformar datos. La versión publicada sigue funcionando con ellas aplicadas.
 
-**Orden para publicar**:
-1. Respaldo: un punto de restauración en Neon (rama desde el momento actual) inmediatamente antes.
-2. Aplicar `0013`, `0014` y `0015` con el método de siempre (copia de `main`, solo esas migraciones).
-3. Publicar el código.
-4. Prueba de humo.
+**Cómo se publicó (3/11)**:
+1. Build, pruebas y tipos en una copia de `main` con el commit a publicar.
+2. Migraciones `0013` a `0015` aplicadas en Neon desde esa copia: antes había 13 aplicadas, después 16, con las cuatro tablas y las dos columnas nuevas. **Punto de restauración: 3/11 a las 16:52:37 (hora argentina, 19:52:37 UTC).**
+3. Push a `main`; Vercel publicó en amaridul.com.
+4. Prueba de humo: páginas públicas 200, páginas privadas piden sesión, la ejecución programada responde 404 y la CSP sigue en `connect-src 'self'`.
 
-**Si algo falla**: volver a la versión anterior en Vercel (las tablas nuevas no la afectan). Si hiciera falta, restaurar la base desde la rama de respaldo.
+**Si algo falla**: volver a la versión anterior en Vercel (las tablas nuevas no la afectan). Si hiciera falta, restaurar la base en Neon al punto de restauración: se pierde lo cargado después.
 
 ## Seguridad: hallazgos
 
@@ -206,18 +206,18 @@ Oculta para socios (ver A). Cuando se retome:
 | Carpeta de Drive con credenciales | Se abre y se lista sin iniciar sesión. | **Abierto.** Restringirla (no se tocó). |
 | Planilla del padrón | Se abre sin iniciar sesión. | **Abierto.** Restringirla. |
 | Clave de Resend | `RESEND_API_KEY` existe en producción, marcada sensible. | **Abierto.** Rotación preparada: crear una clave nueva en Resend, reemplazarla en Vercel (Production, sensible), volver a publicar, probar un correo y recién entonces revocar la anterior. |
-| Copias ocultas (`EMAIL_BCC`) | Copiaban también los enlaces de activación y de cambio de contraseña. | **Local**: los correos con enlaces de acceso (invitación, activación, actualización de datos, contraseña) y el recordatorio de cuota ya no se copian. El resto sigue copiándose mientras dure la prueba. |
-| Herramienta de borrado de pruebas | Bastaba escribir la referencia para borrar un socio admitido con cuenta. | **Local**: en un deploy solo funciona con `TEST_DELETION=on` (se pone para una sesión de pruebas y se saca); nunca borra a quien tenga documentación REPROCANN con archivos. Quitarla antes de la entrega. |
+| Copias ocultas (`EMAIL_BCC`) | Copiaban también los enlaces de activación y de cambio de contraseña. | **Publicado el 3/11**: los correos con enlaces de acceso (invitación, activación, actualización de datos, contraseña) y el recordatorio de cuota ya no se copian. El resto sigue copiándose mientras dure la prueba. |
+| Herramienta de borrado de pruebas | Bastaba escribir la referencia para borrar un socio admitido con cuenta. | **Publicado el 3/11**: en producción ya no aparece; solo funciona con `TEST_DELETION=on` (se pone para una sesión de pruebas y se saca); nunca borra a quien tenga documentación REPROCANN con archivos. Quitarla antes de la entrega. |
 | Administradoras y segundo factor | `ADMIN_SECOND_FACTOR=optional` sigue en producción. | **Abierto.** Que Luci cambie su contraseña inicial; cada administradora activa TOTP y guarda sus códigos de recuperación; después, quitar la variable. |
 | Claves de cifrado | Solo están en Vercel, marcadas sensibles: no se pueden volver a leer. | **Abierto.** Si existe una copia sellada de cuando se generaron, guardarla fuera de línea. No rotar solo por la falta de copia: rotar implica volver a cifrar. |
 | Token de Vercel Blob | El store `amaridul-archivos` es **privado**, está vacío y en São Paulo. `BLOB_READ_WRITE_TOKEN` está en Production marcado **no sensible**. | Volver a crearlo como sensible antes de cargar documentos reales. `REPROCANN_UPLOADS` todavía no está en producción. |
-| Registros (logs) | — | **Local**: la terminal no registra DNI ni contraseñas, y fuera de la computadora de desarrollo los correos de consola no muestran enlaces. |
+| Registros (logs) | — | **Publicado**: la terminal no registra DNI ni contraseñas, y fuera de la computadora de desarrollo los correos de consola no muestran enlaces. |
 | Previews | Piden iniciar sesión en Vercel (redirigen a su SSO) y no tienen base de datos. | Comprobado. |
 
-## Antes de publicar este bloque
+## Después de publicar: qué falta
 
 - **Configuración**
-  - [ ] Migraciones `0013`, `0014` y `0015` con respaldo previo (sección «Migraciones»).
+  - [x] Migraciones `0013`, `0014` y `0015` con punto de restauración (3/11).
   - [ ] `REPROCANN_UPLOADS=on` después de validar la carga real con un archivo ficticio.
   - [ ] `TEST_DELETION=on` solo si todavía hacen falta borrados de prueba.
   - [ ] `FEE_REMINDERS` **sin poner**, hasta que se defina el recordatorio.
@@ -232,7 +232,7 @@ Oculta para socios (ver A). Cuando se retome:
     - revisar la consola del navegador: ningún origen bloqueado por la CSP;
     - ver un PDF en Safari y en iPhone.
 - **Contenido**
-  - [ ] Fotos y descripciones de los 2 productos.
+  - [ ] Fotos y descripciones reales de los 2 productos (hoy, provisorias e ilustrativas).
   - [ ] Instructivo y video de REPROCANN; WhatsApp y correo oficiales (AD-003).
 - **Seguridad**: la tabla anterior.
 
