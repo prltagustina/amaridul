@@ -2,11 +2,12 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
 import { getKeyrings } from "@/server/crypto";
-import { CLOSE_REASONS, formalAdmissionOf, getPreAdmission, latestInvitation } from "@/server/pre-admissions";
+import { CLOSE_REASONS, formalAdmissionOf, getPreAdmission, latestInvitation, memberOfPreAdmission } from "@/server/pre-admissions";
 import { DetailList } from "@/components/ui/data-list";
 import { Card } from "@/components/ui/display";
 import { AdminPageHeader } from "../../../ui";
 import { existingRequestOfPreAdmission } from "@/server/existing-members";
+import { testDeletionAllowed } from "@/server/test-data";
 import PreAdmissionActions from "./actions-panel";
 
 const dateFormat = new Intl.DateTimeFormat("es-AR", { dateStyle: "long", timeStyle: "short", hourCycle: "h23", timeZone: "America/Argentina/Buenos_Aires" });
@@ -18,7 +19,7 @@ export default async function PreadmisionPage({ params }: { params: Promise<{ id
   const db = await getDb();
   const pre = await getPreAdmission(db, getKeyrings().field, id);
   if (!pre) notFound();
-  const [invitation, formal, existingRequest] = await Promise.all([latestInvitation(db, pre.id), formalAdmissionOf(db, pre.id), existingRequestOfPreAdmission(db, pre.id)]);
+  const [invitation, formal, existingRequest, member] = await Promise.all([latestInvitation(db, pre.id), formalAdmissionOf(db, pre.id), existingRequestOfPreAdmission(db, pre.id), memberOfPreAdmission(db, pre.id)]);
 
   return (
     <>
@@ -61,6 +62,8 @@ export default async function PreadmisionPage({ params }: { params: Promise<{ id
           closedReason={pre.closedReason}
           closeReasons={[...CLOSE_REASONS]}
           existingRequest={existingRequest && { id: existingRequest.id, reference: existingRequest.reference }}
+          member={member}
+          testTools={testDeletionAllowed()}
           notes={pre.notes.map((n) => ({ id: n.id, text: n.body, at: noteFormat.format(n.createdAt), author: n.author }))}
         />
       </div>

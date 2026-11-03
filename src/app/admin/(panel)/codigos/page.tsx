@@ -1,4 +1,6 @@
 import { requireAdmin } from "@/server/auth/session";
+import { traceabilityPrototype } from "@/lib/features";
+import { InDevelopment } from "../../in-development";
 import { readState } from "@/lib/demo";
 import { DataList } from "@/components/ui/data-list";
 import { DevStateBar } from "@/components/ui/dev-state-bar";
@@ -9,6 +11,14 @@ import { AdminPageHeader } from "../../ui";
 
 export default async function CodigosPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requireAdmin();
+  if (!traceabilityPrototype())
+    return (
+      <InDevelopment
+        title="Códigos de envase"
+        purpose="Los códigos impresos en cada envase, para que el socio consulte la trazabilidad de su producto."
+        planned={["Generar un código por lote para imprimir en los envases", "Que el socio consulte con ese código el lote, su análisis y su certificado", "Sin identificar a ningún socio ni registrar quién consulta"]}
+      />
+    );
   const state = await readState(searchParams, LIST_STATES);
   return (
     <>

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { and, count, desc, eq, inArray, isNull } from "drizzle-orm";
 import * as z from "zod";
 import type { Database } from "@/server/db/client";
-import { admissions, oneTimeTokens, preAdmissionNotes, preAdmissions, user } from "@/server/db/schema";
+import { admissions, existingMemberRequests, members, oneTimeTokens, preAdmissionNotes, preAdmissions, user } from "@/server/db/schema";
 import { audit } from "@/server/audit/log";
 import { decryptField, encryptField } from "@/server/crypto/field-encryption";
 import { hashToken } from "@/server/crypto/tokens";
@@ -270,6 +270,22 @@ export async function latestInvitation(db: Database, id: string) {
 }
 
 /** The formal request sent from this preadmission's invitation, if any. */
+/** The member this preadmission ended up as: through an approved admission or a «Ya soy socio/a» request. */
+export async function memberOfPreAdmission(db: Database, preAdmissionId: string) {
+  const [viaAdmission] = await db
+    .select({ id: members.id, memberNumber: members.memberNumber })
+    .from(members)
+    .innerJoin(admissions, eq(admissions.id, members.admissionId))
+    .where(eq(admissions.preAdmissionId, preAdmissionId));
+  if (viaAdmission) return viaAdmission;
+  const [viaRequest] = await db
+    .select({ id: members.id, memberNumber: members.memberNumber })
+    .from(members)
+    .innerJoin(existingMemberRequests, eq(existingMemberRequests.linkedMemberId, members.id))
+    .where(eq(existingMemberRequests.preAdmissionId, preAdmissionId));
+  return viaRequest ?? null;
+}
+
 export async function formalAdmissionOf(db: Database, preAdmissionId: string) {
   const [a] = await db.select({ id: admissions.id, reference: admissions.reference }).from(admissions).where(eq(admissions.preAdmissionId, preAdmissionId));
   return a ?? null;

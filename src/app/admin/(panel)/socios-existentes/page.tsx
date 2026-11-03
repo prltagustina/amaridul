@@ -24,8 +24,16 @@ export default async function SociosExistentesPage({ searchParams }: { searchPar
   return (
     <>
       <AdminPageHeader
-        title="Socios existentes"
-        description="Personas que ya eran socias antes del sistema y actualizan su legajo. No pasan por una nueva admisión: verificá cada una con el registro de la asociación."
+        title="Solicitudes de socios existentes"
+        description={
+          <>
+            Pedidos de «Ya soy socio/a»: personas que ya eran socias antes del sistema y actualizan su legajo. No es otro padrón: cada solicitud se verifica y se registra o vincula con un socio de{" "}
+            <Link href="/admin/socios" className="!text-forest underline underline-offset-2">
+              Socios
+            </Link>
+            . No pasan por una nueva admisión.
+          </>
+        }
       />
       <Filters>
         {FILTERS.map((f) => (
@@ -44,7 +52,7 @@ export default async function SociosExistentesPage({ searchParams }: { searchPar
       </Filters>
       <ListStateView state={rows.length ? "default" : "empty"} emptyTitle="No hay solicitudes" emptyDescription="Cuando un socio complete «Ya soy socio/a» en Sumate, aparece acá.">
         <DataList
-          caption="Socios existentes"
+          caption="Solicitudes de socios existentes"
           rows={rows}
           rowKey={(r) => r.id}
           rowHref={(r) => `/admin/socios-existentes/${r.id}`}

@@ -13,6 +13,7 @@ import { categoryOptions } from "@/demo/content";
 import { existingRequestStatus } from "../../../status";
 import { AdminPageHeader } from "../../../ui";
 import ExistingMemberActions from "./actions-panel";
+import { testDeletionAllowed } from "@/server/test-data";
 import { DeleteTestRequest } from "./delete-test-request";
 
 const dateFormat = new Intl.DateTimeFormat("es-AR", { dateStyle: "long", timeStyle: "short", hourCycle: "h23", timeZone: "America/Argentina/Buenos_Aires" });
@@ -59,7 +60,7 @@ export default async function SocioExistentePage({ params }: { params: Promise<{
   return (
     <>
       <AdminPageHeader
-        back={{ href: "/admin/socios-existentes", label: "Socios existentes" }}
+        back={{ href: "/admin/socios-existentes", label: "Solicitudes de socios existentes" }}
         eyebrow={r.reference}
         title={r.fullName}
         description={r.submittedAt ? `Datos recibidos el ${dateFormat.format(r.submittedAt)}` : "Todavía no completó sus datos"}
@@ -146,7 +147,7 @@ export default async function SocioExistentePage({ params }: { params: Promise<{
             writesEnabled={existingMemberWritesEnabled()}
             categories={categoryOptions.map((c) => ({ value: c.value, label: c.label }))}
           />
-          <DeleteTestRequest id={r.id} reference={r.reference} />
+          {testDeletionAllowed() && <DeleteTestRequest id={r.id} reference={r.reference} />}
         </div>
       </div>
     </>

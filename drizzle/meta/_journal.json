@@ -92,6 +92,27 @@
       "when": 1793724125423,
       "tag": "0012_categoria_activo_paciente",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793724834327,
+      "tag": "0013_reprocann_archivos",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793731717417,
+      "tag": "0014_producto_fotos",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1793733863153,
+      "tag": "0015_recordatorio_cuota",
+      "breakpoints": true
     }
   ]
 }

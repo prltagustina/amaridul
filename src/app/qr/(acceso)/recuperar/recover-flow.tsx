@@ -49,7 +49,7 @@ export default function RecoverFlow({ initial, demo }: { initial: Step; demo: bo
         <EmptyState
           icon={<MailCheck aria-hidden className="size-10" strokeWidth={1.25} />}
           title="Te enviamos un link"
-          description="Si el DNI corresponde a una cuenta de socio, vas a recibir un email: para crear una contraseña nueva o, si todavía no activaste tu cuenta, para activarla. Revisá también Spam."
+          description="Si el DNI corresponde a una cuenta de socio, vas a recibir un email: para crear una contraseña nueva o, si todavía no activaste tu cuenta, para activarla. Revisá también Spam. Si sos socio desde antes de la web y la asociación todavía no te invitó a activar tu cuenta, no va a llegar nada: pedile la invitación o completá «Ya soy socio/a»."
           action={
             demo ? (
               <div className="flex flex-col items-center gap-3">
@@ -58,7 +58,11 @@ export default function RecoverFlow({ initial, demo }: { initial: Step; demo: bo
                 </Button>
                 <DevTag>Demo · el link real llega por email</DevTag>
               </div>
-            ) : undefined
+            ) : (
+              <TextLink href="/sumate/socio-existente" className="inline-flex min-h-11 items-center">
+                Completar «Ya soy socio/a»
+              </TextLink>
+            )
           }
         />
       </AccessShell>
@@ -126,7 +130,11 @@ export default function RecoverFlow({ initial, demo }: { initial: Step; demo: bo
         </form>
       </TabbedCard>
       <p className="text-small text-text-muted">
-        ¿Cambiaste de email? Escribinos y lo actualizamos.{" "}
+        ¿Cambiaste de email? Escribinos y lo actualizamos. ¿Sos socio desde antes de la web y nunca activaste tu cuenta?{" "}
+        <TextLink href="/sumate/socio-existente" className="inline-flex min-h-11 items-center">
+          Completá «Ya soy socio/a»
+        </TextLink>
+        {" · "}
         <TextLink href="/qr/login" className="inline-flex min-h-11 items-center">
           Volver al ingreso
         </TextLink>

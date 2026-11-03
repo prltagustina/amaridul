@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Package, Pencil, Plus, Trash2 } from "lucide-react";
+import { ImagePlus, Package, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataList } from "@/components/ui/data-list";
 import { Alert, Card, EmptyState, StatusBadge } from "@/components/ui/display";
 import { Dialog } from "@/components/ui/dialog";
 import { Select, TextField, Textarea } from "@/components/ui/field";
+import { PHOTO_ACCEPT, preparePhoto, removePhoto, uploadPhoto, type PreparedPhoto } from "@/components/products/photo-client";
 import { AdminPageHeader } from "../../ui";
 import { createProductAction, deleteProductAction, renameVarietyAction, updateProductAction, type ProductFormValues } from "./actions";
 
@@ -26,6 +27,7 @@ export type ProductRow = {
   cultivatedOn: string;
   description: string | null;
   status: "activo" | "inactivo";
+  photo: { version: string; width: number; height: number } | null;
 };
 export type VarietyRow = { id: string; code: string; name: string | null; label: string };
 
@@ -40,6 +42,7 @@ const STATUS_OPTIONS = [
   { value: "inactivo", label: "Inactivo" },
 ];
 const missing = <span className="text-text-muted">Sin cargar</span>;
+const photoUrl = (r: ProductRow) => (r.photo ? `/admin/productos/${r.id}/foto?v=${r.photo.version}` : null);
 
 export default function ProductsManager({ rows, varieties, options }: { rows: ProductRow[]; varieties: VarietyRow[]; options: { types: Option[]; cultivation: Option[]; chemotypes: Option[] } }) {
   const router = useRouter();
@@ -53,6 +56,7 @@ export default function ProductsManager({ rows, varieties, options }: { rows: Pr
   const [notice, setNotice] = useState("");
   const [deleting, setDeleting] = useState<ProductRow | null>(null);
   const [deleteError, setDeleteError] = useState("");
+  const [photoOf, setPhotoOf] = useState<ProductRow | null>(null);
   const [pending, startTransition] = useTransition();
 
   const open = (row: ProductRow | "new") => {
@@ -139,6 +143,25 @@ export default function ProductsManager({ rows, varieties, options }: { rows: Pr
           rowKey={(r) => r.id}
           columns={[
             { key: "name", header: "Producto", primary: true, render: (r) => r.name },
+            {
+              key: "photo",
+              header: "Foto",
+              render: (r) => (
+                <button
+                  type="button"
+                  onClick={() => setPhotoOf(r)}
+                  aria-label={r.photo ? `Ver o cambiar la foto de ${r.name}` : `Agregar una foto a ${r.name}`}
+                  className="flex h-10 w-14 items-center justify-center overflow-hidden !rounded-[8px] border border-border bg-mist text-forest hover:border-forest/60"
+                >
+                  {r.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- a private, already small thumbnail
+                    <img src={photoUrl(r)!} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <ImagePlus aria-hidden className="size-4" strokeWidth={1.5} />
+                  )}
+                </button>
+              ),
+            },
             { key: "type", header: "Tipo", render: (r) => r.typeLabel },
             { key: "variety", header: "Variedad", render: (r) => r.varietyLabel ?? missing },
             {
@@ -244,6 +267,18 @@ export default function ProductsManager({ rows, varieties, options }: { rows: Pr
         {deleteError ? <Alert tone="error" live>{deleteError}</Alert> : <p className="text-body">Si solo dejó de ofrecerse, conviene marcarlo «Inactivo»: así conserva su historial.</p>}
       </Dialog>
 
+      {/* Keyed by product: each one opens with a clean dialog. */}
+      <PhotoDialog
+        key={photoOf?.id ?? "ninguno"}
+        row={photoOf}
+        onClose={() => setPhotoOf(null)}
+        onSaved={(message) => {
+          setPhotoOf(null);
+          setNotice(message);
+          router.refresh();
+        }}
+      />
+
       <Dialog
         open={variety !== null}
         onClose={() => setVariety(null)}
@@ -256,5 +291,111 @@ export default function ProductsManager({ rows, varieties, options }: { rows: Pr
         <TextField id="variety-name" label="Nombre definitivo" optional value={varietyName} onChange={(e) => setVarietyName(e.target.value)} error={varietyError} maxLength={60} autoComplete="off" />
       </Dialog>
     </>
+  );
+}
+
+/**
+ * The photo members see in the catalog. It is prepared in this browser (at most 1600 px, as a JPEG,
+ * without camera or location data) and saved apart from the members' private documents.
+ */
+function PhotoDialog({ row, onClose, onSaved }: { row: ProductRow | null; onClose: () => void; onSaved: (message: string) => void }) {
+  const picker = useRef<HTMLInputElement>(null);
+  const [prepared, setPrepared] = useState<(PreparedPhoto & { preview: string }) | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState<"" | "preparando" | "guardando" | "quitando">("");
+
+  // The preview's memory is released when it is replaced or the dialog goes away.
+  useEffect(() => () => void (prepared && URL.revokeObjectURL(prepared.preview)), [prepared]);
+
+  async function pick(file: File | undefined) {
+    if (!file) return;
+    setError("");
+    setBusy("preparando");
+    try {
+      const photo = await preparePhoto(file);
+      setPrepared({ ...photo, preview: URL.createObjectURL(photo.blob) });
+    } catch (e) {
+      setPrepared(null);
+      setError((e as Error).message);
+    } finally {
+      setBusy("");
+      if (picker.current) picker.current.value = "";
+    }
+  }
+
+  async function save() {
+    if (!row || !prepared) return;
+    setBusy("guardando");
+    setError("");
+    try {
+      await uploadPhoto(row.id, prepared);
+      onSaved(`Foto de «${row.name}» guardada.`);
+    } catch (e) {
+      setError((e as Error).message);
+      setBusy("");
+    }
+  }
+
+  async function remove() {
+    if (!row) return;
+    setBusy("quitando");
+    setError("");
+    try {
+      await removePhoto(row.id);
+      onSaved(`«${row.name}» quedó sin foto.`);
+    } catch (e) {
+      setError((e as Error).message);
+      setBusy("");
+    }
+  }
+
+  const current = row && photoUrl(row);
+  const shown = prepared?.preview ?? current;
+  return (
+    <Dialog
+      open={row !== null}
+      onClose={onClose}
+      title={row ? `Foto de ${row.name}` : ""}
+      description={row?.status === "activo" ? "Se ve en el catálogo de socios." : "El producto está inactivo: la foto se va a ver cuando vuelva a estar activo."}
+      confirmLabel={busy === "guardando" ? "Guardando…" : "Guardar foto"}
+      confirmDisabled={!prepared || busy !== ""}
+      onConfirm={() => void save()}
+      wide
+    >
+      {error && (
+        <Alert tone="error" live>
+          {error}
+        </Alert>
+      )}
+      {/* A fixed height keeps «Elegir otra foto» and the hint on screen on a laptop. */}
+      <div className="flex h-56 items-center justify-center overflow-hidden !rounded-control border border-border bg-mist sm:h-72">
+        {shown ? (
+          // eslint-disable-next-line @next/next/no-img-element -- a local preview or a private photo
+          <img src={shown} alt={prepared ? "Vista previa de la foto nueva" : `Foto actual de ${row?.name ?? ""}`} className="h-full w-full object-contain" />
+        ) : (
+          <p className="px-6 text-center text-small text-text-muted">Todavía no tiene foto. En el catálogo se muestra un fondo con la leyenda «Foto pendiente».</p>
+        )}
+      </div>
+      {prepared && (
+        <p className="text-small text-text-muted" role="status">
+          Foto nueva lista para guardar: {prepared.width} × {prepared.height} píxeles, {Math.max(1, Math.round(prepared.blob.size / 1024))} KB.
+        </p>
+      )}
+      <div className="flex flex-wrap items-center gap-3">
+        <input ref={picker} id="product-photo" type="file" accept={PHOTO_ACCEPT} className="peer sr-only" onChange={(e) => void pick(e.target.files?.[0])} disabled={busy !== ""} />
+        <label
+          htmlFor="product-photo"
+          className="inline-flex min-h-11 cursor-pointer items-center gap-2 !rounded-control border border-forest px-5 !text-forest hover:bg-forest-soft peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-forest peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+        >
+          <ImagePlus aria-hidden className="size-4" strokeWidth={1.5} /> {busy === "preparando" ? "Preparando…" : current || prepared ? "Elegir otra foto" : "Elegir foto"}
+        </label>
+        {current && !prepared && (
+          <Button variant="ghost" shape="admin" onClick={() => void remove()} disabled={busy !== ""} loading={busy === "quitando"} loadingLabel="Quitando…">
+            <Trash2 aria-hidden className="size-4" strokeWidth={1.5} /> Quitar foto
+          </Button>
+        )}
+      </div>
+      <p className="text-small text-text-muted">JPG, PNG o WebP. Se achica en esta computadora a 1600 píxeles como máximo y se guarda sin los datos de la cámara ni de ubicación.</p>
+    </Dialog>
   );
 }

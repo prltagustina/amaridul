@@ -1,11 +1,22 @@
 import { and, eq, inArray, ne, or } from "drizzle-orm";
 import type { Database } from "@/server/db/client";
-import { admissionDecisions, admissions, auditLogs, existingMemberRequests, memberFeeSettings, memberNotes, memberNumbers, members, oneTimeTokens, persons, preAdmissions, reprocannCases, reprocannDocuments, user } from "@/server/db/schema";
+import { admissionDecisions, admissions, auditLogs, existingMemberRequests, memberFeeSettings, memberNotes, memberNumbers, members, oneTimeTokens, persons, preAdmissions, reprocannCases, reprocannDocumentFiles, reprocannDocuments, user } from "@/server/db/schema";
 import { audit } from "@/server/audit/log";
 import { INVITATION_KIND } from "@/server/pre-admissions";
 import { UPDATE_LINK_KIND } from "@/server/existing-members";
 
 export class DeleteNotAllowedError extends Error {}
+
+/**
+ * The tools that delete test requests exist on the development machine and in tests. On a
+ * deployment only while TEST_DELETION=on, set for a testing session and removed afterwards, so a
+ * real record cannot be deleted by mistake once the testing phase is over.
+ */
+export const testDeletionAllowed = () =>
+  process.env.TEST_DELETION === "on" || (!process.env.VERCEL && process.env.APP_ENV !== "production" && process.env.APP_ENV !== "preview"); // unset APP_ENV means local, as in env.ts
+const assertAllowed = () => {
+  if (!testDeletionAllowed()) throw new DeleteNotAllowedError("Borrar solicitudes de prueba no está habilitado en este entorno.");
+};
 
 /**
  * The member and what hangs from them: tokens, number history, notes, fee data, REPROCANN record,
@@ -21,7 +32,17 @@ async function deleteMemberChain(t: Database, member: { id: string; userId: stri
   await t.delete(memberFeeSettings).where(eq(memberFeeSettings.memberId, member.id));
   const cases = await t.select({ id: reprocannCases.id }).from(reprocannCases).where(eq(reprocannCases.memberId, member.id));
   if (cases.length) {
-    await t.delete(reprocannDocuments).where(inArray(reprocannDocuments.caseId, cases.map((c) => c.id)));
+    const caseIds = cases.map((c) => c.id);
+    // Files are documentary evidence: whoever has them may be a real person. Never deleted from here.
+    const [withFiles] = await t
+      .select({ id: reprocannDocumentFiles.id })
+      .from(reprocannDocumentFiles)
+      .innerJoin(reprocannDocuments, eq(reprocannDocuments.id, reprocannDocumentFiles.documentId))
+      .where(inArray(reprocannDocuments.caseId, caseIds))
+      .limit(1);
+    if (withFiles) throw new DeleteNotAllowedError("Tiene documentación REPROCANN con archivos cargados: puede ser un registro real y no se borra desde acá.");
+    await t.update(reprocannDocuments).set({ replacedBy: null }).where(inArray(reprocannDocuments.caseId, caseIds));
+    await t.delete(reprocannDocuments).where(inArray(reprocannDocuments.caseId, caseIds));
     await t.delete(reprocannCases).where(eq(reprocannCases.memberId, member.id));
   }
   await t.delete(members).where(eq(members.id, member.id));
@@ -38,6 +59,7 @@ async function deleteMemberChain(t: Database, member: { id: string; userId: stri
  * entries stay; the deleted account's own entries keep no reference to it. Remove before delivery.
  */
 export async function deleteTestRequest(db: Database, actorUserId: string, preAdmissionId: string, confirmReference: string) {
+  assertAllowed();
   return db.transaction(async (tx) => {
     const t = tx as unknown as Database;
     const [pre] = await t.select({ id: preAdmissions.id, reference: preAdmissions.reference }).from(preAdmissions).where(eq(preAdmissions.id, preAdmissionId));
@@ -85,6 +107,7 @@ export async function deleteTestRequest(db: Database, actorUserId: string, preAd
  * Audit entries stay. Remove before delivery.
  */
 export async function deleteTestExistingMemberRequest(db: Database, actorUserId: string, requestId: string, confirmReference: string) {
+  assertAllowed();
   return db.transaction(async (tx) => {
     const t = tx as unknown as Database;
     const [r] = await t

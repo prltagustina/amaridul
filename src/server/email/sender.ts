@@ -18,10 +18,24 @@ export interface EmailSender {
   send(message: EmailMessage): Promise<void>;
 }
 
+const maskAddress = (to: string) => to.replace(/^(.{0,2})[^@]*(@.*)?$/, (_, head: string, domain = "") => `${head}***${domain}`);
+
+/**
+ * Writes emails to the terminal instead of sending them. On the development machine the whole
+ * message is printed, links included: it is the local inbox. Anywhere else (EMAIL_DELIVERY=log on a
+ * deployment) only a summary is logged, because activation and reset links grant access.
+ */
 export class ConsoleEmailSender implements EmailSender {
-  constructor(private readonly from: string) {}
+  constructor(
+    private readonly from: string,
+    private readonly full: boolean = !process.env.VERCEL && (process.env.APP_ENV === "local" || process.env.APP_ENV === "test"),
+  ) {}
 
   async send(message: EmailMessage): Promise<void> {
+    if (!this.full) {
+      console.info(`Email no enviado (solo registro): plantilla ${message.template} para ${maskAddress(message.to)}. Contenido omitido: puede tener enlaces de acceso.`);
+      return;
+    }
     console.info(
       [
         `──── EMAIL NO ENVIADO (solo registro) · ${message.subject} ────`,
@@ -45,6 +59,12 @@ import { LOCKUP_CID, LOCKUP_URL } from "./layout";
 export class EmailDeliveryError extends Error {}
 
 /**
+ * Emails never blind-copied to the team: their link opens someone's account or data (invitation,
+ * activation, data update, password reset), or they go to every member at once (the fee reminder).
+ */
+export const NEVER_COPIED: ReadonlySet<string> = new Set(["admission_invitation", "admission_approved", "existing_member_update_link", "existing_member_access", "password_reset", "fee_reminder"]);
+
+/**
  * Resend (https://resend.com) over its REST API: one POST per message, plain text. The API key is a
  * server-only secret; failures throw so callers can log them (they never lose the stored request).
  */
@@ -60,8 +80,8 @@ export class ResendEmailSender implements EmailSender {
   ) {}
 
   async send(message: EmailMessage): Promise<void> {
-    // Never copy someone on their own email: they would get it twice.
-    const bcc = this.bcc.filter((a) => a !== message.to.toLowerCase());
+    // Never copy someone on their own email (they would get it twice), nor anyone on an access link.
+    const bcc = NEVER_COPIED.has(message.template) ? [] : this.bcc.filter((a) => a !== message.to.toLowerCase());
     const res = await this.fetchImpl("https://api.resend.com/emails", {
       method: "POST",
       headers: {

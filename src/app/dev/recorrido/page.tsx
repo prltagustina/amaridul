@@ -46,7 +46,12 @@ const GROUPS: Group[] = [
       { href: "/qr/recuperar", label: "Recuperar contraseña", states: st("/qr/recuperar", ["enviado", "nueva", "expired", "success"]) },
       { href: "/qr/activar", label: "Activar cuenta", states: st("/qr/activar", ["loading", "expired", "unauthorized", "success"]) },
       { href: "/qr/mi-espacio", label: "Mi espacio", states: st("/qr/mi-espacio", ["loading", "error"]) },
-      { href: "/qr/trazabilidad", label: "Trazabilidad", states: st("/qr/trazabilidad", ["lote", "invalido", "loading", "error", "sin-certificado", "certificado"]) },
+      { href: "/qr/reprocann", label: "REPROCANN" },
+      { href: "/qr/productos", label: "Productos" },
+      { href: "/qr/cuota", label: "Administración de cuota" },
+      { href: "/qr/ayuda", label: "Ayuda" },
+      // Hidden from members; the local demo keeps the design reviewable.
+      { href: "/qr/trazabilidad/demo", label: "Trazabilidad (demo local, oculta para socios)", states: st("/qr/trazabilidad/demo", ["lote", "invalido", "loading", "error", "sin-certificado", "certificado"]) },
     ],
   },
   {

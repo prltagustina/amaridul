@@ -25,6 +25,8 @@ export default function PreAdmissionActions({
   closeReasons,
   notes,
   existingRequest,
+  member,
+  testTools,
 }: {
   id: string;
   reference: string;
@@ -37,6 +39,10 @@ export default function PreAdmissionActions({
   notes: Note[];
   /** The legajo update opened when this person turned out to be an existing member. */
   existingRequest: { id: string; reference: string } | null;
+  /** The member this request ended up as, once resolved. */
+  member: { id: string; memberNumber: string | null } | null;
+  /** The test-deletion tool is available in this environment. */
+  testTools: boolean;
 }) {
   const [dialog, setDialog] = useState<DialogKind>(null);
   const [notice, setNotice] = useState<{ tone: "success" | "error"; text: string } | null>(null);
@@ -107,6 +113,15 @@ export default function PreAdmissionActions({
               <BadgeCheck aria-hidden className="size-4" strokeWidth={1.5} /> Es socio existente
             </Button>
           )}
+          {member && (
+            <p className="text-small text-text-muted">
+              Ya es socio del padrón:{" "}
+              <Link href={`/admin/socios/${member.id}`} className="font-medium !text-forest underline underline-offset-2">
+                {member.memberNumber ? `ver ficha · ${member.memberNumber}` : "ver ficha"}
+              </Link>
+              .
+            </p>
+          )}
           {status === "derivada" && existingRequest && (
             <p className="text-small text-text-muted">
               Es socio existente: sigue como actualización de legajo{" "}
@@ -152,25 +167,27 @@ export default function PreAdmissionActions({
       </Card>
 
       {/* TEMPORARY (testing phase): remove before delivery together with src/server/test-data.ts. */}
-      <Card className="space-y-3 border-dashed border-error-fg/40">
-        <h2 className="text-h3">Solicitud de prueba</h2>
-        <p className="text-small text-text-muted">
-          Borra esta preadmisión y todo lo que vino de ella: la solicitud formal, el socio y su cuenta. No se puede deshacer. Disponible solo durante las pruebas.
-        </p>
-        <Button
-          shape="admin"
-          variant="danger"
-          full
-          onClick={() => {
-            setConfirmRef("");
-            setDeleteError("");
-            setDialog("eliminar");
-          }}
-          disabled={pending}
-        >
-          <Trash2 aria-hidden className="size-4" strokeWidth={1.5} /> Eliminar solicitud de prueba
-        </Button>
-      </Card>
+      {testTools && (
+        <Card className="space-y-3 border-dashed border-error-fg/40">
+          <h2 className="text-h3">Solicitud de prueba</h2>
+          <p className="text-small text-text-muted">
+            Borra esta preadmisión y todo lo que vino de ella: la solicitud formal, el socio y su cuenta. No se puede deshacer. Disponible solo durante las pruebas.
+          </p>
+          <Button
+            shape="admin"
+            variant="danger"
+            full
+            onClick={() => {
+              setConfirmRef("");
+              setDeleteError("");
+              setDialog("eliminar");
+            }}
+            disabled={pending}
+          >
+            <Trash2 aria-hidden className="size-4" strokeWidth={1.5} /> Eliminar solicitud de prueba
+          </Button>
+        </Card>
+      )}
 
       <Dialog
         open={dialog === "eliminar"}

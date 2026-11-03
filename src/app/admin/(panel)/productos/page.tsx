@@ -21,6 +21,7 @@ export default async function ProductosPage() {
     cultivatedOn: p.cultivatedOn ?? "",
     description: p.description,
     status: p.status,
+    photo: p.photo,
   }));
   const varietyRows: VarietyRow[] = varieties.map((v) => ({ id: v.id, code: v.code, name: v.name, label: varietyLabel(v) }));
   return (

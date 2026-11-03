@@ -2,12 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { FilePlus2, Info, Pencil } from "lucide-react";
+import { FilePlus2, FileText, FileUp, Info, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, Card, StatusBadge } from "@/components/ui/display";
 import { Dialog } from "@/components/ui/dialog";
 import { Select, TextField, Textarea } from "@/components/ui/field";
 import { addDocumentAction, reviewDocumentAction, saveCaseAction, type ReprocannResult } from "./reprocann-actions";
+import { UploadDialog } from "./upload-dialog";
 
 type Option = { value: string; label: string };
 export type ReprocannView = {
@@ -21,12 +22,24 @@ export type ReprocannView = {
     source: string;
     reviewStatus: "pendiente" | "observada" | "verificada";
     verifiedOn: string | null;
+    /** Internal: only the team reads it. */
     notes: string | null;
+    /** What the member reads while the document is observed. */
+    memberMessage: string | null;
     createdAt: string;
+    /** Sent by the member from their account. */
+    fromMember: boolean;
+    /** Name of who recorded it (the member or an admin). */
+    recordedBy: string | null;
+    replaced: boolean;
+    /** One per page, in order. */
+    files: { href: string; page: number; label: string; uploaded: string }[];
   }[];
   history: { at: string; actor: string; text: string }[];
-  /** The current credential, as computed on the server (validity is time; review is separate). */
-  credential: { validityLabel: string; validityTone: "success" | "warning" | "error" | "neutral"; expiresOn: string | null; review: "pendiente" | "observada" | "verificada" | null; source: string | null; digitized: boolean };
+  /** The current credential with the same single status the member sees. */
+  credential: { statusLabel: string; statusTone: "success" | "warning" | "error" | "neutral"; expiry: string; review: "pendiente" | "observada" | "verificada" | null; source: string | null; digitized: boolean };
+  /** How files can be loaded here: through this server locally, to the private store on a deployment. */
+  uploads: "local" | "blob" | "unavailable";
 };
 export type ReprocannOptions = { permit: Option[]; management: Option[]; linkage: Option[]; kind: Option[]; review: Option[]; source: Option[] };
 
@@ -37,6 +50,10 @@ const reviewTone = { pendiente: "warning", observada: "error", verificada: "succ
 
 export default function ReprocannPanel({ memberId, view, options }: { memberId: string; view: ReprocannView; options: ReprocannOptions }) {
   const router = useRouter();
+  const [uploading, setUploading] = useState(false);
+  const attachable = view.documents
+    .filter((d) => !d.files.length && !d.replaced && d.reviewStatus !== "verificada")
+    .map((d) => ({ value: d.id, label: `${label(options.kind, d.kind)} registrada el ${d.createdAt.split(",")[0]} (sin archivo)` }));
   const [pending, startTransition] = useTransition();
   const [notice, setNotice] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [caseForm, setCaseForm] = useState(view.case ?? { permitStatus: "sin_permiso", managementSource: "self_or_external", responsibleName: "", linkageStatus: "pendiente" });
@@ -44,7 +61,7 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
   const [editingCase, setEditingCase] = useState(false);
   const [doc, setDoc] = useState({ kind: "", permitIdentifier: "", issuedOn: "", expiresOn: "", source: "en_poder_de_la_asociacion", notes: "" });
   const [docError, setDocError] = useState("");
-  const [reviewing, setReviewing] = useState<{ id: string; reviewStatus: string; verifiedOn: string } | null>(null);
+  const [reviewing, setReviewing] = useState<{ id: string; reviewStatus: string; verifiedOn: string; expiresOn: string; memberMessage: string; notes: string } | null>(null);
   const [reviewError, setReviewError] = useState("");
 
   const run = (action: () => Promise<ReprocannResult>, success: string, onError?: (e: string) => void, after?: () => void) =>
@@ -78,18 +95,15 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
         <Card className="space-y-3">
           <h3 className="text-h3">Credencial</h3>
           <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge tone={view.credential.validityTone}>{view.credential.validityLabel}</StatusBadge>
-            {view.credential.expiresOn && <span className="text-small text-text-muted">vence {day(view.credential.expiresOn)}</span>}
+            <StatusBadge tone={view.credential.statusTone}>{view.credential.statusLabel}</StatusBadge>
+            <span className="text-small text-text-muted">{view.credential.expiry}</span>
           </div>
-          <p className="text-small">
-            Revisión: <b>{view.credential.review ? label(options.review, view.credential.review) : "Sin revisar"}</b>
-          </p>
           {view.credential.source && (
             <p className="text-small text-text-muted">
-              {label(options.source, view.credential.source)} · {view.credential.digitized ? "digitalizada" : "No digitalizada todavía"}
+              {label(options.source, view.credential.source)} · {view.credential.digitized ? "con archivo" : "sin archivo todavía"}
             </p>
           )}
-          <p className="text-xs text-text-muted">La vigencia se calcula con la fecha de vencimiento. Que esté vigente no significa que esté verificada.</p>
+          <p className="text-xs text-text-muted">Es el mismo estado que ve el socio. Una fecha declarada queda «sin verificar» hasta que se verifica el documento.</p>
         </Card>
 
         <Card className="space-y-3">
@@ -133,34 +147,65 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
       <Card className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-h3">Documentación</h3>
-          <Button shape="admin" onClick={() => { setAdding(true); setDocError(""); }}>
-            <FilePlus2 aria-hidden className="size-4" strokeWidth={1.5} /> Registrar documento
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button shape="admin" onClick={() => setUploading(true)} disabled={view.uploads === "unavailable"}>
+              <FileUp aria-hidden className="size-4" strokeWidth={1.5} /> Cargar documentación recibida
+            </Button>
+            <Button variant="secondary" shape="admin" onClick={() => { setAdding(true); setDocError(""); }}>
+              <FilePlus2 aria-hidden className="size-4" strokeWidth={1.5} /> Registrar sin archivo
+            </Button>
+          </div>
         </div>
         {view.documents.length ? (
           <ul className="space-y-3">
             {view.documents.map((d) => (
-              <li key={d.id} className="space-y-2 !rounded-control border border-border px-4 py-3">
+              <li key={d.id} className={`space-y-2 !rounded-control border border-border px-4 py-3 ${d.replaced ? "opacity-70" : ""}`}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-medium">{label(options.kind, d.kind)}</p>
-                  <StatusBadge tone={reviewTone[d.reviewStatus]}>{label(options.review, d.reviewStatus)}</StatusBadge>
+                  {d.replaced ? <StatusBadge tone="neutral">Reemplazado por un archivo nuevo</StatusBadge> : <StatusBadge tone={reviewTone[d.reviewStatus]}>{label(options.review, d.reviewStatus)}</StatusBadge>}
                 </div>
                 <p className="text-small text-text-muted [overflow-wrap:anywhere]">
-                  {d.permitIdentifier ? `Identificador: ${d.permitIdentifier} · ` : ""}Emisión: {day(d.issuedOn)} · Vencimiento: {day(d.expiresOn)} · Fuente: {label(options.source, d.source)}
+                  {d.fromMember ? `Enviado por el socio desde su cuenta · ${d.createdAt}` : `${label(options.source, d.source)} · registrado por ${d.recordedBy ?? "administración"} · ${d.createdAt}`}
+                </p>
+                <p className="text-small text-text-muted [overflow-wrap:anywhere]">
+                  {d.permitIdentifier ? `Identificador: ${d.permitIdentifier} · ` : ""}Emisión: {day(d.issuedOn)} · Vencimiento: {day(d.expiresOn)}
                   {d.verifiedOn ? ` · Verificado el ${day(d.verifiedOn)}` : ""}
                 </p>
-                {d.notes && <p className="text-small">Observaciones: {d.notes}</p>}
-                <Button variant="ghost" shape="admin" className="min-h-9" onClick={() => { setReviewing({ id: d.id, reviewStatus: d.reviewStatus, verifiedOn: d.verifiedOn ?? "" }); setReviewError(""); }}>
-                  Revisar
-                </Button>
+                {d.memberMessage && <p className="!rounded-control bg-warning-bg px-3 py-2 text-small text-warning-fg">Motivo para el socio: {d.memberMessage}</p>}
+                {d.notes && <p className="text-small">Nota interna: {d.notes}</p>}
+                {d.files.length > 0 && (
+                  <ul className="space-y-1">
+                    {d.files.map((f) => (
+                      <li key={f.href} className="flex flex-wrap items-center gap-x-2 text-small">
+                        <a href={f.href} target="_blank" rel="noopener" className="inline-flex min-h-9 items-center gap-1.5 !text-forest underline underline-offset-2">
+                          <FileText aria-hidden className="size-4" strokeWidth={1.5} /> {d.files.length > 1 ? `Ver hoja ${f.page}` : "Ver archivo"} · {f.label}
+                        </a>
+                        <span className="text-text-muted">cargado por {f.uploaded}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+                  {!d.replaced && (
+                    <Button variant="ghost" shape="admin" className="min-h-9" onClick={() => { setReviewing({ id: d.id, reviewStatus: d.reviewStatus, verifiedOn: d.verifiedOn ?? "", expiresOn: d.expiresOn ?? "", memberMessage: d.memberMessage ?? "", notes: d.notes ?? "" }); setReviewError(""); }}>
+                      Revisar
+                    </Button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
         ) : (
           <p className="text-small text-text-muted">Todavía no hay documentos registrados.</p>
         )}
-        <p className="text-small text-text-muted">El archivo (PDF, JPG o PNG) se va a poder adjuntar cuando esté habilitado el almacenamiento privado. Por ahora se registran los datos del documento.</p>
+        <p className="text-small text-text-muted">
+          El socio carga su credencial desde su cuenta y la asociación puede cargar la que ya recibió (PDF, JPG o PNG, hasta 10 MB por hoja). Todo queda pendiente de revisión y cada apertura de un archivo queda registrada. Cuánto tiempo se conservan los archivos todavía no está definido.
+          {view.uploads === "unavailable" && " La carga de archivos no está habilitada en este entorno: falta el almacenamiento privado."}
+        </p>
       </Card>
+      {view.uploads !== "unavailable" && (
+        <UploadDialog open={uploading} onClose={() => setUploading(false)} memberId={memberId} mode={view.uploads} kinds={options.kind} attachable={attachable} />
+      )}
 
       {view.history.length > 0 && (
         <Card className="space-y-3">
@@ -197,7 +242,7 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
           <TextField id="doc-issued" type="date" label="Fecha de emisión" optional max={today()} value={doc.issuedOn} onChange={(e) => setDoc((d) => ({ ...d, issuedOn: e.target.value }))} />
           <TextField id="doc-expires" type="date" label="Fecha de vencimiento" optional value={doc.expiresOn} onChange={(e) => setDoc((d) => ({ ...d, expiresOn: e.target.value }))} />
         </div>
-        <Textarea id="doc-notes" label="Observaciones administrativas" optional hint="Sin datos clínicos." value={doc.notes} onChange={(e) => setDoc((d) => ({ ...d, notes: e.target.value }))} maxLength={500} rows={2} />
+        <Textarea id="doc-notes" label="Nota interna" optional hint="Solo la ve el equipo. Sin datos clínicos." value={doc.notes} onChange={(e) => setDoc((d) => ({ ...d, notes: e.target.value }))} maxLength={500} rows={2} />
       </Dialog>
 
       <Dialog
@@ -207,13 +252,38 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
         description="Este cambio quedará registrado. Verificado no significa habilitado para la dispensa."
         confirmLabel={pending ? "Guardando…" : "Guardar revisión"}
         confirmDisabled={pending}
-        onConfirm={() => reviewing && run(() => reviewDocumentAction(memberId, reviewing.id, { reviewStatus: reviewing.reviewStatus, verifiedOn: reviewing.verifiedOn }), "Revisión guardada.", setReviewError, () => setReviewing(null))}
+        onConfirm={() => reviewing && run(() => reviewDocumentAction(memberId, reviewing.id, reviewing), "Revisión guardada.", setReviewError, () => setReviewing(null))}
+        wide
       >
         {reviewError && <Alert tone="error" live>{reviewError}</Alert>}
         {reviewing && (
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Select id="review-status" label="Estado" options={options.review} value={reviewing.reviewStatus} onChange={(e) => setReviewing((r) => r && { ...r, reviewStatus: e.target.value })} />
-            <TextField id="review-date" type="date" label="Fecha de verificación" optional max={today()} value={reviewing.verifiedOn} onChange={(e) => setReviewing((r) => r && { ...r, verifiedOn: e.target.value })} />
+          <div className="space-y-5">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Select id="review-status" label="Resultado" options={options.review} value={reviewing.reviewStatus} onChange={(e) => setReviewing((r) => r && { ...r, reviewStatus: e.target.value })} />
+              <TextField id="review-date" type="date" label="Fecha de verificación" optional={reviewing.reviewStatus !== "verificada"} max={today()} value={reviewing.verifiedOn} onChange={(e) => setReviewing((r) => r && { ...r, verifiedOn: e.target.value })} />
+              <TextField id="review-expires" type="date" label="Vencimiento según el documento" optional hint="Si el socio lo declaró, corregilo si el documento dice otra fecha." value={reviewing.expiresOn} onChange={(e) => setReviewing((r) => r && { ...r, expiresOn: e.target.value })} />
+            </div>
+            {reviewing.reviewStatus === "observada" && (
+              <Textarea
+                id="review-message"
+                label="Motivo para el socio"
+                hint="Lo lee el socio en su cuenta. Decile qué tiene que corregir, sin datos clínicos."
+                value={reviewing.memberMessage}
+                onChange={(e) => setReviewing((r) => r && { ...r, memberMessage: e.target.value })}
+                maxLength={300}
+                rows={2}
+              />
+            )}
+            <Textarea
+              id="review-notes"
+              label="Nota interna"
+              optional
+              hint="Solo la ve el equipo de la asociación. Sin datos clínicos."
+              value={reviewing.notes}
+              onChange={(e) => setReviewing((r) => r && { ...r, notes: e.target.value })}
+              maxLength={500}
+              rows={2}
+            />
           </div>
         )}
       </Dialog>

@@ -6,6 +6,9 @@ import { getKeyrings } from "@/server/crypto";
 import { categoryLabel, getMemberProfile } from "@/server/member-profile";
 import { DOCUMENT_KIND, INFO_SOURCE, LINKAGE_STATUS, MANAGEMENT_SOURCE, PERMIT_STATUS, REVIEW_STATUS, labelIn } from "@/server/reprocann";
 import { categoryOptions, provinces } from "@/demo/content";
+import { fileSizeLabel } from "@/lib/file-size";
+import { expiryLine } from "@/lib/credential-validity";
+import { uploadMode } from "@/server/storage";
 import { memberStatus } from "../../../status";
 import { AdminPageHeader } from "../../../ui";
 import { AccountBlock, ContactBlock, FeeBlock, MembershipBlock, NotesBlock, PersonalBlock } from "./profile-blocks";
@@ -24,7 +27,20 @@ const LEGAJO = { imported: "Importado del padrón histórico", pending_update: "
 function describe(action: string, m: Record<string, string | number | boolean | null> | null): string {
   if (action === "reprocann.case_opened") return "Se abrió el trámite.";
   if (action === "reprocann.document_added") return `Documento registrado: ${labelIn(DOCUMENT_KIND, String(m?.kind))} (${labelIn(INFO_SOURCE, String(m?.source))})${m?.importRun ? " · importación del padrón" : ""}.`;
-  if (action === "reprocann.document_reviewed") return `Documento revisado: ${labelIn(REVIEW_STATUS, String(m?.reviewStatus_before))} → ${labelIn(REVIEW_STATUS, String(m?.reviewStatus_after))}.`;
+  if (action === "reprocann.document_uploaded") return `El socio envió un archivo desde su cuenta: ${labelIn(DOCUMENT_KIND, String(m?.kind))}${m?.replaces ? " (reemplaza al anterior)" : ""}.`;
+  if (action === "reprocann.document_viewed") return `${m?.by === "member" ? "El socio abrió su archivo" : "Archivo abierto"}${m?.page ? ` (hoja ${m.page})` : ""}.`;
+  if (action === "reprocann.document_files_added")
+    return `${m?.attached ? "Archivos adjuntados al documento ya registrado" : "Documento cargado por la asociación"}: ${labelIn(DOCUMENT_KIND, String(m?.kind))}, ${m?.pages} ${m?.pages === 1 ? "hoja" : "hojas"} · identidad comprobada con el DNI del padrón.`;
+  if (action === "reprocann.document_reviewed") {
+    const parts = [
+      m && "reviewStatus_after" in m ? `${labelIn(REVIEW_STATUS, String(m.reviewStatus_before))} → ${labelIn(REVIEW_STATUS, String(m.reviewStatus_after))}` : null,
+      m?.verifiedOn_changed ? "fecha de verificación" : null,
+      m?.expiresOn_changed ? "vencimiento" : null,
+      m?.memberMessage_changed ? "motivo para el socio" : null,
+      m?.notes_changed ? "nota interna" : null,
+    ].filter(Boolean);
+    return `Documento revisado${parts.length ? `: ${parts.join(" · ")}` : ""}.`;
+  }
   if (action === "reprocann.case_updated")
     return Object.entries(DIMENSIONS)
       .filter(([k]) => m && `${k}_after` in m)
@@ -47,16 +63,38 @@ export default async function SocioPage({ params }: { params: Promise<{ id: stri
   const rep = p.reprocann;
   const reprocann: ReprocannView = {
     case: rep ? { permitStatus: rep.case.permitStatus, managementSource: rep.case.managementSource, responsibleName: rep.case.responsibleName ?? "", linkageStatus: rep.case.linkageStatus } : null,
-    documents: (rep?.documents ?? []).map((d) => ({ id: d.id, kind: d.kind, permitIdentifier: d.permitIdentifier, issuedOn: d.issuedOn, expiresOn: d.expiresOn, source: d.source, reviewStatus: d.reviewStatus, verifiedOn: d.verifiedOn, notes: d.notes, createdAt: d.createdAt.toISOString() })),
+    documents: (rep?.documents ?? []).map((d) => ({
+      id: d.id,
+      kind: d.kind,
+      permitIdentifier: d.permitIdentifier,
+      issuedOn: d.issuedOn,
+      expiresOn: d.expiresOn,
+      source: d.source,
+      reviewStatus: d.reviewStatus,
+      verifiedOn: d.verifiedOn,
+      notes: d.notes,
+      memberMessage: d.memberMessage,
+      createdAt: stamp.format(d.createdAt),
+      fromMember: d.fromMember,
+      recordedBy: d.recordedBy,
+      replaced: !!d.replacedBy,
+      files: d.files.map((f) => ({
+        href: `/admin/socios/${p.id}/reprocann/${f.id}`,
+        page: f.page,
+        label: `${f.contentType === "application/pdf" ? "PDF" : f.contentType === "image/png" ? "PNG" : "JPG"} · ${fileSizeLabel(f.size)}`,
+        uploaded: `${f.uploaderRole === "MEMBER" ? "el socio" : (f.uploaderName ?? "administración")} · ${stamp.format(f.uploadedAt)}`,
+      })),
+    })),
     history: (rep?.history ?? []).map((h) => ({ at: stamp.format(h.at), actor: h.actor ?? "Sistema", text: describe(h.action, h.metadata) })),
     credential: {
-      validityLabel: p.validity.label,
-      validityTone: p.validity.tone,
-      expiresOn: p.credential?.expiresOn ?? null,
+      statusLabel: p.credentialStatus.label,
+      statusTone: p.credentialStatus.tone,
+      expiry: expiryLine(p.credentialStatus.expiry),
       review: p.credential?.reviewStatus ?? null,
       source: p.credential?.source ?? null,
-      digitized: !!p.credential?.fileKey,
+      digitized: !!rep?.documents.find((d) => d.id === p.credential?.id)?.files.length,
     },
+    uploads: uploadMode(),
   };
 
   const ac = p.access;

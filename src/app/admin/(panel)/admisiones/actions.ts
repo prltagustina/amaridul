@@ -6,7 +6,7 @@ import { getDb } from "@/server/db";
 import { elevateToCommission, InvalidAdmissionTransitionError } from "@/server/admissions";
 import { getEmailSender } from "@/server/email";
 import { getEnv } from "@/server/env";
-import { decisionInput, InvalidDecisionError, recordDecision, resendActivation } from "@/server/members";
+import { decisionInput, InvalidDecisionError, recordDecision } from "@/server/members";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -45,17 +45,4 @@ export async function decide(id: string, raw: unknown): Promise<DecideResult> {
   return r.emailed
     ? { ok: true, message: `Admisión aprobada. Socio ${r.memberNumber}: se envió el link de activación de la cuenta.` }
     : { ok: true, message: `Admisión aprobada (socio ${r.memberNumber}), pero el email de activación no se pudo enviar. Reenvialo desde Socios.` };
-}
-
-export async function resendMemberActivation(memberId: string): Promise<ActionResult> {
-  const { user } = await requireAdmin();
-  try {
-    const r = await resendActivation(await getDb(), { email: getEmailSender(), baseURL: getEnv().BETTER_AUTH_URL }, user.id, memberId);
-    if (!r.emailed) return { ok: false, error: "El link nuevo quedó registrado, pero el email no se pudo enviar." };
-  } catch (e) {
-    return { ok: false, error: e instanceof InvalidDecisionError ? "La cuenta ya está activa." : "No pudimos reenviar la activación." };
-  }
-  revalidatePath("/admin/socios");
-  revalidatePath(`/admin/socios/${memberId}`);
-  return { ok: true };
 }

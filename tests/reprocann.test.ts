@@ -56,8 +56,8 @@ describe("REPROCANN documents loaded by the admin", () => {
 
   it("a verification needs its date and is recorded with before and after", async () => {
     const id = await addDocument(ctx.db, ctx.rings.field, adminId, memberId, doc({ kind: "constancia_vinculacion", permitIdentifier: "" }));
-    await expect(reviewDocument(ctx.db, adminId, id, reviewInput.parse({ reviewStatus: "verificada", verifiedOn: "" }))).rejects.toBeInstanceOf(ReprocannError);
-    await reviewDocument(ctx.db, adminId, id, reviewInput.parse({ reviewStatus: "verificada", verifiedOn: "2026-10-14" }));
+    await expect(reviewDocument(ctx.db, ctx.rings.field, adminId, id, reviewInput.parse({ reviewStatus: "verificada", verifiedOn: "" }))).rejects.toBeInstanceOf(ReprocannError);
+    await reviewDocument(ctx.db, ctx.rings.field, adminId, id, reviewInput.parse({ reviewStatus: "verificada", verifiedOn: "2026-10-14" }));
     const [row] = await ctx.db.select().from(reprocannDocuments).where(eq(reprocannDocuments.id, id));
     expect(row).toMatchObject({ reviewStatus: "verificada", verifiedOn: "2026-10-14", reviewedBy: adminId });
     const [log] = await ctx.db.select().from(auditLogs).where(eq(auditLogs.action, "reprocann.document_reviewed"));

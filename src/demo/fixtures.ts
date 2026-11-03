@@ -268,20 +268,5 @@ export const demoMember = {
   category: "Paciente",
   since: "12/09/2026",
   status: "Activo",
-  procedures: [
-    { label: "Alta asociativa", status: "Completa", tone: "success" as const },
-    { label: "Evaluación médica", status: "Pendiente", tone: "warning" as const },
-    { label: "Vinculación REPROCANN", status: "Pendiente", tone: "warning" as const },
-  ],
 };
 
-export const auditEntries = [
-  { at: "10/10/2026 11:42", action: "Preadmisión revisada", entity: "PRE-2026-0005", actor: "admin.local@example.com" },
-  { at: "10/10/2026 11:30", action: "Ingreso al panel", entity: "Sesión", actor: "admin.local@example.com" },
-  { at: "09/10/2026 18:05", action: "Lote publicado", entity: "AD-2025-11-02", actor: "admin.local@example.com" },
-  { at: "09/10/2026 17:58", action: "Código creado", entity: "AD-2025-11-02", actor: "admin.local@example.com" },
-  { at: "08/10/2026 10:12", action: "Invitación enviada", entity: "PRE-2026-0004", actor: "admin.local@example.com" },
-  { at: "05/10/2026 09:47", action: "Solicitud elevada a Comisión", entity: "ADM-2026-0001", actor: "admin.local@example.com" },
-  { at: "01/10/2026 16:20", action: "Certificado cargado", entity: "AD-2025-08-01", actor: "admin.local@example.com" },
-  { at: "28/09/2026 12:03", action: "Preadmisión cerrada", entity: "PRE-2026-0003", actor: "admin.local@example.com" },
-];

@@ -1,7 +1,8 @@
 // REPROCANN, kept apart from the member register. Six separate dimensions, never a single
 // "has REPROCANN" flag; eligibility for dispensing is not stored: it will be derived once defined.
 // Administrative and documentary only: no clinical data, no credentials of official systems.
-import { date, index, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { type AnyPgColumn, check, date, index, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { members } from "./admissions";
 
@@ -35,8 +36,10 @@ export const reprocannCases = pgTable("reprocann_cases", {
 
 /**
  * A document Amarí Dul holds or receives (credential, certificate, linkage proof). The permit
- * identifier and the notes are encrypted, bound to the row. `fileKey` stays null until private
- * file storage is enabled in production: today only the document's data is recorded.
+ * identifier, the internal notes and the message for the member are encrypted, bound to the row.
+ * Its files (one per page) live in `reprocann_document_files`; `fileKey` is a legacy column that
+ * was never used and stays null. A member replacing a document keeps the previous one, marked
+ * with the one that replaced it (retention is not defined yet).
  */
 export const reprocannDocuments = pgTable(
   "reprocann_documents",
@@ -55,10 +58,43 @@ export const reprocannDocuments = pgTable(
     reviewedBy: uuid("reviewed_by").references(() => user.id, { onDelete: "restrict" }),
     reviewedAt: timestamp("reviewed_at", tz),
     notesEncrypted: text("notes_encrypted"),
+    /** What the member reads when the document is observed. Separate from the internal notes. */
+    memberMessageEncrypted: text("member_message_encrypted"),
     fileKey: text("file_key"),
+    replacedBy: uuid("replaced_by").references((): AnyPgColumn => reprocannDocuments.id, { onDelete: "restrict" }),
     createdBy: uuid("created_by").references(() => user.id, { onDelete: "restrict" }),
     createdAt: timestamp("created_at", tz).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", tz).notNull().defaultNow(),
   },
   (t) => [index("reprocann_documents_case_idx").on(t.caseId)],
+);
+
+/**
+ * The files of a document, one per page (a credential photographed front and back is one document
+ * with two pages). Type and size are the ones checked on the server; `sha256` finds the same file
+ * sent twice. Who uploaded each page and when is kept; uploading is never a verification.
+ */
+export const reprocannDocumentFiles = pgTable(
+  "reprocann_document_files",
+  {
+    id: uuid("id").primaryKey(),
+    documentId: uuid("document_id")
+      .notNull()
+      .references(() => reprocannDocuments.id, { onDelete: "restrict" }),
+    page: integer("page").notNull(),
+    fileKey: text("file_key").notNull().unique(),
+    contentType: text("content_type").notNull(),
+    size: integer("size").notNull(),
+    sha256: text("sha256").notNull(),
+    uploadedBy: uuid("uploaded_by").references(() => user.id, { onDelete: "restrict" }),
+    uploadedAt: timestamp("uploaded_at", tz).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("reprocann_document_files_page_idx").on(t.documentId, t.page),
+    index("reprocann_document_files_sha256_idx").on(t.sha256),
+    check(
+      "reprocann_document_files_check",
+      sql`${t.page} >= 1 and ${t.contentType} in ('application/pdf', 'image/jpeg', 'image/png') and ${t.size} between 1 and 10485760 and ${t.sha256} ~ '^[0-9a-f]{64}$'`,
+    ),
+  ],
 );

@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === "development";
 
+// On a deployment, member documents go from the browser straight to the private Vercel Blob store.
+// The installed @vercel/blob client (2.8.2) sends them to this API; nothing else is contacted. It is
+// allowed only once REPROCANN_UPLOADS=on, so the policy stays 'self' until the private store is validated.
+const blobUploads = process.env.REPROCANN_UPLOADS === "on" ? " https://vercel.com/api/blob/" : "";
+
 // Static CSP without nonces: nonces would force dynamic rendering of the public static pages.
 const csp = [
   "default-src 'self'",
@@ -9,7 +14,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' blob: data:",
   "font-src 'self'",
-  "connect-src 'self'",
+  `connect-src 'self'${blobUploads}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -34,6 +39,9 @@ const privateHeaders = [
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["@electric-sql/pglite"],
+  // `next dev` prints every Server Function call with its arguments: DNI and passwords on sign-in.
+  // Requests and errors are still logged; arguments are not.
+  logging: { serverFunctions: false },
   images: {
     formats: ["image/avif", "image/webp"],
     qualities: [75, 85],

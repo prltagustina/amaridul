@@ -1,24 +1,30 @@
 import Link from "next/link";
-import { ArrowRight, Boxes, ClipboardCheck, Inbox, UserCheck, Users } from "lucide-react";
+import { ArrowRight, ClipboardCheck, FileCheck2, Inbox, UserCheck, Users } from "lucide-react";
 import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
 import { countPreAdmissions } from "@/server/pre-admissions";
 import { countAdmissions } from "@/server/admissions";
 import { listMembers } from "@/server/members";
 import { countExistingMemberRequests } from "@/server/existing-members";
-import { Card, DevTag } from "@/components/ui/display";
-import { auditEntries, lots } from "@/demo/fixtures";
+import { listAuditRows } from "@/server/audit/view";
+import { countDocumentsToReview } from "@/server/reprocann-files";
+import { Card } from "@/components/ui/display";
+import { adminGreeting } from "@/lib/admin-greeting";
 import { AdminPageHeader } from "../ui";
+
+const stamp = new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short", hourCycle: "h23", timeZone: "America/Argentina/Buenos_Aires" });
 
 export default async function AdminHomePage() {
   const { user } = await requireAdmin();
   const db = await getDb();
-  const [newPreAdmissions, existingToVerify, toElevate, inCommission, memberRows] = await Promise.all([
+  const [newPreAdmissions, existingToVerify, toElevate, inCommission, memberRows, activity, credentialsToReview] = await Promise.all([
     countPreAdmissions(db, ["recibida"]),
     countExistingMemberRequests(db, ["pending_verification", "needs_review"]),
     countAdmissions(db, ["recibida"]),
     countAdmissions(db, ["comision"]),
     listMembers(db),
+    listAuditRows(db, 5),
+    countDocumentsToReview(db),
   ]);
 
   const pending = [
@@ -32,7 +38,13 @@ export default async function AdminHomePage() {
       href: "/admin/socios-existentes",
       icon: UserCheck,
       count: existingToVerify,
-      label: "socios existentes por verificar",
+      label: "solicitudes de socios existentes por verificar",
+    },
+    {
+      href: "/admin/reprocann",
+      icon: FileCheck2,
+      count: credentialsToReview,
+      label: "credenciales REPROCANN para revisar",
     },
     {
       href: "/admin/admisiones",
@@ -52,17 +64,11 @@ export default async function AdminHomePage() {
       count: memberRows.filter((m) => m.accountStatus === "pending_activation").length,
       label: "socios con activación pendiente",
     },
-    {
-      href: "/admin/lotes",
-      icon: Boxes,
-      count: lots.filter((l) => !l.hasCertificate && l.status === "publicado").length,
-      label: "lotes publicados sin certificado",
-    },
   ];
 
   return (
     <>
-      <AdminPageHeader eyebrow="Inicio" title={`Hola, ${user.name?.split(" ")[0] || "equipo"}`} description="Lo que necesita tu atención hoy." />
+      <AdminPageHeader eyebrow="Inicio" title={`Hola, ${adminGreeting(user.name)}`} description="Lo que necesita tu atención hoy." />
       <section aria-labelledby="pendientes" className="space-y-4">
         <h2 id="pendientes" className="text-h2 text-forest">
           Pendientes
@@ -95,18 +101,22 @@ export default async function AdminHomePage() {
           </Link>
         </div>
         <Card padded={false}>
-          <ul className="divide-y divide-border">
-            {auditEntries.slice(0, 5).map((e) => (
-              <li key={e.at + e.action} className="flex flex-col gap-1 px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-base">
-                  {e.action} <span className="text-text-muted">· {e.entity}</span>
-                </span>
-                <span className="text-small text-text-muted tabular-nums">{e.at}</span>
-              </li>
-            ))}
-          </ul>
+          {activity.length ? (
+            <ul className="divide-y divide-border">
+              {activity.map((e) => (
+                <li key={e.id} className="flex flex-col gap-1 px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                  <span className="min-w-0 text-base [overflow-wrap:anywhere]">
+                    {e.action}
+                    {e.subject && <span className="text-text-muted"> · {e.subject.label}</span>}
+                  </span>
+                  <span className="shrink-0 text-small text-text-muted tabular-nums">{stamp.format(e.at)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="px-5 py-4 text-small text-text-muted">Todavía no hay actividad registrada.</p>
+          )}
         </Card>
-        <DevTag>Datos ficticios</DevTag>
       </section>
     </>
   );

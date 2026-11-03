@@ -13,7 +13,7 @@ export function EnvironmentNotice() {
   );
 }
 
-/** Sidebar on desktop, collapsible menu on mobile. Sections still run on fixtures until Fase 1 connects them. */
+/** Sidebar on desktop, collapsible menu on mobile. */
 export function AdminShell({ email, children }: { email: string; children: ReactNode }) {
   const signOut = (
     <form action={logout}>

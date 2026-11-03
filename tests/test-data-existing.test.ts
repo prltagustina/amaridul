@@ -1,9 +1,16 @@
 // The temporary test-deletion tool for «Ya soy socio/a» requests: it removes the request and what
 // it created (member, account, person and DNI), never a member who was already on the register,
 // and says why when it refuses.
-import { beforeAll, describe, expect, it } from "vitest";
+import { randomUUID } from "node:crypto";
+import { mkdtemp } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
-import { auditLogs, existingMemberRequests, members, oneTimeTokens, personIdentities, persons, user } from "@/server/db/schema";
+import { auditLogs, existingMemberRequests, members, oneTimeTokens, personIdentities, persons, reprocannDocuments, user } from "@/server/db/schema";
+import { addDocument, documentInput } from "@/server/reprocann";
+import { addAdminDocument, adminUploadInput, memberFolder } from "@/server/reprocann-files";
+import { LocalObjectStorage } from "@/server/storage/object-storage";
 import { MemoryEmailSender } from "@/server/email/sender";
 import { activateAccount } from "@/server/members";
 import { existingMemberInput, institutionalInput, linkExistingMember, linkInput, registerExistingMember, submitExistingMemberRequest } from "@/server/existing-members";
@@ -75,5 +82,46 @@ describe("borrar una solicitud «Ya soy socio/a» de prueba", () => {
     await deleteTestExistingMemberRequest(ctx.db, adminId, r.id, r.reference);
     expect(await ctx.db.select().from(existingMemberRequests).where(eq(existingMemberRequests.id, r.id))).toHaveLength(0);
     await expect(deleteTestExistingMemberRequest(ctx.db, adminId, r.id, r.reference)).rejects.toBeInstanceOf(DeleteNotAllowedError);
+  });
+});
+
+describe("las herramientas de borrado no alcanzan registros reales", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  const registered = async (dni: string) => {
+    const r = await request(dni);
+    await registerExistingMember(ctx.db, deps(), adminId, r.id, institutionalInput.parse({ numberMode: "next", memberNumber: "", category: "paciente", since: "", minutesReference: "", status: "activo" }));
+    const [row] = await ctx.db.select().from(existingMemberRequests).where(eq(existingMemberRequests.id, r.id));
+    return { r, memberId: row.linkedMemberId! };
+  };
+
+  it("are off on a deployment unless TEST_DELETION=on is set for a testing session", async () => {
+    const r = await request("99070004");
+    vi.stubEnv("VERCEL", "1");
+    vi.stubEnv("APP_ENV", "production");
+    await expect(deleteTestExistingMemberRequest(ctx.db, adminId, r.id, r.reference)).rejects.toThrow(/no está habilitado en este entorno/);
+    expect(await ctx.db.select().from(existingMemberRequests).where(eq(existingMemberRequests.id, r.id))).toHaveLength(1);
+    vi.stubEnv("TEST_DELETION", "on");
+    await deleteTestExistingMemberRequest(ctx.db, adminId, r.id, r.reference);
+    expect(await ctx.db.select().from(existingMemberRequests).where(eq(existingMemberRequests.id, r.id))).toHaveLength(0);
+  });
+
+  it("never delete someone with REPROCANN files; records without files go, replaced ones included", async () => {
+    const storage = new LocalObjectStorage(await mkdtemp(path.join(tmpdir(), "amaridul-borrado-")));
+    const withFiles = await registered("99070005");
+    const key = memberFolder(withFiles.memberId) + randomUUID();
+    await storage.put(key, new TextEncoder().encode(`%PDF-1.7\n% ficticio ${randomUUID()}\n%%EOF\n`), "application/pdf");
+    const loaded = await addAdminDocument(ctx.db, storage, ctx.rings, adminId, withFiles.memberId, adminUploadInput.parse({ target: "nuevo", kind: "credencial", expiresOn: "", dni: "99070005", pages: [key] }));
+    expect(loaded.ok).toBe(true);
+    await expect(deleteTestExistingMemberRequest(ctx.db, adminId, withFiles.r.id, withFiles.r.reference)).rejects.toThrow(/documentación REPROCANN con archivos/);
+    expect(await ctx.db.select().from(members).where(eq(members.id, withFiles.memberId))).toHaveLength(1);
+
+    const withRecords = await registered("99070006");
+    const record = () => addDocument(ctx.db, ctx.rings.field, adminId, withRecords.memberId, documentInput.parse({ kind: "credencial", permitIdentifier: "", issuedOn: "", expiresOn: "2027-01-10", source: "en_poder_de_la_asociacion", notes: "" }));
+    const older = await record();
+    const newer = await record();
+    await ctx.db.update(reprocannDocuments).set({ replacedBy: newer }).where(eq(reprocannDocuments.id, older));
+    await deleteTestExistingMemberRequest(ctx.db, adminId, withRecords.r.id, withRecords.r.reference);
+    expect(await ctx.db.select().from(members).where(eq(members.id, withRecords.memberId))).toHaveLength(0);
+    expect(await ctx.db.select().from(reprocannDocuments).where(eq(reprocannDocuments.id, older))).toHaveLength(0);
   });
 });

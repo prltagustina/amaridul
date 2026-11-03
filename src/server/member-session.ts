@@ -9,15 +9,17 @@ import { isDemoEnabled } from "@/lib/demo";
 export type PortalMember = NonNullable<Awaited<ReturnType<typeof memberOfUser>>>;
 
 /**
- * The signed-in member for the portal pages. Without a member session the visitor is sent to the
- * login; locally and on previews the fictitious demo member is shown instead, to review the screens.
+ * The signed-in member for the portal pages, whatever the membership status: a suspended or
+ * withdrawn member sees that status instead of being silently sent back to the login. Without a
+ * member session the visitor goes to the login; locally and on previews the fictitious demo member
+ * is shown instead, to review the screens.
  */
 export const currentMember = cache(async (): Promise<PortalMember | "demo"> => {
   try {
     const current = await getCurrentSession();
     if (current?.user && (current.user as { role?: string }).role === "MEMBER") {
       const m = await memberOfUser(await getDb(), current.user.id);
-      if (m && m.status === "activo") return m;
+      if (m) return m;
     }
   } catch (e) {
     // No database on previews: fall through to the demo.

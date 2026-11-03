@@ -5,6 +5,8 @@ import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
 import { getKeyrings } from "@/server/crypto";
 import { addDocument, caseInput, documentInput, ReprocannError, reviewDocument, reviewInput, saveCase } from "@/server/reprocann";
+import { addAdminDocument, adminUploadInput, type AdminUploadResult } from "@/server/reprocann-files";
+import { documentStorage, uploadMode } from "@/server/storage";
 
 export type ReprocannResult = { ok: true } | { ok: false; error: string };
 
@@ -41,9 +43,9 @@ export async function addDocumentAction(memberId: string, raw: unknown): Promise
 export async function reviewDocumentAction(memberId: string, documentId: string, raw: unknown): Promise<ReprocannResult> {
   const { user } = await requireAdmin();
   const parsed = reviewInput.safeParse(raw);
-  if (!parsed.success) return { ok: false, error: "Revisá los datos." };
+  if (!parsed.success) return { ok: false, error: firstMessage(parsed.error.issues) };
   try {
-    await reviewDocument(await getDb(), user.id, String(documentId), parsed.data);
+    await reviewDocument(await getDb(), getKeyrings().field, user.id, String(documentId), parsed.data);
   } catch (e) {
     if (e instanceof ReprocannError) return { ok: false, error: e.message };
     console.error("REPROCANN review failed:", e instanceof Error ? e.message : e);
@@ -51,4 +53,24 @@ export async function reviewDocumentAction(memberId: string, documentId: string,
   }
   revalidatePath(`/admin/socios/${memberId}`);
   return { ok: true };
+}
+
+/** Loads documentation the association received: identity checked against the register, pending review. */
+export async function adminUploadAction(memberId: string, raw: unknown): Promise<AdminUploadResult> {
+  const { user } = await requireAdmin();
+  const parsed = adminUploadInput.safeParse(raw);
+  if (!parsed.success) return { ok: false, error: firstMessage(parsed.error.issues) };
+  const storage = documentStorage();
+  if (!storage || uploadMode() === "unavailable") return { ok: false, error: "La carga de archivos todavía no está habilitada: falta el almacenamiento privado." };
+  try {
+    const r = await addAdminDocument(await getDb(), storage, getKeyrings(), user.id, String(memberId), parsed.data);
+    if (r.ok) {
+      revalidatePath(`/admin/socios/${memberId}`);
+      revalidatePath("/admin/reprocann");
+    }
+    return r;
+  } catch (e) {
+    console.error("REPROCANN admin upload failed:", e instanceof Error ? e.message : e);
+    return { ok: false, error: "No pudimos cargar la documentación." };
+  }
 }

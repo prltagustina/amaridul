@@ -1,7 +1,7 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import * as z from "zod";
 import type { Database } from "@/server/db/client";
-import { products, varieties } from "@/server/db/schema";
+import { productPhotos, products, varieties } from "@/server/db/schema";
 import { audit } from "@/server/audit/log";
 
 export type ProductType = (typeof products.$inferSelect)["type"];
@@ -73,15 +73,69 @@ export async function listVarieties(db: Database): Promise<Variety[]> {
   return db.select().from(varieties).orderBy(asc(varieties.code));
 }
 
-export type ProductWithVariety = Product & { variety: Pick<Variety, "code" | "name"> | null };
+export type ProductWithVariety = Product & { variety: Pick<Variety, "code" | "name"> | null; photo: PhotoMeta | null };
+
+/** What the pages need to show a photo: its size, and a version that changes with every new photo. */
+export type PhotoMeta = { version: string; width: number; height: number };
+export const photoMeta = (p: { sha256: string; width: number; height: number }): PhotoMeta => ({ version: p.sha256.slice(0, 16), width: p.width, height: p.height });
+
+// The photo's size and version only: its bytes are read by the image routes.
+const photoColumns = { sha256: productPhotos.sha256, width: productPhotos.width, height: productPhotos.height };
+const photoOf = (ph: { sha256: string; width: number; height: number } | null) => (ph ? photoMeta(ph) : null);
 
 export async function listProducts(db: Database): Promise<ProductWithVariety[]> {
   const rows = await db
-    .select({ p: products, code: varieties.code, vname: varieties.name })
+    .select({ p: products, code: varieties.code, vname: varieties.name, ph: photoColumns })
     .from(products)
     .leftJoin(varieties, eq(varieties.id, products.varietyId))
+    .leftJoin(productPhotos, eq(productPhotos.productId, products.id))
     .orderBy(asc(products.status), asc(products.name));
-  return rows.map((r) => ({ ...r.p, variety: r.code ? { code: r.code, name: r.vname } : null }));
+  return rows.map((r) => ({ ...r.p, variety: r.code ? { code: r.code, name: r.vname } : null, photo: photoOf(r.ph) }));
+}
+
+export type CatalogItem = {
+  id: string;
+  name: string;
+  type: string;
+  variety: string | null;
+  chemotype: string | null;
+  cultivation: string | null;
+  cultivatedOn: string | null;
+  description: string | null;
+  photo: PhotoMeta | null;
+};
+
+/**
+ * The catalog as members see it: active products only, and only what describes the product.
+ * No prices, stock or availability (none exist yet), and nothing about lots or deliveries; seeing
+ * the catalog does not enable buying. Read on every request, so a change in the admin shows at once.
+ */
+export async function listCatalog(db: Database, onlyId?: string): Promise<CatalogItem[]> {
+  const rows = await db
+    .select({ p: products, code: varieties.code, vname: varieties.name, ph: photoColumns })
+    .from(products)
+    .leftJoin(varieties, eq(varieties.id, products.varietyId))
+    .leftJoin(productPhotos, eq(productPhotos.productId, products.id))
+    .where(onlyId ? and(eq(products.status, "activo"), eq(products.id, onlyId)) : eq(products.status, "activo"))
+    .orderBy(asc(products.name));
+  return rows.map(({ p, code, vname, ph }) => ({
+    id: p.id,
+    name: p.name,
+    type: productTypeLabel(p.type),
+    variety: code ? varietyLabel({ code, name: vname }) : null,
+    // "1", "2" or "3": shown under the label «Quimiotipo».
+    chemotype: p.chemotype,
+    cultivation: cultivationLabel(p.cultivation),
+    cultivatedOn: p.cultivatedOn,
+    description: p.description,
+    photo: photoOf(ph),
+  }));
+}
+
+/** One product of the catalog; null when it does not exist or is not active. */
+export async function getCatalogItem(db: Database, id: string): Promise<CatalogItem | null> {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+  return (await listCatalog(db, id))[0] ?? null;
 }
 
 export async function getProduct(db: Database, id: string): Promise<Product | null> {

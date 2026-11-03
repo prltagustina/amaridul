@@ -10,17 +10,21 @@ import { BrandLockup } from "./headers";
 
 const LINKS = [
   { href: "/qr/mi-espacio", label: "Mi espacio" },
-  { href: "/qr/trazabilidad", label: "Trazabilidad" },
+  { href: "/qr/reprocann", label: "REPROCANN" },
+  { href: "/qr/productos", label: "Productos" },
+  { href: "/qr/cuota", label: "Cuota" },
+  { href: "/qr/ayuda", label: "Ayuda" },
 ];
 
 /** Private navigation for the member portal. "Salir" closes the session. */
 export function MemberHeader({ memberName }: { memberName: string }) {
+  const links = LINKS;
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
 
   const link = (l: (typeof LINKS)[number], mobile = false) => {
-    const active = pathname === l.href;
+    const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
     return (
       <Link
         key={l.href}
@@ -46,7 +50,7 @@ export function MemberHeader({ memberName }: { memberName: string }) {
           <BrandLockup />
         </Link>
         <nav aria-label="Portal de socios" className="hidden items-center gap-6 lg:flex">
-          {LINKS.map((l) => link(l))}
+          {links.map((l) => link(l))}
           <span className="h-5 w-px bg-border" aria-hidden />
           <span className="text-small whitespace-nowrap text-text-muted">{memberName}</span>
           <form action={memberSignOut}>
@@ -68,7 +72,7 @@ export function MemberHeader({ memberName }: { memberName: string }) {
       </div>
       <nav id="member-menu" aria-label="Portal de socios" hidden={!open} className="admin-column border-t border-border/70 pt-2 pb-4 lg:hidden">
         <p className="py-2 text-small text-text-muted">{memberName}</p>
-        <div className="flex flex-col">{LINKS.map((l) => link(l, true))}</div>
+        <div className="flex flex-col">{links.map((l) => link(l, true))}</div>
         <form action={memberSignOut}>
           <button type="submit" className="mt-2 inline-flex min-h-11 items-center gap-2 px-1 text-lg !text-text-muted">
             <LogOut aria-hidden className="size-5" strokeWidth={1.5} /> Salir

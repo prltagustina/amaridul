@@ -16,7 +16,6 @@ const ACCOUNT = {
   disabled: { label: "Bloqueada", tone: "error" },
 } as const;
 const LEGAJO = { imported: "Importado", pending_update: "Pendiente de actualizar", updated: "Actualizado" } as const;
-const REVIEW = { pendiente: "Revisión pendiente", observada: "Observada", verificada: "Verificada" } as const;
 const day = (iso: string | null) => (iso ? iso.split("-").reverse().join("/") : "—");
 
 export default async function SociosPage() {
@@ -68,10 +67,9 @@ export default async function SociosPage() {
               header: "Credencial REPROCANN",
               render: (r) => (
                 <span className="flex flex-col gap-1">
-                  <StatusBadge tone={r.validity.tone}>{r.validity.label}</StatusBadge>
+                  <StatusBadge tone={r.credential.tone}>{r.credential.label}</StatusBadge>
                   <span className="text-xs text-text-muted">
-                    {r.expiresOn ? `Vence ${day(r.expiresOn)}` : "Sin vencimiento"}
-                    {r.review ? ` · ${REVIEW[r.review]}` : ""}
+                    {r.credential.expiry ? `Vence ${day(r.credential.expiry.date)}${r.credential.expiry.verified ? "" : " · sin verificar"}` : r.credential.key === "none" ? "—" : "Sin vencimiento"}
                   </span>
                 </span>
               ),

@@ -1,9 +1,9 @@
 // Every email has a designed HTML version (see layout.ts) and a plain-text one for clients that
 // do not show HTML. Copy is provisional, consistent with the site: replace it with the approved
 // text. Lila while joining (Sumate, invitation, formal request), green once a member.
+import { FEE_PAYMENT } from "@/lib/fee-payment";
 import { renderEmail, type EmailBlock, type EmailLayout } from "./layout";
 
-const PENDING = "[TEXTO PENDIENTE DE APROBACIÓN]";
 
 type Rendered = { subject: string; text: string; html?: string };
 
@@ -188,11 +188,6 @@ export const emailTemplates = {
       ],
     ),
 
-  // Not used yet (activation goes in the approval email); kept with its pending marker.
-  account_activation: (p: { url: string; expiresAt: Date }): Rendered => ({
-    subject: "Activá tu cuenta",
-    text: `${PENDING}\n\n${p.url}\n\nVence: ${p.expiresAt.toISOString()}`,
-  }),
 
   password_reset: (p: { url: string }): Rendered =>
     email(
@@ -209,6 +204,35 @@ export const emailTemplates = {
         { kind: "p", text: "Recibimos un pedido para crear una contraseña nueva para tu espacio de socio en Amarí Dul." },
         { kind: "button", label: "Crear contraseña nueva", url: p.url },
         { kind: "note", text: "El link vence en 30 minutos y sirve una sola vez. Al guardarla, cerramos las sesiones abiertas en otros dispositivos. Si no lo pediste, ignorá este email: tu contraseña sigue igual." },
+      ],
+    ),
+
+  /**
+   * A general notice to every active member: the system records no payments, so it never says
+   * that someone owes, how much or until when. The payment data come from the one shared source.
+   */
+  fee_reminder: (p: { name: string; url: string }): Rendered =>
+    email(
+      "Recordatorio: cuota social de Amarí Dul",
+      `Hola, ${p.name}:`,
+      {
+        tone: "member",
+        preheader: "Los datos de la asociación para pagar tu cuota social.",
+        title: "Tu cuota social",
+        tab: "Socios",
+        reason: "Recibís este email porque sos socio/a de Amarí Dul. Es un aviso general, igual para todos los socios.",
+      },
+      [
+        { kind: "p", text: "Te recordamos que podés pagar la cuota social con una transferencia a la cuenta de la asociación:" },
+        { kind: "fact", label: "Titular", value: FEE_PAYMENT.holder },
+        { kind: "fact", label: "Plataforma", value: FEE_PAYMENT.platform },
+        { kind: "fact", label: "Alias", value: FEE_PAYMENT.alias, mono: true },
+        { kind: "fact", label: "CVU", value: FEE_PAYMENT.cvu, mono: true },
+        { kind: "fact", label: "CUIT", value: FEE_PAYMENT.cuit },
+        ...(FEE_PAYMENT.link ? [{ kind: "button" as const, label: `Pagar con ${FEE_PAYMENT.platform}`, url: FEE_PAYMENT.link }] : []),
+        { kind: "p", text: "Si ya la pagaste, no hace falta que hagas nada." },
+        { kind: "button", label: "Ver los datos en mi espacio", url: p.url },
+        { kind: "note", text: "Este aviso no indica que tengas una deuda. Si tenés dudas sobre tu cuota, consultá con la asociación." },
       ],
     ),
 } as const;

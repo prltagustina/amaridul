@@ -117,6 +117,20 @@ describe("Resend", () => {
     expect(bodies[2]).not.toHaveProperty("bcc");
   });
 
+  it("never copies the team on emails whose link opens someone's account, nor on the fee reminder", async () => {
+    const bodies: Record<string, unknown>[] = [];
+    const fake = (async (_: string, init: RequestInit) => {
+      bodies.push(JSON.parse(String(init.body)));
+      return new Response("{}", { status: 200 });
+    }) as unknown as typeof fetch;
+    const s = new ResendEmailSender("re_ficticia", "x@amaridul.com", undefined, fake, ["equipo.a@example.com"]);
+    const withLinks = ["admission_invitation", "admission_approved", "existing_member_update_link", "existing_member_access", "password_reset", "fee_reminder"];
+    for (const template of withLinks) await s.send({ to: "persona@example.com", subject: "s", text: "t", template });
+    await s.send({ to: "persona@example.com", subject: "s", text: "t", template: "pre_admission_received" });
+    expect(bodies.slice(0, withLinks.length).every((b) => !("bcc" in b))).toBe(true);
+    expect(bodies.at(-1)!.bcc).toEqual(["equipo.a@example.com"]);
+  });
+
   it("is used in production when the API key is configured", async () => {
     const get = await senderFor({ APP_ENV: "production", EMAIL_DELIVERY: undefined, RESEND_API_KEY: "re_ficticia" });
     expect(get()).toBeInstanceOf((await import("@/server/email/sender")).ResendEmailSender);

@@ -1,31 +1,48 @@
+import Link from "next/link";
 import { requireAdmin } from "@/server/auth/session";
-import { readState } from "@/lib/demo";
+import { getDb } from "@/server/db";
+import { listAuditRows } from "@/server/audit/view";
 import { DataList } from "@/components/ui/data-list";
-import { DevStateBar } from "@/components/ui/dev-state-bar";
-import { auditEntries } from "@/demo/fixtures";
-import { LIST_STATES, ListStateView } from "../../list-state";
+import { ListStateView } from "../../list-state";
 import { AdminPageHeader } from "../../ui";
 
-export default async function AuditoriaPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+const stamp = new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short", hourCycle: "h23", timeZone: "America/Argentina/Buenos_Aires" });
+const SHOWN = 100;
+
+export default async function AuditoriaPage() {
   await requireAdmin();
-  const state = await readState(searchParams, LIST_STATES);
+  const rows = await listAuditRows(await getDb(), SHOWN);
   return (
     <>
-      <AdminPageHeader title="Auditoría" description="Registro de acciones de la administración. Solo lectura: no se puede editar ni borrar." />
-      <ListStateView state={state} emptyTitle="Sin registros" emptyDescription="Las acciones de la administración aparecen acá.">
+      <AdminPageHeader
+        title="Auditoría"
+        description={`Lo que pasa en el sistema: solicitudes, cambios en el padrón, accesos y catálogo. Solo lectura. Para cuidar los datos se muestra qué cambió, no los valores. Últimos ${SHOWN} registros.`}
+      />
+      <ListStateView state={rows.length ? "default" : "empty"} emptyTitle="Todavía no hay registros" emptyDescription="Las acciones de la administración y de los formularios aparecen acá.">
         <DataList
           caption="Registro de auditoría"
-          rows={auditEntries}
-          rowKey={(r) => r.at + r.action}
+          rows={rows}
+          rowKey={(r) => r.id}
           columns={[
             { key: "action", header: "Acción", primary: true, render: (r) => r.action },
-            { key: "entity", header: "Referencia", render: (r) => <span className="font-mono text-[13px]">{r.entity}</span> },
-            { key: "actor", header: "Usuario", render: (r) => r.actor },
-            { key: "at", header: "Fecha", render: (r) => <span className="tabular-nums">{r.at}</span> },
+            {
+              key: "subject",
+              header: "Sobre",
+              render: (r) =>
+                r.subject?.href ? (
+                  <Link href={r.subject.href} className="!text-forest underline underline-offset-2">
+                    {r.subject.label}
+                  </Link>
+                ) : (
+                  (r.subject?.label ?? <span className="text-text-muted">—</span>)
+                ),
+            },
+            { key: "actor", header: "Quién", render: (r) => r.actor },
+            { key: "detail", header: "Detalle", render: (r) => r.detail ?? <span className="text-text-muted">—</span> },
+            { key: "at", header: "Fecha", render: (r) => <span className="tabular-nums whitespace-nowrap">{stamp.format(r.at)}</span> },
           ]}
         />
       </ListStateView>
-      <DevStateBar path="/admin/auditoria" states={LIST_STATES} current={state} label="Lista" />
     </>
   );
 }

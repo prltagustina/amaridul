@@ -1,5 +1,7 @@
 import { FileBadge, Plus } from "lucide-react";
 import { requireAdmin } from "@/server/auth/session";
+import { traceabilityPrototype } from "@/lib/features";
+import { InDevelopment } from "../../in-development";
 import { readState } from "@/lib/demo";
 import { LinkButton } from "@/components/ui/button";
 import { DataList } from "@/components/ui/data-list";
@@ -12,6 +14,8 @@ import { AdminPageHeader } from "../../ui";
 
 export default async function LotesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requireAdmin();
+  if (!traceabilityPrototype())
+    return <InDevelopment title="Lotes" purpose="Los lotes de producción, con su análisis y certificado, y a qué socio se entregó cada uno." planned={["Cargar cada lote con su producto, variedad, fechas de cultivo y elaboración", "Adjuntar el análisis de laboratorio y el certificado en forma privada", "Registrar las entregas a cada socio, para que vea solo los lotes que recibió"]} />;
   const state = await readState(searchParams, LIST_STATES);
   return (
     <>

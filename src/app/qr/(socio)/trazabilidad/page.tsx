@@ -1,40 +1,10 @@
-import type { Metadata } from "next";
-import { readState } from "@/lib/demo";
-import { PageBand } from "@/components/brand/page-band";
-import { DevStateBar } from "@/components/ui/dev-state-bar";
-import LotLookup, { type LookupState } from "./lot-lookup";
-import { currentMember } from "@/server/member-session";
+import { notFound } from "next/navigation";
 
-export const metadata: Metadata = { title: "Trazabilidad | Amarí Dul" };
-
-const STATES: readonly LookupState[] = ["default", "lote", "invalido", "loading", "error", "sin-certificado", "certificado"];
-
-export default async function TrazabilidadPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  // Members only: without a member session this sends to the login (demo locally and on previews).
-  await currentMember();
-  const state = await readState(searchParams, STATES);
-  return (
-    <main>
-      <PageBand
-        compact
-        tone="green"
-        eyebrow="Trazabilidad"
-        title="Conocé tu producto"
-        description="Lote, composición y análisis."
-        tab="Consulta por lote"
-        back={{ href: "/qr/mi-espacio", label: "Mi espacio" }}
-        width="wide"
-      />
-      {/* Same column and left edge as Mi espacio, so switching sections never shifts the layout;
-          the lookup keeps its reading width inside it. */}
-      <div className="page-gutter pt-6 pb-8">
-        <div className="admin-column">
-          <div className="max-w-2xl">
-            <LotLookup key={state} initial={state} />
-          </div>
-        </div>
-        <DevStateBar path="/qr/trazabilidad" states={STATES} current={state} label="Trazabilidad" />
-      </div>
-    </main>
-  );
+/**
+ * Lots, traceability and deliveries are hidden from members until the association defines them
+ * (decided 2026-11). The route answers "not found", with or without a session; the admin sections
+ * and the local demo (/qr/trazabilidad/demo, development machine only) stay.
+ */
+export default function TrazabilidadPage() {
+  notFound();
 }

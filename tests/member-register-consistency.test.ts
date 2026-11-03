@@ -6,7 +6,7 @@ import { eq, sql } from "drizzle-orm";
 import { admissions, existingMemberRequests, memberFeeSettings, members, persons } from "@/server/db/schema";
 import { MemoryEmailSender } from "@/server/email/sender";
 import { admissionInput, elevateToCommission, submitAdmission } from "@/server/admissions";
-import { createPreAdmission, inviteToAdmission, preAdmissionInput } from "@/server/pre-admissions";
+import { createPreAdmission, inviteToAdmission, memberOfPreAdmission, preAdmissionInput } from "@/server/pre-admissions";
 import { activateAccount, decisionInput, memberEmailOf, memberOfUser, recordDecision, resendActivation } from "@/server/members";
 import { setPersonDni } from "@/server/identity/person-identity";
 import { analyse, applyImport, mapRows, parseCsv } from "@/server/legacy-import";
@@ -331,3 +331,21 @@ describe("«Ya soy socio/a» asks only name, DNI and email", () => {
     expect(r).toMatchObject({ province: "Santa Fe", locality: "Rafaela", address: null, status: "pending_verification" });
   });
 });
+
+describe("solicitudes resueltas enlazan al socio", () => {
+  it("a preadmission whose admission was approved points to that member", async () => {
+    const a = await approved("99008701");
+    const [adm] = await ctx.db.select({ pre: admissions.preAdmissionId }).from(admissions).where(eq(admissions.id, a.id));
+    expect(await memberOfPreAdmission(ctx.db, adm.pre)).toEqual({ id: a.member.id, memberNumber: a.member.memberNumber });
+  });
+
+  it("a preadmission still open points to no member", async () => {
+    const { id } = await createPreAdmission(
+      ctx.db,
+      { field: ctx.rings.field, email: new MemoryEmailSender() },
+      preAdmissionInput.parse({ nombre: "Persona Abierta", email: "persona.abierta@example.com", provincia: "Santa Fe", localidad: "Santa Fe", intereses: ["comunidad"], reprocann: "", participacion: "si", privacidad: true }),
+    );
+    expect(await memberOfPreAdmission(ctx.db, id)).toBeNull();
+  });
+});
+

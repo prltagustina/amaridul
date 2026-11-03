@@ -31,3 +31,42 @@ export function currentCredential<T extends { kind: string; createdAt: Date }>(d
   const candidates = documents.filter((d) => d.kind === "credencial" || d.kind === "certificado");
   return candidates.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0] ?? null;
 }
+
+export type CredentialStatusKey = "none" | "pending" | "observed" | "verified" | "expiring" | "expired";
+
+/**
+ * The one status of the current credential, shown the same way to the member and to the admin.
+ * Review comes first: an expiry date is only "valid" once the document was verified. Before that
+ * it is what the member (or the association's record) declared, so it is labelled as unverified.
+ * An expired date is shown as such even unverified: it already needs a new credential.
+ */
+export type CredentialStatus = {
+  key: CredentialStatusKey;
+  label: string;
+  tone: "success" | "warning" | "error" | "neutral";
+  expiry: { date: string; verified: boolean; validity: CredentialValidity } | null;
+};
+
+export function credentialStatus(credential: { reviewStatus: "pendiente" | "observada" | "verificada"; expiresOn: string | null } | null, today: string = todayInArgentina()): CredentialStatus {
+  if (!credential) return { key: "none", label: "Sin credencial cargada", tone: "neutral", expiry: null };
+  const validity = credentialValidity(credential, today);
+  const verified = credential.reviewStatus === "verificada";
+  const expiry = credential.expiresOn ? { date: credential.expiresOn, verified, validity } : null;
+  if (credential.reviewStatus === "observada") return { key: "observed", label: "Observada", tone: "error", expiry };
+  if (validity.state === "expired") return { key: "expired", label: "Vencida", tone: "error", expiry };
+  if (!verified) return { key: "pending", label: "En revisión", tone: "warning", expiry };
+  if (validity.state === "expiring") return { key: "expiring", label: "Vence pronto", tone: "warning", expiry };
+  return { key: "verified", label: "Verificada", tone: "success", expiry };
+}
+
+const ddmmyyyy = (iso: string) => iso.split("-").reverse().join("/");
+
+/** The expiry as a sentence: verified dates read plainly, declared ones say they are not checked yet. */
+export function expiryLine(expiry: CredentialStatus["expiry"]): string {
+  if (!expiry) return "Sin fecha de vencimiento registrada";
+  if (!expiry.verified) return expiry.validity.state === "expired" ? `Venció el ${ddmmyyyy(expiry.date)} (fecha sin verificar)` : `Vencimiento sin verificar: ${ddmmyyyy(expiry.date)}`;
+  const v = expiry.validity;
+  if (v.state === "expired") return `Venció el ${ddmmyyyy(expiry.date)}`;
+  if (v.state === "expiring") return v.days === 0 ? `Vence hoy (${ddmmyyyy(expiry.date)})` : `Vence el ${ddmmyyyy(expiry.date)}, en ${v.days} ${v.days === 1 ? "día" : "días"}`;
+  return `Vence el ${ddmmyyyy(expiry.date)}`;
+}

@@ -4,7 +4,6 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { DisallowedContentTypeError, InvalidStorageKeyError, LocalObjectStorage } from "@/server/storage/object-storage";
 import { MemoryRateLimiter } from "@/server/rate-limit/limiter";
-import { MemoryEmailSender } from "@/server/email/sender";
 import { emailTemplates } from "@/server/email/templates";
 import { parseEnv } from "@/server/env";
 import { withStrictSsl } from "@/server/db/client";
@@ -43,13 +42,6 @@ describe("memory rate limiter", () => {
 });
 
 describe("email", () => {
-  it("templates keep institutional text visibly pending", async () => {
-    const sender = new MemoryEmailSender();
-    const { subject, text } = emailTemplates.account_activation({ url: "https://amaridul.test/qr/activar", expiresAt: new Date() });
-    await sender.send({ to: "x@example.com", subject, text, template: "account_activation" });
-    expect(sender.sent[0].text).toContain("PENDIENTE DE APROBACIÓN");
-  });
-
   it("the preadmission acknowledgement greets by name and carries the reference", () => {
     const { subject, text } = emailTemplates.pre_admission_received({ reference: "PRE-2026-0001", name: "Persona Ficticia" });
     expect(subject).toContain("PRE-2026-0001");

@@ -25,7 +25,7 @@ import { dniLookupCandidates, maskDni, normalizeDni } from "@/server/crypto/dni"
 import { readPersonDni, setPersonDni, type Keyrings } from "@/server/identity/person-identity";
 import { ACTIVATION_KIND, deliveryEmail, grantMemberAccess, MemberAccessError, memberNumberTaken, type Deps } from "@/server/members";
 import { getReprocann } from "@/server/reprocann";
-import { credentialValidity, currentCredential, todayInArgentina } from "@/lib/credential-validity";
+import { credentialStatus, credentialValidity, currentCredential, todayInArgentina } from "@/lib/credential-validity";
 import { categoryOptions, provinces } from "@/demo/content";
 
 export class MemberProfileError extends Error {}
@@ -132,13 +132,13 @@ export async function listRegister(db: Database, today = todayInArgentina()) {
   const caseIds = rows.flatMap((r) => (r.caseId ? [r.caseId] : []));
   const docs = caseIds.length
     ? await db
-        .select({ caseId: reprocannDocuments.caseId, kind: reprocannDocuments.kind, expiresOn: reprocannDocuments.expiresOn, reviewStatus: reprocannDocuments.reviewStatus, createdAt: reprocannDocuments.createdAt })
+        .select({ caseId: reprocannDocuments.caseId, kind: reprocannDocuments.kind, expiresOn: reprocannDocuments.expiresOn, reviewStatus: reprocannDocuments.reviewStatus, createdAt: reprocannDocuments.createdAt, replacedBy: reprocannDocuments.replacedBy })
         .from(reprocannDocuments)
         .where(inArray(reprocannDocuments.caseId, caseIds))
     : [];
 
   return rows.map((r) => {
-    const credential = currentCredential(docs.filter((d) => d.caseId === r.caseId));
+    const credential = currentCredential(docs.filter((d) => d.caseId === r.caseId && !d.replacedBy));
     return {
       id: r.id,
       memberNumber: r.memberNumber,
@@ -152,6 +152,7 @@ export async function listRegister(db: Database, today = todayInArgentina()) {
       validity: credentialValidity(credential, today),
       expiresOn: credential?.expiresOn ?? null,
       review: credential?.reviewStatus ?? null,
+      credential: credentialStatus(credential, today),
     };
   });
 }
@@ -193,7 +194,7 @@ export async function getMemberProfile(db: Database, rings: Keyrings, id: string
     .orderBy(desc(existingMemberRequests.createdAt))
     .limit(1);
   const reprocann = await getReprocann(db, rings.field, id);
-  const credential = currentCredential(reprocann?.documents ?? []);
+  const credential = currentCredential((reprocann?.documents ?? []).filter((d) => !d.replacedBy));
   const access = await accessView(
     db,
     { memberId: id, personId: m.member.personId, hasDni: !!dni, accountStatus: m.accountStatus, to: deliveryEmail({ notificationEmail: m.notificationEmail, email: m.person.email }) },
@@ -236,6 +237,8 @@ export async function getMemberProfile(db: Database, rings: Keyrings, id: string
     reprocann,
     credential: credential ? { ...credential, validity: credentialValidity(credential, today) } : null,
     validity: credentialValidity(credential, today),
+    /** The same single status the member sees. */
+    credentialStatus: credentialStatus(credential, today),
   };
 }
 
