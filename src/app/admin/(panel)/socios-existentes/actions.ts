@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
 import { getKeyrings } from "@/server/crypto";
@@ -16,6 +17,7 @@ import {
   rejectExistingMemberRequest,
   resendUpdateLink,
 } from "@/server/existing-members";
+import { DeleteNotAllowedError, deleteTestExistingMemberRequest } from "@/server/test-data";
 
 export type ActionResult = { ok: true; message: string } | { ok: false; error: string };
 
@@ -97,4 +99,17 @@ export async function resendLinkAction(id: string): Promise<ActionResult> {
   } catch (e) {
     return failure(e, "No pudimos reenviar el link.");
   }
+}
+
+/** TEMPORARY (testing phase): deletes a test «Ya soy socio/a» request and what it created. */
+export async function deleteTestExistingRequestAction(id: string, confirmReference: string): Promise<ActionResult> {
+  const { user } = await requireAdmin();
+  try {
+    await deleteTestExistingMemberRequest(await getDb(), user.id, String(id), confirmReference);
+  } catch (e) {
+    if (!(e instanceof DeleteNotAllowedError)) console.error("Existing request delete failed:", e instanceof Error ? e.message : e);
+    return { ok: false, error: e instanceof DeleteNotAllowedError ? e.message : "No pudimos eliminar la solicitud." };
+  }
+  refresh(String(id));
+  redirect("/admin/socios-existentes");
 }

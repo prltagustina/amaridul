@@ -70,7 +70,7 @@ export async function deleteTestRequestAction(id: string, confirmReference: stri
     await deleteTestRequest(await getDb(), user.id, id, confirmReference);
   } catch (e) {
     if (!(e instanceof DeleteNotAllowedError)) console.error("Test request delete failed:", e instanceof Error ? e.message : e);
-    return { ok: false, error: e instanceof DeleteNotAllowedError ? "La referencia no coincide. Escribila tal como aparece arriba." : "No pudimos eliminar la solicitud." };
+    return { ok: false, error: e instanceof DeleteNotAllowedError ? e.message : "No pudimos eliminar la solicitud." };
   }
   revalidatePath("/admin/preadmisiones");
   revalidatePath("/admin/admisiones");

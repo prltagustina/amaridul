@@ -13,6 +13,7 @@ import { categoryOptions } from "@/demo/content";
 import { existingRequestStatus } from "../../../status";
 import { AdminPageHeader } from "../../../ui";
 import ExistingMemberActions from "./actions-panel";
+import { DeleteTestRequest } from "./delete-test-request";
 
 const dateFormat = new Intl.DateTimeFormat("es-AR", { dateStyle: "long", timeStyle: "short", hourCycle: "h23", timeZone: "America/Argentina/Buenos_Aires" });
 const day = (iso: string | null) => (iso ? iso.split("-").reverse().join("/") : "—");
@@ -130,20 +131,23 @@ export default async function SocioExistentePage({ params }: { params: Promise<{
             )}
           </Card>
         </div>
-        <ExistingMemberActions
-          id={r.id}
-          status={r.status}
-          declaredNumber={r.declaredMemberNumber}
-          sentEmail={r.email}
-          member={
-            found
-              ? { number: found.memberNumber, category: found.category ?? "", since: found.since ?? "", minutesReference: found.minutesReference ?? "", status: found.status, accountStatus: found.accountStatus ?? "none", email: found.email }
-              : null
-          }
-          blocked={!!(match.openAdmission || match.otherAccount)}
-          writesEnabled={existingMemberWritesEnabled()}
-          categories={categoryOptions.map((c) => ({ value: c.value, label: c.label }))}
-        />
+        <div className="space-y-6">
+          <ExistingMemberActions
+            id={r.id}
+            status={r.status}
+            declaredNumber={r.declaredMemberNumber}
+            sentEmail={r.email}
+            member={
+              found
+                ? { number: found.memberNumber, category: found.category ?? "", since: found.since ?? "", minutesReference: found.minutesReference ?? "", status: found.status, accountStatus: found.accountStatus ?? "none", email: found.email }
+                : null
+            }
+            blocked={!!(match.openAdmission || match.otherAccount)}
+            writesEnabled={existingMemberWritesEnabled()}
+            categories={categoryOptions.map((c) => ({ value: c.value, label: c.label }))}
+          />
+          <DeleteTestRequest id={r.id} reference={r.reference} />
+        </div>
       </div>
     </>
   );
