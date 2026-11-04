@@ -168,7 +168,14 @@ Actualizado: 3/11/2026, 21 h. Etapa 1 **abierta**. Bloques del cierre: **A** por
   - «Ya tengo mi credencial: quiero cargarla»: la carga en `/qr/reprocann`.
   - «¿Dónde encuentro mi código de vinculación?»: tres pasos y un **video propio de la asociación** (30 segundos, sin sonido, con el texto en pantalla y las pantallas ilustradas; termina con el logo de Amarí Dul y el WhatsApp). Se reproduce en la misma página (`/videos/codigo-de-vinculacion.mp4`, 0,8 MB). Reemplaza al video de un profesional externo que se había enlazado en Drive.
   - Cuota, actualizar datos, compras y «Escribirle a la asociación» por WhatsApp.
-- **Inicio público (`/qr`, «Cómo sumarte»)**: cuatro situaciones (quiero asociarme; todavía no tengo REPROCANN; ya soy socio/a y no tengo cuenta; ya tengo mi cuenta), los tres pasos de la admisión con la aclaración de que no hace falta tener REPROCANN para empezar la preadmisión (la preadmisión ya pregunta por él) y «¿Dudas? Escribinos por WhatsApp».
+- **Inicio público (`/qr`)**, reordenado:
+  1. «Sumate a Amarí Dul»: tres entradas directas (quiero asociarme; ya soy socio/a y no tengo cuenta; ya tengo mi cuenta).
+  2. «Cómo es asociarse»: los tres pasos de la admisión (no hace falta tener REPROCANN para empezar la preadmisión, que ya pregunta por él).
+  3. **«Tu REPROCANN, paso a paso»**: tramitarlo (sitio oficial), encontrar el código de vinculación (**con el video integrado**) y cargarlo en tu espacio; cierra con «¿Dudas? Escribinos por WhatsApp».
+- **Vinculación con Amarí Dul (circuito completo, local)**:
+  - El socio, en su espacio → REPROCANN, carga su **código de vinculación** (con el video al lado). Se guarda **cifrado**; el socio lo ve enmascarado y el estado «Vinculación pendiente» o «verificada». El inicio lo resume: «Falta tu código», «Código enviado» o «Verificada».
+  - La administración lo ve completo en la ficha del socio (con «Copiar código»), lo puede cargar por quienes no usan el portal, y tiene en «Credenciales REPROCANN» la lista **«Vinculaciones para hacer en REPROCANN»**. Cuando la hace, marca «Vinculación verificada» y el socio lo ve.
+  - El código nunca se escribe en el registro de cambios. Migración `0018`.
 - Los mensajes de WhatsApp no llevan DNI, datos médicos ni documentos.
 - **Falta**: un instructivo propio de la asociación para iniciar el trámite, si lo quieren.
 
@@ -195,6 +202,7 @@ Oculta para socios (ver A). Cuando se retome:
 | `0015` | Recordatorio de cuota: configuración y registro de envíos. | **Publicada el 3/11.** |
 | `0016` | Forma de pago de cada socio (mensual, trimestral o semestral), con quién la eligió y cuándo. | **Publicada el 3/11** (punto de restauración 20:50:49). |
 | `0017` | Ficha técnica del producto (cosecha, laboratorio, análisis, THC/CBD, perfil) y certificado PDF. | **Publicada el 3/11.** |
+| `0018` | Código de vinculación del socio (cifrado), quién lo envió y cuándo. | Local, para publicar (antes que el código). |
 
 **Compatibilidad**: las tres solo agregan tablas, columnas y tipos, sin borrar ni transformar datos. La versión publicada sigue funcionando con ellas aplicadas.
 

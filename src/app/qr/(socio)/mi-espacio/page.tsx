@@ -18,6 +18,7 @@ import { getKeyrings } from "@/server/crypto";
 import { currentMember } from "@/server/member-session";
 import { memberFeePlan } from "@/server/fee-plan";
 import { memberReprocann } from "@/server/member-portal";
+import { memberLinkage } from "@/server/reprocann-link";
 import { listCatalog } from "@/server/products";
 
 export const metadata: Metadata = { title: "Mi espacio | Amarí Dul" };
@@ -52,8 +53,8 @@ function credentialTask(status: CredentialStatus, managedByAssociation: boolean,
 }
 
 // Only for reviewing the screens locally without a session: a fictitious member.
-type CredentialSummary = { status: CredentialStatus; managedByAssociation: boolean; reason: string | null; documents: number; products: number; plan: string | null };
-const DEMO: CredentialSummary = { status: credentialStatus({ reviewStatus: "pendiente", expiresOn: "2027-03-01" }), managedByAssociation: false, reason: null, documents: 1, products: 2, plan: null };
+type CredentialSummary = { status: CredentialStatus; managedByAssociation: boolean; reason: string | null; documents: number; products: number; plan: string | null; linkage: { verified: boolean; sent: boolean } };
+const DEMO: CredentialSummary = { status: credentialStatus({ reviewStatus: "pendiente", expiresOn: "2027-03-01" }), managedByAssociation: false, reason: null, documents: 1, products: 2, plan: null, linkage: { verified: false, sent: false } };
 
 export default async function MiEspacioPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const state = await readState(searchParams, STATES);
@@ -90,6 +91,7 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
       documents: reprocann?.documents.filter((d) => !d.replaced).length ?? 0,
       products: (await listCatalog(db)).length,
       plan: (await memberFeePlan(db, m.id)).plan,
+      linkage: await memberLinkage(db, getKeyrings().field, m.id).then((l) => ({ verified: l.verified, sent: !!l.masked })),
     };
   }
   const task = credentialTask(credential.status, credential.managedByAssociation, credential.reason);
@@ -123,6 +125,14 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
                       <StatusBadge tone={credential.status.tone}>{credential.status.label}</StatusBadge>
                     </div>
                     <p className="text-small text-text-muted">{task.detail}</p>
+                  </li>
+                  <li className="flex items-center justify-between gap-3 py-2.5">
+                    <Link href="/qr/reprocann#vinculacion" className="text-[0.9375rem] !text-foreground underline-offset-4 hover:underline">
+                      Vinculación con Amarí Dul
+                    </Link>
+                    <StatusBadge tone={credential.linkage.verified ? "success" : credential.linkage.sent ? "info" : "warning"}>
+                      {credential.linkage.verified ? "Verificada" : credential.linkage.sent ? "Código enviado" : "Falta tu código"}
+                    </StatusBadge>
                   </li>
                 </ul>
                 <CardFoot>

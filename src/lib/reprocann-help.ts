@@ -11,5 +11,5 @@ export const LINK_CODE_VIDEO = { src: "/videos/codigo-de-vinculacion.mp4", poste
 export const LINK_CODE_STEPS = [
   "Entrá a reprocann.msal.gob.ar con tu cuenta de Mi Argentina.",
   "Elegí el perfil «Paciente» y abrí tu «Registro de paciente».",
-  "En «Identificación» está tu código de vinculación: copialo y enviáselo a la asociación.",
+  "En «Identificación» está tu código de vinculación: copialo y cargalo en tu espacio, en REPROCANN.",
 ] as const;

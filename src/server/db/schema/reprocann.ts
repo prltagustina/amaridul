@@ -28,6 +28,13 @@ export const reprocannCases = pgTable("reprocann_cases", {
   /** Free text, e.g. the medical team the association works with. Not a logical identity. */
   responsibleName: text("responsible_name"),
   linkageStatus: reprocannLinkageStatus("linkage_status").notNull().default("pendiente"),
+  /**
+   * The member's REPROCANN «código de vinculación», which the association uses to link them in
+   * REPROCANN. Encrypted (field key); who sent it last (the member or an admin) and when.
+   */
+  linkCodeEncrypted: text("link_code_encrypted"),
+  linkCodeSentBy: uuid("link_code_sent_by").references(() => user.id, { onDelete: "set null" }),
+  linkCodeSentAt: timestamp("link_code_sent_at", tz),
   createdBy: uuid("created_by").references(() => user.id, { onDelete: "restrict" }),
   updatedBy: uuid("updated_by").references(() => user.id, { onDelete: "restrict" }),
   createdAt: timestamp("created_at", tz).notNull().defaultNow(),

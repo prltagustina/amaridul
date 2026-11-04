@@ -2,7 +2,9 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import heroPhoto from "@/assets/demo/qr-portada-provisoria.jpg";
-import { ArrowRight, BadgeCheck, ChevronDown, ExternalLink, FileText, Info, MessageCircle, Sprout, UserRound } from "lucide-react";
+import { Fragment } from "react";
+import { ArrowRight, BadgeCheck, ChevronDown, ExternalLink, Info, MessageCircle, Sprout, UserRound } from "lucide-react";
+import { LinkCodeVideo } from "@/components/reprocann/link-code-video";
 import { BRAND, SHARE_DESCRIPTION, SHARE_IMAGE, SITE_URL } from "@/lib/constants";
 import { SiteFooter } from "@/components/brand/site-footer";
 import { CircleLogo } from "@/components/brand/circle-logo";
@@ -42,53 +44,42 @@ export const metadata: Metadata = {
   },
 };
 
-// The two flows keep their colours: members in hoja, joining in lila.
+// Every way someone arrives, with its one next step. Joining in lila, members in hoja.
 const PATHS = [
-  { href: "/qr/login", title: "Acceso socios", detail: "Tu espacio personal", Icon: UserRound, theme: "", badge: "bg-[linear-gradient(135deg,var(--hoja-800),var(--hoja-700))]" },
-  { href: "/sumate", title: "Sumate a la comunidad", detail: "Solicitud de preadmisión", Icon: Sprout, theme: "flujo-sumate", badge: "bg-[linear-gradient(135deg,var(--lila-800),var(--lila-700))]" },
-];
-
-// Every way someone arrives, with the next step for each. Joining in lila, members in hoja.
-const SITUATIONS = [
-  {
-    title: "Quiero asociarme",
-    detail: "Empezá con la preadmisión: lleva unos 5 minutos. Contanos quién sos y si tenés REPROCANN; el equipo te orienta sobre el recorrido.",
-    href: "/sumate#asociarme",
-    cta: "Empezar la preadmisión",
-    Icon: Sprout,
-    badge: "bg-[linear-gradient(135deg,var(--lila-800),var(--lila-700))]",
-  },
-  {
-    title: "Todavía no tengo REPROCANN",
-    detail: "El registro se tramita en el sitio oficial del Ministerio de Salud, con tu cuenta de Mi Argentina. Podés empezar la preadmisión igual: contalo ahí y te orientamos.",
-    href: REPROCANN_OFFICIAL_SITE,
-    cta: "Ir al sitio oficial",
-    external: true,
-    Icon: FileText,
-    badge: "bg-[linear-gradient(135deg,var(--lila-800),var(--lila-700))]",
-  },
-  {
-    title: "Ya soy socio/a y no tengo cuenta",
-    detail: "Pedí tu acceso con tu nombre, DNI y email. La asociación verifica tus datos y te manda el enlace para activar tu cuenta. No hace falta volver a asociarte.",
-    href: "/sumate/socio-existente",
-    cta: "Ya soy socio/a",
-    Icon: BadgeCheck,
-    badge: "bg-[linear-gradient(135deg,var(--hoja-800),var(--hoja-700))]",
-  },
-  {
-    title: "Ya tengo mi cuenta",
-    detail: "Ingresá con tu DNI y tu contraseña. En tu espacio cargás tu credencial REPROCANN y ves los productos, la cuota y la ayuda.",
-    href: "/qr/login",
-    cta: "Ingresar",
-    Icon: UserRound,
-    badge: "bg-[linear-gradient(135deg,var(--hoja-800),var(--hoja-700))]",
-  },
+  { href: "/sumate#asociarme", title: "Quiero asociarme", detail: "Empezá con la preadmisión: lleva unos 5 minutos", Icon: Sprout, theme: "flujo-sumate", badge: "bg-[linear-gradient(135deg,var(--lila-800),var(--lila-700))]" },
+  { href: "/sumate/socio-existente", title: "Ya soy socio/a y no tengo cuenta", detail: "Pedí tu acceso: sin volver a asociarte", Icon: BadgeCheck, theme: "", badge: "bg-[linear-gradient(135deg,var(--hoja-800),var(--hoja-700))]" },
+  { href: "/qr/login", title: "Ya tengo mi cuenta", detail: "Ingresá a tu espacio de socio", Icon: UserRound, theme: "", badge: "bg-[linear-gradient(135deg,var(--hoja-800),var(--hoja-700))]" },
 ];
 
 const JOURNEY = [
   { meta: "Online · 5 minutos", title: "Preadmisión", detail: "Contanos quién sos y qué te acerca a Amarí Dul. Si todavía no tenés REPROCANN, contalo ahí: no hace falta tenerlo para empezar.", href: "/sumate#asociarme", cta: "Empezar" },
   { meta: "Por invitación", title: "Solicitud formal", detail: "Completás tus datos, la categoría y aceptás el estatuto.", href: undefined, cta: undefined },
   { meta: "Comisión Directiva", title: "Admisión", detail: "Te avisamos la decisión y activás tu cuenta de socio.", href: undefined, cta: undefined },
+];
+
+// Whole class names, so Tailwind generates them.
+const ROW = ["lg:row-start-1", "lg:row-start-2", "lg:row-start-3"];
+
+// REPROCANN with the association, step by step; the video shows step 2.
+const REPROCANN_STEPS = [
+  {
+    meta: "Sitio oficial · con Mi Argentina",
+    title: "Tramitá tu REPROCANN",
+    detail: "Se hace en el sitio oficial del Ministerio de Salud de la Nación. Si todavía no lo tenés, podés empezar la preadmisión igual: te orientamos.",
+    link: { href: REPROCANN_OFFICIAL_SITE, label: "Ir al sitio oficial", external: true },
+  },
+  {
+    meta: "En tu Registro de paciente",
+    title: "Encontrá tu código de vinculación",
+    detail: "Con ese código la asociación te vincula en REPROCANN. El video muestra dónde está, en menos de un minuto.",
+    link: null,
+  },
+  {
+    meta: "En tu espacio de socio",
+    title: "Pasáselo a la asociación",
+    detail: "Cuando seas socio/a, cargalo en tu espacio, en REPROCANN, junto con tu credencial. Ahí ves cuándo queda verificada la vinculación.",
+    link: { href: "/qr/login", label: "Ingresar a mi espacio", external: false },
+  },
 ];
 
 export default function QRPage() {
@@ -162,36 +153,12 @@ export default function QRPage() {
         <EditorialSection
           id="sumarte"
           eyebrow="Asociarse"
-          title="Cómo sumarte"
-          intro="Elegí tu situación y te mostramos el camino. El equipo de la asociación te acompaña en cada paso."
+          title="Cómo es asociarse"
+          intro="Tres pasos, con el acompañamiento del equipo de la asociación."
           className="border-y border-hoja-100 bg-[linear-gradient(180deg,var(--hoja-50)_0%,var(--hoja-100)_100%)]"
           decor={<span aria-hidden className="pointer-events-none absolute -bottom-40 -left-32 -z-10 size-96 !rounded-full bg-hoja-200/60 blur-3xl" />}
         >
-          <ul className="grid gap-4 sm:grid-cols-2">
-            {SITUATIONS.map((s) => (
-              <li key={s.title} className="flex flex-col gap-3 !rounded-card border border-hoja-200 bg-white/70 p-5 sm:p-6">
-                <div className="flex items-center gap-3">
-                  <span aria-hidden className={`flex size-10 shrink-0 items-center justify-center !rounded-full text-white ${s.badge}`}>
-                    <s.Icon className="size-[1.125rem]" strokeWidth={1.5} />
-                  </span>
-                  <h3 className="font-title text-[1.1875rem] leading-snug text-foreground">{s.title}</h3>
-                </div>
-                <p className="text-body text-text-muted">{s.detail}</p>
-                <a
-                  href={s.href}
-                  {...(s.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                  className="font-ui mt-auto inline-flex min-h-11 items-center gap-1.5 self-start !text-forest underline-offset-4 hover:underline"
-                >
-                  {s.cta}
-                  {s.external ? <ExternalLink aria-hidden className="size-4" strokeWidth={1.5} /> : <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />}
-                  {s.external && <span className="sr-only">(se abre en otra pestaña)</span>}
-                </a>
-              </li>
-            ))}
-          </ul>
-
-          <h3 className="mt-12 font-title text-[clamp(1.25rem,1.1rem+0.6vw,1.5rem)] text-forest">Si te asociás por primera vez</h3>
-          <ol className="mt-4">
+          <ol>
             {JOURNEY.map((step, i) => (
               <li key={step.title} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-5 border-t border-hoja-200 py-7 first:border-t-0 first:pt-0 sm:gap-x-8 sm:py-8">
                 <p aria-hidden className="font-display text-[clamp(2.75rem,2.2rem+2.4vw,4rem)] leading-[0.9] font-medium text-hoja-600">
@@ -199,10 +166,10 @@ export default function QRPage() {
                 </p>
                 <div>
                   <p className="text-eyebrow text-hoja-700">{step.meta}</p>
-                  <h4 className="mt-1 font-title text-[clamp(1.25rem,1.1rem+0.6vw,1.5rem)] text-foreground">
+                  <h3 className="mt-1 font-title text-[clamp(1.25rem,1.1rem+0.6vw,1.5rem)] text-foreground">
                     <span className="sr-only">Paso {i + 1}: </span>
                     {step.title}
-                  </h4>
+                  </h3>
                   <p className="mt-2 text-body text-text-muted">{step.detail}</p>
                   {step.href && (
                     <Link href={step.href} className="font-ui mt-2 inline-flex min-h-11 items-center gap-1.5 !text-forest underline-offset-4 hover:underline">
@@ -219,9 +186,49 @@ export default function QRPage() {
               <strong className="font-medium">Enviar la preadmisión no implica la admisión.</strong> La decide la Comisión Directiva y te avisamos por email.
             </span>
           </p>
+        </EditorialSection>
+
+        <EditorialSection id="reprocann" eyebrow="REPROCANN" title="Tu REPROCANN, paso a paso" intro="El registro del Ministerio de Salud para el cannabis medicinal. No hace falta tenerlo para empezar a asociarte: te acompañamos en el camino." className="bg-arena-50">
+          <div className="grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,1fr)_15rem]">
+            {REPROCANN_STEPS.map((step, i) => (
+              <Fragment key={step.title}>
+                <div className={`grid grid-cols-[auto_minmax(0,1fr)] gap-x-5 border-t border-arena-200 pt-7 sm:gap-x-8 lg:col-start-1 ${ROW[i]} ${i === 0 ? "border-t-0 pt-0" : ""}`}>
+                  <p aria-hidden className="font-display text-[clamp(2.75rem,2.2rem+2.4vw,4rem)] leading-[0.9] font-medium text-arena-500">
+                    {String(i + 1).padStart(2, "0")}
+                  </p>
+                  <div>
+                    <p className="text-eyebrow text-arena-700">{step.meta}</p>
+                    <h3 className="mt-1 font-title text-[clamp(1.25rem,1.1rem+0.6vw,1.5rem)] text-foreground">
+                      <span className="sr-only">Paso {i + 1}: </span>
+                      {step.title}
+                    </h3>
+                    <p className="mt-2 text-body text-text-muted">{step.detail}</p>
+                    {step.link && (
+                      <a
+                        href={step.link.href}
+                        {...(step.link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                        className="font-ui mt-2 inline-flex min-h-11 items-center gap-1.5 !text-forest underline-offset-4 hover:underline"
+                      >
+                        {step.link.label}
+                        {step.link.external ? <ExternalLink aria-hidden className="size-4" strokeWidth={1.5} /> : <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />}
+                        {step.link.external && <span className="sr-only">(se abre en otra pestaña)</span>}
+                      </a>
+                    )}
+                  </div>
+                </div>
+                {/* On a phone the video follows step 2; on a wide screen it stays beside the three steps. */}
+                {i === 1 && (
+                  <figure className="mx-auto w-full max-w-[15rem] space-y-2 lg:sticky lg:top-8 lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:mx-0">
+                    <LinkCodeVideo />
+                    <figcaption className="text-center text-small text-text-muted">Dónde está tu código de vinculación · 30 segundos</figcaption>
+                  </figure>
+                )}
+              </Fragment>
+            ))}
+          </div>
           {whatsapp && (
-            <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="font-ui mt-6 inline-flex min-h-11 items-center gap-2 !rounded-full border border-forest/60 px-5 !text-forest hover:bg-white/60">
-              <MessageCircle aria-hidden className="size-4" strokeWidth={1.5} /> ¿Dudas? Escribinos por WhatsApp
+            <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="font-ui mt-10 inline-flex min-h-11 items-center gap-2 !rounded-full border border-forest/60 px-5 !text-forest hover:bg-white/60">
+              <MessageCircle aria-hidden className="size-4" strokeWidth={1.5} /> ¿Dudas con tu REPROCANN o con el ingreso? Escribinos por WhatsApp
             </a>
           )}
         </EditorialSection>

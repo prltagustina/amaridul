@@ -9,6 +9,7 @@ import { categoryOptions, provinces } from "@/demo/content";
 import { fileSizeLabel } from "@/lib/file-size";
 import { expiryLine } from "@/lib/credential-validity";
 import { uploadMode } from "@/server/storage";
+import { adminLinkCode } from "@/server/reprocann-link";
 import { memberStatus } from "../../../status";
 import { AdminPageHeader } from "../../../ui";
 import { AccountBlock, ContactBlock, FeeBlock, MembershipBlock, NotesBlock, PersonalBlock } from "./profile-blocks";
@@ -95,6 +96,7 @@ export default async function SocioPage({ params }: { params: Promise<{ id: stri
       digitized: !!rep?.documents.find((d) => d.id === p.credential?.id)?.files.length,
     },
     uploads: uploadMode(),
+    linkCode: await adminLinkCode(await getDb(), getKeyrings().field, p.id),
   };
 
   const ac = p.access;

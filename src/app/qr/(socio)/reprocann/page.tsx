@@ -11,6 +11,9 @@ import { getKeyrings } from "@/server/crypto";
 import { currentMember } from "@/server/member-session";
 import { memberReprocann, type PortalDocument } from "@/server/member-portal";
 import { memberFolder } from "@/server/reprocann-files";
+import { memberLinkage } from "@/server/reprocann-link";
+import { LinkCodeSteps, LinkCodeVideo } from "@/components/reprocann/link-code-video";
+import { LinkCodeForm } from "./link-code-form";
 import { uploadMode } from "@/server/storage";
 import UploadForm from "./upload-form";
 
@@ -54,6 +57,7 @@ export default async function ReprocannPage() {
   const m = await currentMember();
   if (m !== "demo" && m.status !== "activo") redirect("/qr/mi-espacio");
   const reprocann = m === "demo" ? null : await memberReprocann(await getDb(), getKeyrings().field, m.id);
+  const linkage = m === "demo" ? { verified: false, sentOn: null, masked: null } : await memberLinkage(await getDb(), getKeyrings().field, m.id);
   const mode = uploadMode();
   const current = reprocann?.credential ?? null;
   const status = reprocann?.status ?? credentialStatus(null);
@@ -70,8 +74,8 @@ export default async function ReprocannPage() {
         compact
         tone="sand"
         eyebrow="REPROCANN"
-        title="Tu credencial REPROCANN"
-        description="Cargala, mirá su estado y corregila si te lo piden."
+        title="Tu REPROCANN"
+        description="Tu credencial y tu vinculación con la asociación, paso a paso."
         tab="Documentación"
         back={{ href: "/qr/mi-espacio", label: "Mi espacio" }}
         width="wide"
@@ -113,7 +117,32 @@ export default async function ReprocannPage() {
               )}
             </TabbedCard>
 
-            <TabbedCard tab={formTitle} tone="sand" id="cargar" className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1" bodyClassName="space-y-5">
+            <TabbedCard tab="Vinculación con Amarí Dul" tone="sand" id="vinculacion" className="min-w-0 scroll-mt-6 lg:col-start-1 lg:row-start-2" bodyClassName="space-y-4">
+              <StatusBadge tone={linkage.verified ? "success" : "warning"}>{linkage.verified ? "Vinculación verificada" : "Vinculación pendiente"}</StatusBadge>
+              <p className="text-[0.9375rem] leading-relaxed text-text-muted">
+                {linkage.verified ? (
+                  "La asociación ya te vinculó en REPROCANN."
+                ) : linkage.masked ? (
+                  <>
+                    Recibimos tu código <span className="font-mono tracking-wider text-forest">{linkage.masked}</span> el {day(linkage.sentOn)}. Cuando la asociación haga la vinculación, acá vas a ver «Vinculación verificada».
+                  </>
+                ) : (
+                  "Pasanos tu código de vinculación de REPROCANN: con ese código la asociación te vincula para poder acompañarte."
+                )}
+              </p>
+              {!linkage.verified && <LinkCodeForm canSend={m !== "demo"} correcting={!!linkage.masked} />}
+              {!linkage.verified && (
+                <details className="!rounded-control border border-mist-line bg-mist/50 px-4 py-3 [&[open]>summary]:mb-4">
+                  <summary className="cursor-pointer text-[0.9375rem] font-medium text-forest">¿Dónde lo encuentro? Mirá el video (30 segundos)</summary>
+                  <div className="grid items-start gap-4 text-[0.9375rem] leading-relaxed text-text-muted sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)]">
+                    <LinkCodeVideo className="mx-auto max-w-[10rem]" />
+                    <LinkCodeSteps />
+                  </div>
+                </details>
+              )}
+            </TabbedCard>
+
+            <TabbedCard tab={formTitle} tone="sand" id="cargar" className="min-w-0 lg:col-start-2 lg:row-span-3 lg:row-start-1" bodyClassName="space-y-5">
               {m === "demo" ? (
                 <DevTag>Demo sin sesión: ingresá con un socio de prueba para cargar un archivo</DevTag>
               ) : mode === "unavailable" ? (
@@ -124,7 +153,7 @@ export default async function ReprocannPage() {
             </TabbedCard>
 
             {history.length > 0 && (
-              <TabbedCard tab="Historial" tone="sand" className="min-w-0 lg:col-start-1 lg:row-start-2" bodyClassName="space-y-4">
+              <TabbedCard tab="Historial" tone="sand" className="min-w-0 lg:col-start-1 lg:row-start-3" bodyClassName="space-y-4">
                 <ul className="divide-y divide-mist-line">
                   {history.map((d) => (
                     <HistoryItem key={d.id} d={d} />

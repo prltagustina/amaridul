@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Alert, Card, StatusBadge } from "@/components/ui/display";
 import { Dialog } from "@/components/ui/dialog";
 import { Select, TextField, Textarea } from "@/components/ui/field";
-import { addDocumentAction, reviewDocumentAction, saveCaseAction, type ReprocannResult } from "./reprocann-actions";
+import { CopyValue } from "@/components/ui/copy-value";
+import { addDocumentAction, reviewDocumentAction, saveCaseAction, saveLinkCodeAction, type ReprocannResult } from "./reprocann-actions";
 import { UploadDialog } from "./upload-dialog";
 
 type Option = { value: string; label: string };
@@ -40,6 +41,8 @@ export type ReprocannView = {
   credential: { statusLabel: string; statusTone: "success" | "warning" | "error" | "neutral"; expiry: string; review: "pendiente" | "observada" | "verificada" | null; source: string | null; digitized: boolean };
   /** How files can be loaded here: through this server locally, to the private store on a deployment. */
   uploads: "local" | "blob" | "unavailable";
+  /** The member's «código de vinculación», in full (admins only). */
+  linkCode: { code: string; sentOn: string | null; byMember: boolean } | null;
 };
 export type ReprocannOptions = { permit: Option[]; management: Option[]; linkage: Option[]; kind: Option[]; review: Option[]; source: Option[] };
 
@@ -57,6 +60,9 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
   const [pending, startTransition] = useTransition();
   const [notice, setNotice] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [caseForm, setCaseForm] = useState(view.case ?? { permitStatus: "sin_permiso", managementSource: "self_or_external", responsibleName: "", linkageStatus: "pendiente" });
+  const [editingLink, setEditingLink] = useState(false);
+  const [linkDraft, setLinkDraft] = useState("");
+  const [linkError, setLinkError] = useState("");
   const [adding, setAdding] = useState(false);
   const [editingCase, setEditingCase] = useState(false);
   const [doc, setDoc] = useState({ kind: "", permitIdentifier: "", issuedOn: "", expiresOn: "", source: "en_poder_de_la_asociacion", notes: "" });
@@ -119,12 +125,56 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
             <div><dt className="text-text-muted">Quién gestiona</dt><dd>{label(options.management, caseForm.managementSource)}</dd></div>
             <div><dt className="text-text-muted">Responsable</dt><dd>{caseForm.responsibleName || "—"}</dd></div>
           </dl>
+          <div className="space-y-1.5 border-t border-border pt-3 text-small">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-text-muted">Código de vinculación</p>
+              <Button
+                variant="ghost"
+                shape="admin"
+                className="min-h-9"
+                onClick={() => {
+                  setLinkDraft(view.linkCode?.code ?? "");
+                  setLinkError("");
+                  setEditingLink(true);
+                }}
+              >
+                <Pencil aria-hidden className="size-4" strokeWidth={1.5} /> {view.linkCode ? "Corregir" : "Cargar"}
+              </Button>
+            </div>
+            {view.linkCode ? (
+              <>
+                <CopyValue label="código" value={view.linkCode.code} />
+                <p className="text-xs text-text-muted">{`${view.linkCode.byMember ? "Lo envió el socio" : "Lo cargó la administración"}${view.linkCode.sentOn ? ` el ${view.linkCode.sentOn.split("-").reverse().join("/")}` : ""}. Cuando lo vincules en REPROCANN, marcá «Vinculación verificada» en Editar.`}</p>
+              </>
+            ) : (
+              <p className="text-text-muted">Todavía no lo tenemos. El socio lo puede enviar desde su espacio, en REPROCANN.</p>
+            )}
+          </div>
           <p className="flex items-start gap-2 border-t border-border pt-3 text-small text-text-muted">
             <Info aria-hidden className="mt-0.5 size-4 shrink-0" strokeWidth={1.5} />
             <span>Dispensa: pendiente de definición. Cargar o verificar documentos no la habilita.</span>
           </p>
         </Card>
       </div>
+
+      <Dialog
+        open={editingLink}
+        onClose={() => setEditingLink(false)}
+        title="Código de vinculación"
+        description="Tal como figura en el «Registro de paciente» del socio. Se guarda cifrado y el cambio queda registrado; si lo dejás vacío, se quita."
+        confirmLabel={pending ? "Guardando…" : "Guardar"}
+        confirmDisabled={pending}
+        onConfirm={() =>
+          startTransition(async () => {
+            const r = await saveLinkCodeAction(memberId, linkDraft);
+            if (!r.ok) return setLinkError(r.error);
+            setEditingLink(false);
+            router.refresh();
+          })
+        }
+      >
+        <TextField id="link-code-admin" label="Código de vinculación" optional autoComplete="off" spellCheck={false} maxLength={40} value={linkDraft} onChange={(e) => setLinkDraft(e.target.value)} error={linkError || undefined} className="font-mono tracking-wider" />
+      </Dialog>
 
       <Dialog
         open={editingCase}

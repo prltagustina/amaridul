@@ -127,6 +127,13 @@
       "when": 1793748680476,
       "tag": "0017_ficha_tecnica",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793753605701,
+      "tag": "0018_codigo_vinculacion",
+      "breakpoints": true
     }
   ]
 }

@@ -8,7 +8,8 @@ import { TabbedCard } from "@/components/ui/technical";
 import { CONTACT } from "@/lib/constants";
 import { localDemo } from "@/lib/features";
 import { FEE_PAGE } from "@/lib/fee-payment";
-import { LINK_CODE_STEPS, LINK_CODE_VIDEO, REPROCANN_OFFICIAL_SITE } from "@/lib/reprocann-help";
+import { REPROCANN_OFFICIAL_SITE } from "@/lib/reprocann-help";
+import { LinkCodeSteps, LinkCodeVideo } from "@/components/reprocann/link-code-video";
 import { MEMBER_QUESTION_MESSAGE, officialWhatsAppLink, UPDATE_DATA_MESSAGE } from "@/lib/whatsapp";
 import { currentMember } from "@/server/member-session";
 
@@ -75,27 +76,19 @@ export default async function AyudaPage() {
             >
               <p>Subí el PDF o una foto nítida. La asociación la revisa: hasta entonces figura «en revisión».</p>
             </Topic>
-            <Topic title="¿Dónde encuentro mi código de vinculación?">
-              <div id="codigo-de-vinculacion" className="grid scroll-mt-6 items-start gap-5 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)]">
-                <video
-                  controls
-                  playsInline
-                  preload="none"
-                  poster={LINK_CODE_VIDEO.poster}
-                  width={LINK_CODE_VIDEO.width}
-                  height={LINK_CODE_VIDEO.height}
-                  aria-label="Video: dónde encontrar tu código de vinculación de REPROCANN. 30 segundos, sin sonido, con los pasos escritos en pantalla."
-                  className="mx-auto h-auto w-full max-w-[13rem] !rounded-[18px] border border-mist-line bg-forest shadow-[0_18px_40px_-28px_rgba(26,26,24,0.45)]"
-                >
-                  <source src={LINK_CODE_VIDEO.src} type="video/mp4" />
-                </video>
+            <Topic
+              title="¿Dónde encuentro mi código de vinculación?"
+              action={
+                <LinkButton href="/qr/reprocann#vinculacion" variant="secondary">
+                  Cargar mi código
+                </LinkButton>
+              }
+            >
+              <div id="codigo-de-vinculacion" className="grid scroll-mt-6 items-start gap-5 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
+                <LinkCodeVideo className="mx-auto max-w-[12rem]" />
                 <div className="space-y-2">
-                  <p>Si la asociación te lo pide, lo encontrás así:</p>
-                  <ol className="list-decimal space-y-1.5 pl-5 marker:text-forest">
-                    {LINK_CODE_STEPS.map((s) => (
-                      <li key={s}>{s}</li>
-                    ))}
-                  </ol>
+                  <p>Con ese código la asociación te vincula en REPROCANN. Lo encontrás así:</p>
+                  <LinkCodeSteps />
                 </div>
               </div>
             </Topic>

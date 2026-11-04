@@ -6,6 +6,7 @@ import { getDb } from "@/server/db";
 import { getKeyrings } from "@/server/crypto";
 import { addDocument, caseInput, documentInput, ReprocannError, reviewDocument, reviewInput, saveCase } from "@/server/reprocann";
 import { addAdminDocument, adminUploadInput, type AdminUploadResult } from "@/server/reprocann-files";
+import { LinkCodeError, linkCodeInput, setLinkCode } from "@/server/reprocann-link";
 import { documentStorage, uploadMode } from "@/server/storage";
 
 export type ReprocannResult = { ok: true } | { ok: false; error: string };
@@ -73,4 +74,22 @@ export async function adminUploadAction(memberId: string, raw: unknown): Promise
     console.error("REPROCANN admin upload failed:", e instanceof Error ? e.message : e);
     return { ok: false, error: "No pudimos cargar la documentación." };
   }
+}
+
+/** Records (or, left empty, removes) the member's «código de vinculación», for members who do not use the portal. */
+export async function saveLinkCodeAction(memberId: string, raw: string): Promise<ReprocannResult> {
+  const { user } = await requireAdmin();
+  const text = String(raw ?? "").trim();
+  const parsed = text ? linkCodeInput.safeParse(text) : null;
+  if (parsed && !parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Revisá el código." };
+  try {
+    await setLinkCode(await getDb(), getKeyrings().field, user.id, String(memberId), parsed ? parsed.data : null);
+  } catch (e) {
+    if (e instanceof LinkCodeError) return { ok: false, error: e.message };
+    console.error("Link code not saved:", e instanceof Error ? e.message : e);
+    return { ok: false, error: "No pudimos guardar el código. Probá de nuevo." };
+  }
+  revalidatePath(`/admin/socios/${memberId}`);
+  revalidatePath("/admin/reprocann");
+  return { ok: true };
 }
