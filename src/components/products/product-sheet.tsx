@@ -134,7 +134,7 @@ export function ProductSheet({ product, photoSrc }: { product: CatalogItem; phot
               content: (
                 <div className="space-y-4">
                   <div>
-                    <p className="text-[11px] font-medium tracking-[0.18em] text-accent uppercase">Análisis de laboratorio</p>
+                    <p className="text-[11px] font-medium tracking-[0.18em] text-accent uppercase">Cromatografía (HPLC)</p>
                     <h3 className="mt-1 text-xl font-title text-forest">Perfil de cannabinoides</h3>
                   </div>
                   {s.cannabinoids.length ? (

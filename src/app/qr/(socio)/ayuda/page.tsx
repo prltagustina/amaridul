@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, ExternalLink, MessageCircle, PlayCircle, Upload } from "lucide-react";
+import { ArrowRight, ExternalLink, MessageCircle, Upload } from "lucide-react";
 import { PageBand } from "@/components/brand/page-band";
 import { LinkButton } from "@/components/ui/button";
 import { DevTag } from "@/components/ui/display";
@@ -75,21 +75,29 @@ export default async function AyudaPage() {
             >
               <p>Subí el PDF o una foto nítida. La asociación la revisa: hasta entonces figura «en revisión».</p>
             </Topic>
-            <Topic
-              title="¿Dónde encuentro mi código de vinculación?"
-              action={
-                <a href={LINK_CODE_VIDEO} target="_blank" rel="noopener noreferrer" className={textLink}>
-                  <PlayCircle aria-hidden className="size-5" strokeWidth={1.5} /> Ver el video (menos de 1 minuto)
-                  <span className="sr-only">(se abre en otra pestaña)</span>
-                </a>
-              }
-            >
-              <p>Si la asociación te lo pide, lo encontrás así:</p>
-              <ol className="list-decimal space-y-1 pl-5 marker:text-forest">
-                {LINK_CODE_STEPS.map((s) => (
-                  <li key={s}>{s}</li>
-                ))}
-              </ol>
+            <Topic title="¿Dónde encuentro mi código de vinculación?">
+              <div id="codigo-de-vinculacion" className="grid scroll-mt-6 items-start gap-5 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)]">
+                <video
+                  controls
+                  playsInline
+                  preload="none"
+                  poster={LINK_CODE_VIDEO.poster}
+                  width={LINK_CODE_VIDEO.width}
+                  height={LINK_CODE_VIDEO.height}
+                  aria-label="Video: dónde encontrar tu código de vinculación de REPROCANN. 30 segundos, sin sonido, con los pasos escritos en pantalla."
+                  className="mx-auto h-auto w-full max-w-[13rem] !rounded-[18px] border border-mist-line bg-forest shadow-[0_18px_40px_-28px_rgba(26,26,24,0.45)]"
+                >
+                  <source src={LINK_CODE_VIDEO.src} type="video/mp4" />
+                </video>
+                <div className="space-y-2">
+                  <p>Si la asociación te lo pide, lo encontrás así:</p>
+                  <ol className="list-decimal space-y-1.5 pl-5 marker:text-forest">
+                    {LINK_CODE_STEPS.map((s) => (
+                      <li key={s}>{s}</li>
+                    ))}
+                  </ol>
+                </div>
+              </div>
             </Topic>
           </TabbedCard>
 
