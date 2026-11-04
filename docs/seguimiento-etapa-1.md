@@ -1,6 +1,6 @@
 # Amarí Dul — Seguimiento de la etapa 1
 
-Actualizado: 3/11/2026, 17 h. Etapa 1 **abierta**. Bloques del cierre: **A** portal y catálogo, **B** credenciales, **C** cuota, **D** cierre. **Publicado el 3/11** (`8bc4e3b` y `3c04d74`), con las migraciones `0013` a `0015` aplicadas en producción antes del deploy. Siguen **apagados**: la carga de archivos (`REPROCANN_UPLOADS`, hasta validarla) y el recordatorio de cuota (`FEE_REMINDERS`).
+Actualizado: 3/11/2026, 21 h. Etapa 1 **abierta**. Bloques del cierre: **A** portal y catálogo, **B** credenciales, **C** cuota, **D** cierre. **Publicado el 3/11** en dos tandas (`8bc4e3b` y `3c04d74`; después `582fb9f`), con las migraciones `0013` a `0017` aplicadas en producción antes de cada deploy. **La carga de credenciales está activa** (`REPROCANN_UPLOADS=on` desde las 20:55). Sigue **apagado** el recordatorio de cuota (`FEE_REMINDERS`).
 
 **Fuentes**: los pedidos de Luci (A–E), el resumen de la planilla de seguimiento (no se pudo leer: pide sesión de Google; no se editó) y lo comprobado en código, en local y en producción en solo lectura.
 
@@ -14,10 +14,10 @@ Actualizado: 3/11/2026, 17 h. Etapa 1 **abierta**. Bloques del cierre: **A** por
 
 | ID | Tema | Estado | Falta |
 |---|---|---|---|
-| A | Credencial REPROCANN | **Publicado el 3/11, con la carga de archivos apagada.** No validado con el almacenamiento real. Detalle en «Credenciales». | Validar la carga real y activar `REPROCANN_UPLOADS`. Criterios de AD-012. «Sin REPROCANN activo no hay dispensa» no se aplica: no hay dispensa (AD-006). |
-| B | Productos en el portal | **Publicado el 3/11**: catálogo con foto y ficha del producto (migración `0014`). **Local, para publicar**: ficha técnica con **Origen, Composición y Análisis** (cosecha, laboratorio, THC/CBD, perfil de cannabinoides y certificado PDF) que carga la administración y ve el socio, como la ficha del lote (migración `0017`). | Los **2 productos activos** (FLORES-CC y FLORES-EX) tienen una **descripción provisoria** (solo variedad y cultivo) y **fotos reales de flores de cannabis de Wikimedia Commons** (CC0 y dominio público), rotuladas «Imagen ilustrativa» porque no son de los productos de la asociación. Falta cargar su ficha técnica y reemplazar fotos y textos por los de la asociación. |
+| A | Credencial REPROCANN | **Publicado el 3/11. Carga activa desde las 20:55.** El almacenamiento privado se validó con un archivo ficticio (sin clave da 403, con clave lee, se borró). Detalle en «Credenciales». | Importar las 10 credenciales de Drive desde el panel (la revisión previa ya las dio por «Confirmado»). Criterios de AD-012. «Sin REPROCANN activo no hay dispensa» no se aplica: no hay dispensa (AD-006). |
+| B | Productos en el portal | **Publicado el 3/11**: catálogo con foto y ficha del producto (migración `0014`). **Publicado el 3/11**: ficha técnica con **Origen, Composición y Análisis** (cosecha, laboratorio, THC/CBD, perfil de cannabinoides y certificado PDF) que carga la administración y ve el socio, como la ficha del lote (migración `0017`). | Los **2 productos activos** (FLORES-CC y FLORES-EX) tienen una **descripción provisoria** (solo variedad y cultivo) y **fotos reales de flores de cannabis de Wikimedia Commons** (CC0 y dominio público), rotuladas «Imagen ilustrativa» porque no son de los productos de la asociación. Falta cargar su ficha técnica y reemplazar fotos y textos por los de la asociación. |
 | C | Difusión por correo | **Recordatorio de cuota publicado el 3/11, apagado** (migración `0015`). Regla definida el 3/11: **una vez por mes a quien paga mes a mes, cada tres meses al resto**. No hay plataforma de campañas (fuera de alcance). | Encenderlo: confirmación, `FEE_REMINDERS=on`, `CRON_SECRET` y la programación diaria en `vercel.json`. |
-| D | Cuotas y Mercado Pago | **Publicado el 3/11**: «Administración de cuota» con los datos de pago. **Local, para publicar**: los montos (mensual $ 5.000, trimestral $ 15.000, semestral $ 30.000) y la **forma de pago que elige cada socio** (o carga la administración), migración `0016`. Sin deudas ni vencimientos. | Acreditación automática y débito o suscripción: pendientes. Registro de pagos: propuesto, no implementado. |
+| D | Cuotas y Mercado Pago | **Publicado el 3/11**: «Administración de cuota» con los datos de pago. **Publicado el 3/11**: los montos (mensual $ 5.000, trimestral $ 15.000, semestral $ 30.000) y la **forma de pago que elige cada socio** (o carga la administración), migración `0016`. Sin deudas ni vencimientos. | Acreditación automática y débito o suscripción: pendientes. Registro de pagos: propuesto, no implementado. |
 | E | Socios existentes y padrón | **Publicado el 28/10.** Acceso digital desde la ficha y «Ya soy socio/a». Categoría «Activo y paciente» publicada el 3/11. | **Revisión de duplicados en producción (pendiente).** Un integrante de la Comisión todavía no está en el padrón: importar su fila (archivo de una fila, ya con DNI y email) desde Socios → Importar y después asignarle «Activo y paciente». A otro socio le falta el DNI en la planilla (ya está importado). |
 
 ## Planilla compartida (AD-001 a AD-014)
@@ -193,8 +193,8 @@ Oculta para socios (ver A). Cuando se retome:
 | `0013` | Archivos de credenciales por hoja, mensaje para el socio y reemplazos. Es la que el pedido llama «0012»: se renumeró porque la `0012` publicada es la de categorías. El SQL no cambió. | **Publicada el 3/11.** |
 | `0014` | Fotos de productos. | **Publicada el 3/11.** |
 | `0015` | Recordatorio de cuota: configuración y registro de envíos. | **Publicada el 3/11.** |
-| `0016` | Forma de pago de cada socio (mensual, trimestral o semestral), con quién la eligió y cuándo. | Local, para publicar. |
-| `0017` | Ficha técnica del producto (cosecha, laboratorio, análisis, THC/CBD, perfil) y certificado PDF. | Local, para publicar. |
+| `0016` | Forma de pago de cada socio (mensual, trimestral o semestral), con quién la eligió y cuándo. | **Publicada el 3/11** (punto de restauración 20:50:49). |
+| `0017` | Ficha técnica del producto (cosecha, laboratorio, análisis, THC/CBD, perfil) y certificado PDF. | **Publicada el 3/11.** |
 
 **Compatibilidad**: las tres solo agregan tablas, columnas y tipos, sin borrar ni transformar datos. La versión publicada sigue funcionando con ellas aplicadas.
 
@@ -225,7 +225,7 @@ Oculta para socios (ver A). Cuando se retome:
 
 - **Configuración**
   - [x] Migraciones `0013`, `0014` y `0015` con punto de restauración (3/11).
-  - [ ] `REPROCANN_UPLOADS=on` después de validar la carga real con un archivo ficticio.
+  - [x] `REPROCANN_UPLOADS=on` (3/11, 20:55), después de validar el almacenamiento privado con un archivo ficticio.
   - [ ] `TEST_DELETION=on` solo si todavía hacen falta borrados de prueba.
   - [ ] `FEE_REMINDERS` **sin poner**, hasta que se defina el recordatorio.
 - **Validación real** (con archivos ficticios, nunca documentos reales)
