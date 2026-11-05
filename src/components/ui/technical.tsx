@@ -87,7 +87,10 @@ export function Chip({ tone = "green", children, className }: { tone?: InfoTone;
   return <span className={cn("inline-flex items-center !rounded-full border px-3 py-1 text-sm tabular-nums", TONE[tone].line, TONE[tone].ink, className)}>{children}</span>;
 }
 
-/** THC:CBD proportion bar: forest for THC, lilac for CBD. */
+/**
+ * THC:CBD proportion bar: forest for THC, lilac for CBD, each part named inside. Each part keeps
+ * room for its name (2.75rem), so a very uneven ratio (31:1) never cuts «CBD».
+ */
 export function RatioBar({ thc, cbd, label, tone = "green", className }: { thc: number; cbd: number; label?: string; tone?: InfoTone; className?: string }) {
   const total = thc + cbd || 1;
   const t = Math.max(6, Math.round((thc / total) * 100));
@@ -99,10 +102,10 @@ export function RatioBar({ thc, cbd, label, tone = "green", className }: { thc: 
         aria-label={`Proporción THC:CBD aproximada ${Math.round((thc / total) * 100)} a ${Math.round((cbd / total) * 100)}`}
         className="flex h-5 overflow-hidden !rounded-full text-[10px] font-medium tracking-wide"
       >
-        <span className={cn("flex items-center pl-2.5 text-white", TONE[tone].fill)} style={{ width: `${t}%` }}>
+        <span className={cn("flex min-w-[2.75rem] items-center pl-2.5 text-white", TONE[tone].fill)} style={{ width: `${t}%` }}>
           THC
         </span>
-        <span className={cn("flex flex-1 items-center justify-end bg-lilac pr-2.5", TONE[tone].ink)}>CBD</span>
+        <span className={cn("flex min-w-[2.75rem] flex-1 items-center justify-end bg-lilac pr-2.5", TONE[tone].ink)}>CBD</span>
       </div>
     </div>
   );
@@ -116,7 +119,7 @@ export function ratioLabel(thc: number, cbd: number) {
 
 /**
  * The two main cannabinoids as large figures, each on its own tint (THC green, CBD lilac), and
- * under them their proportion as a bar in the same two colours. Only the values the lab gave.
+ * under them their proportion on the ratio bar. Only the values the lab gave.
  */
 export function CannabinoidFigures({ thc, cbd, unit, className }: { thc: number | null; cbd: number | null; /** As shown after the figure: «%», «mg/ml». */ unit: string; className?: string }) {
   const figures = [
@@ -125,8 +128,6 @@ export function CannabinoidFigures({ thc, cbd, unit, className }: { thc: number 
   ].filter((f): f is typeof f & { value: number } => f.value !== null);
   const t = thc ?? 0;
   const c = cbd ?? 0;
-  // The thinner part never vanishes: at least 4 % of the bar.
-  const share = Math.min(96, Math.max(4, (t / (t + c || 1)) * 100));
   return (
     <div className={cn("space-y-5", className)}>
       <dl className={cn("grid gap-3", figures.length > 1 ? "grid-cols-2" : null)}>
@@ -151,10 +152,7 @@ export function CannabinoidFigures({ thc, cbd, unit, className }: { thc: number 
             <span className="text-text-muted">Proporción THC:CBD</span>
             <span className="font-medium text-forest tabular-nums">≈ {ratioLabel(t, c)}</span>
           </p>
-          <div role="img" aria-label={`Proporción THC:CBD aproximada: ${ratioLabel(t, c)}`} className="mt-2 flex h-2.5 gap-0.5">
-            <span className="!rounded-full bg-hoja-700" style={{ width: `${share}%` }} />
-            <span className="flex-1 !rounded-full bg-lila-400" />
-          </div>
+          <RatioBar thc={t} cbd={c} className="mt-2" />
         </div>
       )}
     </div>
