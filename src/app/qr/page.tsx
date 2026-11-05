@@ -59,8 +59,8 @@ const SECTIONS = [
 // Every way someone arrives, with its one next step. Joining in lila, members in hoja.
 const PATHS = [
   { href: "/sumate", title: "Quiero asociarme", detail: "Empezá con la preadmisión: lleva unos 5 minutos", Icon: Sprout, theme: "flujo-sumate", badge: "bg-[linear-gradient(135deg,var(--lila-800),var(--lila-700))]" },
-  { href: "/sumate/socio-existente", title: "Ya soy socio/a y no tengo cuenta", detail: "Pedí tu acceso: sin volver a asociarte", Icon: BadgeCheck, theme: "", badge: "bg-[linear-gradient(135deg,var(--hoja-800),var(--hoja-700))]" },
   { href: "/qr/login", title: "Ya tengo mi cuenta", detail: "Ingresá a tu espacio de socio", Icon: UserRound, theme: "", badge: "bg-[linear-gradient(135deg,var(--hoja-800),var(--hoja-700))]" },
+  { href: "/sumate/socio-existente", title: "Ya soy socio/a y no tengo cuenta", detail: "Pedí tu acceso: sin volver a asociarte", Icon: BadgeCheck, theme: "", badge: "bg-[linear-gradient(135deg,var(--hoja-800),var(--hoja-700))]" },
 ];
 
 const JOURNEY = [
@@ -156,9 +156,6 @@ export default function QRPage() {
               </li>
             ))}
           </ul>
-          <Link href="/" className="font-ui mt-6 inline-flex min-h-11 items-center gap-2 text-[0.8125rem] tracking-[0.18em] !text-arena-700 uppercase hover:!text-forest">
-            Conocé más sobre Amarí Dul <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
-          </Link>
         </EditorialSection>
 
         {/* How to join: a soft green ground from the Amarí Dul scale. */}

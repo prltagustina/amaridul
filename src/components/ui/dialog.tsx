@@ -51,7 +51,12 @@ export function Dialog({
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
-    if (open && !d.open) d.showModal();
+    if (open && !d.open) {
+      d.showModal();
+      // The dialog itself takes the focus (its title is read; Tab goes on from there), not the
+      // close button, which would open wearing its focus ring.
+      d.focus();
+    }
     if (!open && d.open) d.close();
   }, [open]);
 
@@ -79,10 +84,11 @@ export function Dialog({
   return (
     <dialog
       ref={ref}
+      tabIndex={-1}
       onClose={onClose}
       aria-labelledby={titleId}
       aria-describedby={description ? descriptionId : undefined}
-      className={cn("dialog-panel !rounded-card border border-border bg-surface p-0 text-foreground shadow-xl backdrop:bg-foreground/40 open:flex open:flex-col", wide ? "max-w-2xl" : "max-w-lg")}
+      className={cn("dialog-panel !rounded-card border border-border bg-surface p-0 text-foreground shadow-xl outline-none backdrop:bg-foreground/40 open:flex open:flex-col", wide ? "max-w-2xl" : "max-w-lg")}
     >
       <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
         <div className="min-w-0 space-y-1">
@@ -100,7 +106,9 @@ export function Dialog({
           <X aria-hidden className="size-5" strokeWidth={1.5} />
         </button>
       </div>
-      {children && <div className="min-h-0 min-w-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">{children}</div>}
+      {/* Its own height (flex-basis auto), shrinking and scrolling only when the dialog reaches the
+          screen's: with a basis of 0, Safari squeezed it to its padding. */}
+      {children && <div className="min-h-0 min-w-0 flex-auto space-y-5 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">{children}</div>}
       {onConfirm && (
         // One row, also on a phone: stacked buttons would take the height the body needs.
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-border px-5 py-3 sm:px-6 sm:py-4 [&>*]:whitespace-nowrap [&>*:last-child]:flex-1 sm:[&>*:last-child]:flex-none">

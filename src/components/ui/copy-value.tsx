@@ -69,20 +69,21 @@ export function CopyValue({ label, value, className }: { label: string; value: s
 
 /**
  * A labelled value to copy, on a dark fill (the payment card): the name above, and the value with
- * its «Copiar» beside it, on the value's line. The value is sized from the width left for it, so a
- * 22-digit CVU stays on one line (a monospace digit with this tracking is under 0.63em, 22 of them
- * under 14em): from 22rem the button says «Copiar»; from 14.5rem, only its icon (the name stays for
- * screen readers and as a tooltip); narrower (a 320 px phone), the button goes under the value.
+ * its «Copiar» beside it, on the value's line. From 22rem the button says «Copiar»; from 14.5rem,
+ * only its icon (the name stays for screen readers and as a tooltip); narrower (a 320 px phone), the
+ * button goes under the value. The value's size goes up in steps with the card's width, each one
+ * leaving at least 7 % to spare, so a 22-digit CVU stays on one line (a monospace digit is 0.6em,
+ * 22 of them 13.2em) in every browser. Steps and not container units: Safari sized those larger.
  */
 export function CopyField({ name, label, value, className }: { /** What it is, as shown: «Alias», «CVU». */ name: string; /** For «Copiar …» and the announcement. */ label: string; value: string; className?: string }) {
   const { text, state, copy } = useCopy(value);
   return (
     <div className={cn("@container min-w-0", className)}>
       <p className="text-sm text-white/80">{name}</p>
-      <div className="mt-1.5 flex flex-col items-start gap-2 @min-[14.5rem]:flex-row @min-[14.5rem]:items-center @min-[14.5rem]:justify-between @min-[14.5rem]:gap-3">
+      <div className="mt-1.5 flex flex-col items-start gap-2 @min-[14.5rem]:flex-row @min-[14.5rem]:items-center @min-[14.5rem]:justify-between">
         <p
           ref={text as React.RefObject<HTMLParagraphElement>}
-          className="min-w-0 font-mono text-[length:min(1.25rem,100cqw/14)] tracking-wide break-all text-white tabular-nums select-all @min-[14.5rem]:@max-[22rem]:text-[length:min(1.25rem,(100cqw_-_3.25rem)/14)] @min-[22rem]:text-[length:min(1.25rem,(100cqw_-_7rem)/14)]"
+          className="min-w-0 font-mono text-[0.8125rem] break-all text-white tabular-nums select-all @min-[12.5rem]:@max-[14.5rem]:text-[0.875rem] @min-[15.5rem]:@max-[17rem]:text-[0.875rem] @min-[17rem]:@max-[18.5rem]:text-[0.96875rem] @min-[18.5rem]:@max-[20.5rem]:text-[1.0625rem] @min-[20.5rem]:@max-[22rem]:text-[1.15625rem] @min-[22rem]:@max-[24.5rem]:text-[1.0625rem] @min-[24.5rem]:text-[1.25rem]"
         >
           {value}
         </p>

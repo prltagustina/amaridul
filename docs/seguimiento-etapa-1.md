@@ -241,7 +241,7 @@ La causa del desborde: el ancho se calculaba con `100vw` (incluye la barra de de
   - El video del código de vinculación: tres pasos y un **video propio de la asociación** (30 segundos, sin sonido, con el texto en pantalla y las pantallas ilustradas; termina con el logo de Amarí Dul y el WhatsApp). Se reproduce en la misma página (`/videos/codigo-de-vinculacion.mp4`, 0,8 MB). Reemplaza al video de un profesional externo que se había enlazado en Drive.
   - Cuota, actualizar datos, compras y «Escribirle a la asociación» por WhatsApp.
 - **Inicio público (`/qr`)**, reordenado:
-  1. «Sumate a Amarí Dul»: tres entradas directas (quiero asociarme; ya soy socio/a y no tengo cuenta; ya tengo mi cuenta).
+  1. «Sumate a Amarí Dul»: tres entradas directas (quiero asociarme; ya tengo mi cuenta; ya soy socio/a y no tengo cuenta).
   2. «Cómo es asociarse»: los tres pasos de la admisión (no hace falta tener REPROCANN para empezar la preadmisión, que ya pregunta por él).
   3. **«Tu REPROCANN, paso a paso»**: tramitarlo (sitio oficial), encontrar el código de vinculación (**con el video integrado**) y cargarlo en tu espacio; cierra con «¿Dudas? Escribinos por WhatsApp».
 - **Vinculación con Amarí Dul (circuito completo, publicado el 3/11)**:
