@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 import { PageBand } from "@/components/brand/page-band";
-import { DISPENSING_NOTE, photoSrc, ProductPreview, ProductStepper, PURCHASE_NOTICE } from "@/components/products/product-card";
+import { photoSrc, ProductNotices, ProductPreview, ProductStepper } from "@/components/products/product-card";
 import { ProductSheet } from "@/components/products/product-sheet";
 import { getDb } from "@/server/db";
 import { currentMember } from "@/server/member-session";
@@ -39,19 +39,15 @@ export default async function ProductoPage({ params }: { params: Promise<{ id: s
         {n > 1 && <ProductStepper position={i + 1} total={n} prev={prev} next={next} />}
       </PageBand>
       <div className="page-gutter pt-8 pb-12 sm:pt-10">
-        <div className="portal-column grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-10">
-          <ProductSheet product={product} photoSrc={photoSrc(product)} />
-          <aside aria-label="Más productos" className="space-y-6 lg:sticky lg:top-6">
-            {next && (
+        <div className={next ? "portal-column grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-10" : "portal-column max-w-[44.5rem]"}>
+          <ProductSheet product={product} photoSrc={photoSrc(product)} footer={<ProductNotices />} />
+          {next && (
+            <aside aria-label="Más productos" className="lg:sticky lg:top-6">
               <div className="max-w-xs !rounded-card border border-mist-line bg-white p-4 lg:max-w-none">
                 <ProductPreview product={next} eyebrow="Siguiente producto" />
               </div>
-            )}
-            <div className="space-y-3 text-sm leading-relaxed text-text-muted">
-              <p>{PURCHASE_NOTICE}</p>
-              <p>{DISPENSING_NOTE}</p>
-            </div>
-          </aside>
+            </aside>
+          )}
         </div>
       </div>
     </main>

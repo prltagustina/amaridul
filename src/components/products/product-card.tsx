@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, ListChecks, ShoppingBag } from "lucide-react";
 import { PhotoPlaceholder } from "@/components/brand/placeholders";
+import { LinkButton } from "@/components/ui/button";
+import { HelpStrip } from "@/components/ui/guidance";
 import { cn } from "@/lib/cn";
 import type { CatalogItem } from "@/server/products";
 
@@ -73,5 +75,27 @@ export function ProductStepper({ position, total, prev, next }: { position: numb
   );
 }
 
-export const PURCHASE_NOTICE = "Próximamente vas a poder comprar productos desde tu cuenta. Te avisaremos cuando esté disponible.";
-export const DISPENSING_NOTE = "Ver los productos no habilita una dispensa: para eso hacen falta tres condiciones (membresía activa, credencial REPROCANN verificada y vinculación con Amarí Dul verificada). Las ves en Mi espacio, en Trámites.";
+/**
+ * What every product sheet closes with: buying is not available yet, and seeing a product does not
+ * enable dispensing (with the way to the member's three conditions). Two strips, one per notice.
+ */
+export function ProductNotices() {
+  return (
+    <div className="divide-y divide-lila-100">
+      <HelpStrip icon={<ShoppingBag strokeWidth={1.75} />} title="Próximamente vas a poder comprar productos desde tu cuenta.">
+        Te avisaremos cuando esté disponible.
+      </HelpStrip>
+      <HelpStrip
+        icon={<ListChecks strokeWidth={1.75} />}
+        title="Ver los productos no habilita una dispensa."
+        action={
+          <LinkButton href="/qr/mi-espacio#tramites" variant="secondary" size="sm">
+            Ver mis trámites
+          </LinkButton>
+        }
+      >
+        Hacen falta membresía activa, credencial REPROCANN verificada y vinculación con Amarí Dul verificada.
+      </HelpStrip>
+    </div>
+  );
+}
