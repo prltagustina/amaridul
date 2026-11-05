@@ -151,7 +151,8 @@ export default async function ReprocannPage() {
             </Panel>
           )}
           <p className="order-6 text-sm text-text-muted lg:col-start-1">
-            Que la credencial esté verificada es una de las tres condiciones para la dispensa.{" "}
+            Que la credencial esté verificada es una de las tres condiciones para la dispensa.
+            <br />
             <Link href="/qr/mi-espacio#tramites" className="font-medium !text-forest !underline underline-offset-4">
               Ver las tres en Mi espacio
             </Link>
