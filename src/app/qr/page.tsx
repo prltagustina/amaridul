@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import heroPhoto from "@/assets/demo/qr-portada-provisoria.jpg";
-import { ArrowRight, BadgeCheck, ChevronDown, ExternalLink, Info, Sprout, UserRound } from "lucide-react";
+import { ArrowRight, BadgeCheck, ChevronDown, Info, Sprout, UserRound } from "lucide-react";
 import { BRAND, SHARE_DESCRIPTION, SHARE_IMAGE, SITE_URL } from "@/lib/constants";
 import { SiteFooter } from "@/components/brand/site-footer";
 import { CircleLogo } from "@/components/brand/circle-logo";
@@ -10,15 +10,11 @@ import { EditorialSection } from "@/components/brand/editorial-section";
 import { SectionNav } from "@/components/brand/section-nav";
 import Nav from "@/components/Nav";
 import { Accordion } from "@/components/ui/accordion";
-import { AnchorButton, LinkButton } from "@/components/ui/button";
-import { StepCards } from "@/components/ui/step-cards";
-import { LinkCodeVideo } from "@/components/reprocann/link-code-video";
-import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { ReprocannGuide } from "@/components/reprocann/reprocann-guide";
 import { DevTag } from "@/components/ui/display";
 import { faqAnswers, faqClosingPhrase, faqPlaceholderAnswer, faqQuestions, institutionalPhrase } from "@/demo/content";
 import { isDemoEnabled } from "@/lib/demo";
 import { contactAvailable } from "@/lib/features";
-import { REPROCANN_OFFICIAL_SITE } from "@/lib/reprocann-help";
 import { officialWhatsAppLink, PUBLIC_QUESTION_MESSAGE } from "@/lib/whatsapp";
 
 const title = BRAND.name;
@@ -67,29 +63,6 @@ const JOURNEY = [
   { meta: "Online · 5 minutos", title: "Preadmisión", detail: "Contanos quién sos y qué te acerca a Amarí Dul. Si todavía no tenés REPROCANN, contalo ahí: no hace falta tenerlo para empezar.", href: "/sumate", cta: "Empezar" },
   { meta: "Por invitación", title: "Solicitud formal", detail: "Completás tus datos, la categoría y aceptás el estatuto.", href: undefined, cta: undefined },
   { meta: "Comisión Directiva", title: "Admisión", detail: "Te avisamos la decisión y activás tu cuenta de socio.", href: undefined, cta: undefined },
-];
-
-// REPROCANN with the association, step by step, in the order Luci set: starting the procedure
-// with the association begins with the link code (the video shows where it is, after step 1).
-const REPROCANN_STEPS = [
-  {
-    meta: "Primer paso · sitio oficial",
-    title: "Encontrá tu código de vinculación REPROCANN",
-    detail: "Si vas a iniciar el trámite con la asociación, empezá por acá: entrá al sitio oficial con tu cuenta de Mi Argentina y buscalo en tu Registro de paciente.",
-    link: { href: REPROCANN_OFFICIAL_SITE, label: "Ir al sitio oficial", external: true },
-  },
-  {
-    meta: "En tu espacio de socio",
-    title: "Pasáselo a la asociación",
-    detail: "Cuando seas socio/a, cargalo en tu espacio, en REPROCANN. Con ese código la asociación gestiona tu vinculación con Amarí Dul y te acompaña en el trámite; ahí ves cuándo queda verificada.",
-    link: null,
-  },
-  {
-    meta: "Si ya tenés tu credencial",
-    title: "Cargala para que la revisemos",
-    detail: "Subila desde tu espacio, en REPROCANN. Hasta que la asociación la revise, figura «en revisión».",
-    link: { href: "/qr/login", label: "Ingresar a mi espacio", external: false },
-  },
 ];
 
 export default function QRPage() {
@@ -215,40 +188,7 @@ export default function QRPage() {
           stacked
           className="bg-lila-50"
         >
-          <StepCards
-            label="Tu REPROCANN, paso a paso"
-            bleed="-mx-6 px-6 scroll-px-6 sm:-mx-4 sm:px-4 sm:scroll-px-4"
-            aside={
-              <div className="mx-auto w-full max-w-[16rem] lg:relative lg:mx-0 lg:h-full lg:w-[14.5rem] lg:max-w-none xl:w-[13.5rem]">
-                <LinkCodeVideo className="lg:absolute lg:inset-0 lg:size-full lg:object-cover" />
-              </div>
-            }
-            steps={REPROCANN_STEPS.map((step) => ({
-              meta: step.meta,
-              title: step.title,
-              detail: step.detail,
-              action: step.link ? (
-                step.link.external ? (
-                  <AnchorButton href={step.link.href} target="_blank" rel="noopener noreferrer" size="sm">
-                    {step.link.label} <ExternalLink aria-hidden strokeWidth={1.5} />
-                    <span className="sr-only">(se abre en otra pestaña)</span>
-                  </AnchorButton>
-                ) : (
-                  <LinkButton href={step.link.href} size="sm">
-                    {step.link.label} <ArrowRight aria-hidden strokeWidth={1.5} />
-                  </LinkButton>
-                )
-              ) : undefined,
-            }))}
-          />
-          {whatsapp && (
-            <div className="mt-10 flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-lila-200 pt-7">
-              <p className="text-body text-foreground">¿Dudas con tu REPROCANN o con el ingreso?</p>
-              <AnchorButton href={whatsapp} target="_blank" rel="noopener noreferrer" variant="primary">
-                <WhatsAppIcon /> Escribinos<span className="sr-only"> por WhatsApp</span>
-              </AnchorButton>
-            </div>
-          )}
+          <ReprocannGuide whatsapp={whatsapp} bleed="-mx-6 px-6 scroll-px-6 sm:-mx-4 sm:px-4 sm:scroll-px-4" />
         </EditorialSection>
 
         <EditorialSection id="preguntas" eyebrow="Información" title="Preguntas frecuentes" className="bg-arena-100">
