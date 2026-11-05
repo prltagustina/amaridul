@@ -76,15 +76,12 @@ export function ProductStepper({ position, total, prev, next }: { position: numb
 }
 
 /**
- * What every product sheet closes with: buying is not available yet, and seeing a product does not
- * enable dispensing (with the way to the member's three conditions). Two strips, one per notice.
+ * What every product sheet closes with: seeing a product does not enable dispensing (with the way
+ * to the member's three conditions), and buying is not available yet. Two strips, one per notice.
  */
 export function ProductNotices() {
   return (
     <div className="divide-y divide-lila-100">
-      <HelpStrip icon={<ShoppingBag strokeWidth={1.75} />} title="Próximamente vas a poder comprar productos desde tu cuenta.">
-        Te avisaremos cuando esté disponible.
-      </HelpStrip>
       <HelpStrip
         icon={<ListChecks strokeWidth={1.75} />}
         title="Ver los productos no habilita una dispensa."
@@ -94,7 +91,12 @@ export function ProductNotices() {
           </LinkButton>
         }
       >
+        <br />
         Hacen falta membresía activa, credencial REPROCANN verificada y vinculación con Amarí Dul verificada.
+      </HelpStrip>
+      <HelpStrip icon={<ShoppingBag strokeWidth={1.75} />} title="Próximamente vas a poder comprar productos desde tu cuenta.">
+        <br />
+        Te avisaremos cuando esté disponible.
       </HelpStrip>
     </div>
   );
