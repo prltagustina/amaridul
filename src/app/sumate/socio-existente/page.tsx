@@ -18,7 +18,7 @@ export default function SocioExistentePage() {
         title="Actualización de legajo de socio"
         description="Si ya formás parte de Amarí Dul, completá tus datos para incorporarlos al sistema y activar tu acceso digital."
         tab="Actualización de legajo"
-        back={{ href: "/sumate", label: "Sumate" }}
+        back={{ href: "/qr#comunidad", label: "Inicio" }}
       />
       <div className="page-gutter pt-8 pb-12 sm:pt-10">
         <div className="content-column">

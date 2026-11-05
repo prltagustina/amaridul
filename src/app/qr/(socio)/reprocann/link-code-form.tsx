@@ -20,7 +20,7 @@ export function LinkCodeForm({ canSend, correcting }: { canSend: boolean; correc
   if (!open)
     return (
       <Button type="button" variant="ghost" className="-ml-2 min-h-10" onClick={() => setOpen(true)}>
-        Corregir el código
+        Corregir el código de vinculación
       </Button>
     );
 
@@ -46,13 +46,13 @@ export function LinkCodeForm({ canSend, correcting }: { canSend: boolean; correc
     >
       {sent && (
         <Alert tone="success" live>
-          Recibimos tu código. Cuando la asociación haga la vinculación, acá vas a ver «Vinculación verificada».
+          Recibimos tu código de vinculación. Todavía no es la vinculación: cuando la asociación la haga en REPROCANN, acá vas a ver «Vinculación verificada».
         </Alert>
       )}
       <TextField
         id="link-code"
-        label="Código de vinculación"
-        hint="Tal como figura en tu «Registro de paciente», en «Identificación»."
+        label="Código de vinculación REPROCANN"
+        hint="Tal como figura en tu «Registro de paciente», en «Identificación». No es tu DNI ni el número de tu credencial."
         autoComplete="off"
         autoCapitalize="characters"
         spellCheck={false}
@@ -67,10 +67,10 @@ export function LinkCodeForm({ canSend, correcting }: { canSend: boolean; correc
       />
       {canSend ? (
         <Button type="submit" variant="secondary" loading={pending} loadingLabel="Enviando…" disabled={!code.trim()}>
-          <Send aria-hidden className="size-4" strokeWidth={1.5} /> Enviar mi código
+          <Send aria-hidden className="size-4" strokeWidth={1.5} /> Agregar código
         </Button>
       ) : (
-        <p className="text-small text-text-muted">Vista de demostración: para enviar tu código, ingresá con tu cuenta.</p>
+        <p className="text-small text-text-muted">Vista de demostración: para enviar tu código de vinculación, ingresá con tu cuenta.</p>
       )}
     </form>
   );

@@ -56,7 +56,7 @@ export default async function AdmisionPage({ params }: { params: Promise<{ id: s
           : []),
       ],
     },
-    { id: "D", title: "Acreditación de identidad", items: [{ label: "Método", value: "Pendiente de definición institucional" }] },
+    { id: "D", title: "Credencial REPROCANN", items: [{ label: "En la solicitud", value: "Sin archivos: ni DNI ni credencial. Quien la tiene la carga en su espacio después del alta" }] },
     { id: "E", title: "Estatuto y reglamentos", items: [{ label: "Aceptación", value: `Aceptado (versión ${adm.statuteVersion})` }] },
     { id: "F", title: "Cuota social", items: [{ label: "Toma de conocimiento", value: "Informada" }] },
     { id: "G", title: "Declaraciones", items: [{ label: "Veracidad y cambios", value: "Declaradas" }] },

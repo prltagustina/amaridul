@@ -45,7 +45,7 @@ export function MemberHeader({ memberName }: { memberName: string }) {
 
   return (
     <header className="page-gutter border-b border-border/70 bg-background">
-      <div className="admin-column flex h-[var(--nav-h)] items-center justify-between gap-4">
+      <div className="portal-column flex h-[var(--nav-h)] items-center justify-between gap-4">
         <Link href="/qr/mi-espacio" aria-label="Amarí Dul, mi espacio" className="flex min-h-11 items-center gap-2">
           <BrandLockup />
         </Link>
@@ -70,7 +70,7 @@ export function MemberHeader({ memberName }: { memberName: string }) {
           {open ? <X aria-hidden className="size-6" strokeWidth={1.5} /> : <Menu aria-hidden className="size-6" strokeWidth={1.5} />}
         </button>
       </div>
-      <nav id="member-menu" aria-label="Portal de socios" hidden={!open} className="admin-column border-t border-border/70 pt-2 pb-4 lg:hidden">
+      <nav id="member-menu" aria-label="Portal de socios" hidden={!open} className="portal-column border-t border-border/70 pt-2 pb-4 lg:hidden">
         <p className="py-2 text-small text-text-muted">{memberName}</p>
         <div className="flex flex-col">{links.map((l) => link(l, true))}</div>
         <form action={memberSignOut}>

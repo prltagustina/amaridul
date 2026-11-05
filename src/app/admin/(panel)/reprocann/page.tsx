@@ -19,7 +19,7 @@ export default async function CredencialesPage() {
     <>
       <AdminPageHeader
         title="Credenciales REPROCANN"
-        description="Documentación con archivo que nadie revisó todavía, la más antigua primero: la que enviaron los socios desde su cuenta y la que cargó la asociación. La revisión se hace en la ficha de cada socio; verificarla no habilita la dispensa."
+        description="Documentación con archivo que nadie revisó todavía, la más antigua primero: la que enviaron los socios desde su cuenta y la que cargó la asociación. Cada fila abre la revisión en la ficha del socio. Verificar la credencial es una de las tres condiciones para la dispensa, no la habilitación."
         actions={
           <LinkButton href="/admin/reprocann/importar" shape="admin" variant="secondary">
             <FileUp aria-hidden className="size-4" strokeWidth={1.5} /> Importar credenciales recibidas
@@ -31,7 +31,7 @@ export default async function CredencialesPage() {
           caption="Documentación para revisar"
           rows={rows}
           rowKey={(r) => r.id}
-          rowHref={(r) => `/admin/socios/${r.memberId}#reprocann`}
+          rowHref={(r) => `/admin/socios/${r.memberId}?revisar=${r.id}#reprocann`}
           columns={[
             { key: "name", header: "Socio", primary: true, render: (r) => r.name },
             { key: "number", header: "N.º", render: (r) => (r.memberNumber ? <span className="font-mono text-[13px]">{r.memberNumber}</span> : <span className="text-text-muted">A confirmar</span>) },
@@ -48,9 +48,9 @@ export default async function CredencialesPage() {
           <h2 id="vinculaciones" className="text-h3 text-forest">
             Vinculaciones para hacer en REPROCANN
           </h2>
-          <p className="text-small text-text-muted">Socios que ya pasaron su código de vinculación. Hacé la vinculación en REPROCANN y marcala «verificada» en su ficha: ellos lo ven en su espacio.</p>
+          <p className="text-small text-text-muted">Socios que ya pasaron su código de vinculación REPROCANN. Tener el código no es la vinculación: hacela en REPROCANN y marcala «verificada» en su ficha. Ellos lo ven en su espacio.</p>
         </div>
-        <ListStateView state={linkages.length ? "default" : "empty"} emptyTitle="No hay vinculaciones pendientes" emptyDescription="Cuando un socio envíe su código de vinculación desde su espacio, o lo cargues en su ficha, aparece acá.">
+        <ListStateView state={linkages.length ? "default" : "empty"} emptyTitle="No hay vinculaciones pendientes" emptyDescription="Cuando un socio envíe su código de vinculación REPROCANN desde su espacio, o lo cargues en su ficha, aparece acá.">
           <DataList
             caption="Vinculaciones para hacer en REPROCANN"
             rows={linkages}

@@ -5,11 +5,26 @@ import { cn } from "@/lib/cn";
 /*
  * Information components in the manner of the Dambar fichas técnicas (folder tabs, gradient
  * bands, data blocks, THC:CBD ratio bars, outlined chips, rule rows, numbered steps), drawn
- * with the Amarí Dul plant palette. Three tones tell the kind of information apart:
- * green = comunidad y trazabilidad, lilac = asociarse, sand = trámites y salud.
+ * with the Amarí Dul palette. The three brand colours, by section: green (the member's own world
+ * and every action), magenta (trámites y salud: REPROCANN) and lilac (asociarse and orientation).
  */
 
-export type InfoTone = "green" | "lilac" | "sand";
+export type InfoTone = "green" | "lilac" | "magenta";
+
+/** A section's colour as a fill, at the same weight in the three (whole class names, for Tailwind). */
+export const ACCENT_BAR: Record<InfoTone, string> = { green: "bg-hoja-500", magenta: "bg-rosa-400", lilac: "bg-lila-500" };
+/**
+ * The coloured top edge of a sheet (a panel, the open tab): 3 px that are the sheet's own edge,
+ * following its rounded corners and thinning into the side borders. Its 1 px border takes the
+ * colour and an inset line adds the rest, so the sheet keeps the size of the others.
+ */
+export const TOP_EDGE: Record<InfoTone, string> = {
+  green: "border-t-hoja-500 shadow-[inset_0_2px_0_0_var(--hoja-500)]",
+  magenta: "border-t-rosa-400 shadow-[inset_0_2px_0_0_var(--rosa-400)]",
+  lilac: "border-t-lila-500 shadow-[inset_0_2px_0_0_var(--lila-500)]",
+};
+/** A section's eyebrow, in its colour (the pink sections write in Dambar's indigo, as its fichas do). */
+export const EYEBROW: Record<InfoTone, string> = { green: "text-accent", magenta: "text-lila-800", lilac: "text-lila-700" };
 
 export const TONE = {
   green: {
@@ -28,23 +43,24 @@ export const TONE = {
     soft: "bg-lilac-soft",
     line: "border-lilac-ink/70",
   },
-  sand: {
-    band: "bg-[linear-gradient(118deg,var(--arena-800)_0%,var(--arena-700)_50%,var(--arena-600)_100%)]",
-    tab: "border-arena-500",
-    ink: "text-arena-800",
-    fill: "bg-arena-700",
-    soft: "bg-arena-100",
-    line: "border-arena-700/70",
+  magenta: {
+    // Dambar's pink with its indigo ink, as in its fichas.
+    band: "bg-rosa-200 !text-lila-800",
+    tab: "border-rosa-300",
+    ink: "text-lila-800",
+    fill: "bg-lila-800",
+    soft: "bg-rosa-50",
+    line: "border-rosa-300",
   },
 } as const satisfies Record<InfoTone, Record<string, string>>;
 
-/** Three folder tabs, one per information tone (lilac · green · sand), to sit on top of a card. */
+/** Three folder tabs, one per brand colour (lilac · green · magenta), to sit on top of a card. */
 export function FolderTabs({ className }: { className?: string }) {
   return (
     <div aria-hidden className={cn("flex gap-1 px-5", className)}>
       <span className="h-3 flex-1 !rounded-t-[10px] bg-lilac" />
       <span className="h-3 flex-1 !rounded-t-[10px] bg-accent" />
-      <span className="h-3 flex-1 !rounded-t-[10px] bg-arena-400" />
+      <span className="h-3 flex-1 !rounded-t-[10px] bg-rosa-300" />
     </div>
   );
 }
@@ -228,7 +244,10 @@ export function CheckList({ items, tone = "green", className }: { items: ReactNo
   );
 }
 
-/** White card with a folder-tab label on top, the main information container of the fichas. */
+/**
+ * A titled panel: the title (once a folder tab on top) inside a plain white panel with a hairline
+ * border and no shadow, like every other container of the system.
+ */
 export function TabbedCard({
   tab,
   tone = "green",
@@ -252,13 +271,9 @@ export function TabbedCard({
 }) {
   const Heading = level === 2 ? "h2" : "h3";
   return (
-    <section id={id} className={cn("scroll-mt-6", fill && "flex h-full flex-col", className)}>
-      <Heading className="relative z-10 -mb-px flex">
-        <SectionTab tone={tone} className="border-x border-mist-line text-[0.9375rem]">
-          {tab}
-        </SectionTab>
-      </Heading>
-      <div className={cn("!rounded-card !rounded-tl-none border border-mist-line bg-white p-5 shadow-[0_18px_40px_-32px_rgb(29_52_30/0.55)] sm:p-6", fill && "flex flex-1 flex-col", bodyClassName)}>{children}</div>
+    <section id={id} className={cn("relative scroll-mt-6 !rounded-card border border-mist-line bg-white", tone !== "green" && TOP_EDGE[tone], fill && "flex h-full flex-col", className)}>
+      <Heading className={cn("px-5 pt-5 text-h3 sm:px-6 sm:pt-6", tone === "lilac" ? "text-lilac-ink" : "text-forest")}>{tab}</Heading>
+      <div className={cn("px-5 pt-4 pb-5 sm:px-6 sm:pb-6", fill && "flex flex-1 flex-col", bodyClassName)}>{children}</div>
     </section>
   );
 }

@@ -41,7 +41,8 @@ async function deleteMemberChain(t: Database, member: { id: string; userId: stri
       .where(inArray(reprocannDocuments.caseId, caseIds))
       .limit(1);
     if (withFiles) throw new DeleteNotAllowedError("Tiene documentación REPROCANN con archivos cargados: puede ser un registro real y no se borra desde acá.");
-    await t.update(reprocannDocuments).set({ replacedBy: null }).where(inArray(reprocannDocuments.caseId, caseIds));
+    // Documents point at each other (replaced by, kept instead of): clear that before deleting them.
+    await t.update(reprocannDocuments).set({ replacedBy: null, withdrawnAt: null, withdrawnBy: null, withdrawalReason: null, keptDocumentId: null }).where(inArray(reprocannDocuments.caseId, caseIds));
     await t.delete(reprocannDocuments).where(inArray(reprocannDocuments.caseId, caseIds));
     await t.delete(reprocannCases).where(eq(reprocannCases.memberId, member.id));
   }

@@ -37,12 +37,14 @@ export function BrandButterfly({ onPhoto = false, className }: { onPhoto?: boole
   );
 }
 
-export function MemberAccessLink({ tone = "light" }: { tone?: "over-photo" | "light" }) {
+/** `compact`: on a phone, only the icon (beside the lockup in a fixed menu); the name stays for screen readers. */
+export function MemberAccessLink({ tone = "light", compact = false }: { tone?: "over-photo" | "light"; compact?: boolean }) {
   return (
     <Link
       href="/qr/login"
       className={cn(
         "inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 !rounded-full px-3 text-sm whitespace-nowrap min-[360px]:px-4 transition-colors motion-safe-only",
+        compact && "max-sm:!px-0",
         tone === "over-photo"
           ? "border border-white/50 bg-foreground/20 !text-white backdrop-blur-sm hover:bg-foreground/35"
           : "border border-forest/40 !text-forest hover:bg-forest-soft",
@@ -50,7 +52,7 @@ export function MemberAccessLink({ tone = "light" }: { tone?: "over-photo" | "li
     >
       <UserRound aria-hidden className="size-4" strokeWidth={1.5} />
       {/* Below 360px only the icon fits beside the lockup. */}
-      <span className="max-[359px]:sr-only">Acceso socios</span>
+      <span className={compact ? "max-sm:sr-only" : "max-[359px]:sr-only"}>Acceso socios</span>
     </Link>
   );
 }

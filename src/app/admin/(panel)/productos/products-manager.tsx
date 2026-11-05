@@ -45,11 +45,14 @@ const STATUS_OPTIONS = [
 ];
 const missing = <span className="text-text-muted">Sin cargar</span>;
 const photoUrl = (r: ProductRow) => (r.photo ? `/admin/productos/${r.id}/foto?v=${r.photo.version}` : null);
+const valuesOf = (row: ProductRow): ProductFormValues => ({ name: row.name, type: row.type, varietyId: row.varietyId, cultivation: row.cultivation, chemotype: row.chemotype, cultivatedOn: row.cultivatedOn, description: row.description ?? "", status: row.status });
 
-export default function ProductsManager({ rows, varieties, options }: { rows: ProductRow[]; varieties: VarietyRow[]; options: { types: Option[]; cultivation: Option[]; chemotypes: Option[] } }) {
+export default function ProductsManager({ rows, varieties, options, initialEdit = null }: { rows: ProductRow[]; varieties: VarietyRow[]; options: { types: Option[]; cultivation: Option[]; chemotypes: Option[] }; initialEdit?: string | null }) {
   const router = useRouter();
-  const [editing, setEditing] = useState<ProductRow | "new" | null>(null);
-  const [values, setValues] = useState<ProductFormValues>(EMPTY);
+  // Opened from the panel search («?editar=<product>»): that product's form, from the first render.
+  const fromSearch = initialEdit ? (rows.find((r) => r.id === initialEdit) ?? null) : null;
+  const [editing, setEditing] = useState<ProductRow | "new" | null>(fromSearch);
+  const [values, setValues] = useState<ProductFormValues>(fromSearch ? valuesOf(fromSearch) : EMPTY);
   const [errors, setErrors] = useState<Partial<Record<keyof ProductFormValues, string>>>({});
   const [formError, setFormError] = useState("");
   const [variety, setVariety] = useState<VarietyRow | null>(null);
@@ -64,11 +67,7 @@ export default function ProductsManager({ rows, varieties, options }: { rows: Pr
 
   const open = (row: ProductRow | "new") => {
     setEditing(row);
-    setValues(
-      row === "new"
-        ? EMPTY
-        : { name: row.name, type: row.type, varietyId: row.varietyId, cultivation: row.cultivation, chemotype: row.chemotype, cultivatedOn: row.cultivatedOn, description: row.description ?? "", status: row.status },
-    );
+    setValues(row === "new" ? EMPTY : valuesOf(row));
     setErrors({});
     setFormError("");
   };

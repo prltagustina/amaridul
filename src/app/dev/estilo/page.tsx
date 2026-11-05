@@ -5,15 +5,16 @@ import { PhotoPlaceholder } from "@/components/brand/placeholders";
 import { Button, LinkButton, TextLink } from "@/components/ui/button";
 import { Alert, Card, DevTag, EmptyState, LoadingBlock, SectionHeader, StatusBadge, type Tone } from "@/components/ui/display";
 import { Select, TextField, Textarea } from "@/components/ui/field";
-import { CheckList, Chip, FolderTabs, KeyFact, RatioBar, RuleList, SectionTab, StepCards, TechBand, VarietyBadge } from "@/components/ui/technical";
+import { CheckList, Chip, FolderTabs, KeyFact, RatioBar, RuleList, SectionTab, StepCards, TechBand, VarietyBadge, type InfoTone } from "@/components/ui/technical";
 import { FolderSwitcher } from "@/components/ui/folder-tabs";
 import { InteractiveSamples } from "./interactive";
 
 const SCALES: { name: string; token: string; role: string; steps: [number, string][] }[] = [
   { name: "Hoja", token: "hoja", role: "Identidad, socios y trazabilidad: asociación, acceso, producto y lote. 700 es el verde del logo.", steps: [[50, "#f3f9f2"], [100, "#e6f3e6"], [200, "#cfe5ce"], [300, "#b0d2b0"], [400, "#8cb88d"], [500, "#6a9a6b"], [600, "#517f53"], [700, "#3f6640"], [800, "#2c4b2d"], [900, "#1d341e"]] },
-  { name: "Lila", token: "lila", role: "Asociarse: Sumate, invitación y solicitud formal.", steps: [[50, "#f8f5fc"], [100, "#f1ebf9"], [200, "#e3d8f2"], [300, "#cfbfe4"], [400, "#b5a0cf"], [500, "#9780b3"], [600, "#7c6695"], [700, "#64517a"], [800, "#493b5a"], [900, "#332840"]] },
+  { name: "Lila", token: "lila", role: "Asociarse: Sumate, invitación y solicitud formal. También los avisos informativos.", steps: [[50, "#f8f5fc"], [100, "#f1ebf9"], [200, "#e3d8f2"], [300, "#cfbfe4"], [400, "#b5a0cf"], [500, "#9780b3"], [600, "#7c6695"], [700, "#64517a"], [800, "#493b5a"], [900, "#332840"]] },
+  { name: "Rosa", token: "rosa", role: "Trámites y salud: REPROCANN, credencial y vinculación. 100 y 300 son los rosas de las fichas de Dambar, exactos; 300 va solo como relleno.", steps: [[50, "#fef3fd"], [100, "#ffe8fe"], [200, "#fccbf9"], [300, "#ffa7fd"], [400, "#e380e0"], [500, "#c35fc1"], [600, "#a247a1"], [700, "#843783"], [800, "#612761"], [900, "#441b43"]] },
   { name: "Ámbar", token: "ambar", role: "Solo estados de aviso (pendiente, advertencia).", steps: [[50, "#fef5ee"], [100, "#fcebdd"], [200, "#f7d7bd"], [300, "#ecbd95"], [400, "#d89d68"], [500, "#bb7c40"], [600, "#9d6226"], [700, "#804d18"], [800, "#5f370d"], [900, "#442606"]] },
-  { name: "Arena", token: "arena", role: "Neutros cálidos: fondos editoriales, bordes, texto secundario y trámites.", steps: [[50, "#f8f7f4"], [100, "#f0eeea"], [200, "#e1ded5"], [300, "#cdc7bb"], [400, "#b1aa9b"], [500, "#938b7b"], [600, "#787161"], [700, "#615a4d"], [800, "#474238"], [900, "#312d26"]] },
+  { name: "Arena", token: "arena", role: "Neutros cálidos: fondos editoriales, bordes y texto secundario.", steps: [[50, "#f8f7f4"], [100, "#f0eeea"], [200, "#e1ded5"], [300, "#cdc7bb"], [400, "#b1aa9b"], [500, "#938b7b"], [600, "#787161"], [700, "#615a4d"], [800, "#474238"], [900, "#312d26"]] },
 ];
 
 const ROLES: [string, string][] = [
@@ -21,6 +22,21 @@ const ROLES: [string, string][] = [
   ["Rellenos y fondos suaves", "50–300"],
   ["Degradés de bandas y botones", "900 → 800 → 700"],
   ["Mismo paso en distintas escalas", "misma luminosidad: combinan entre sí"],
+];
+
+// The three flows: each one has its own colour, from the band to the tabs and labels.
+const FLOWS: { tone: InfoTone; token: string; color: string; flow: string; where: string }[] = [
+  { tone: "green", token: "hoja", color: "Verde · hoja", flow: "Tu membresía", where: "Mi espacio, productos y su ficha, cuota y trazabilidad." },
+  { tone: "lilac", token: "lila", color: "Violeta · lila", flow: "Asociarse", where: "Sumate, invitación y solicitud formal. También los avisos informativos." },
+  { tone: "magenta", token: "rosa", color: "Rosa · Dambar", flow: "Trámites y salud", where: "REPROCANN: credencial, código de vinculación, su ayuda y sus pasos en la web." },
+];
+
+const FLOW_RULES: ReactNode[] = [
+  <>El <strong>rosa 300</strong> (#FFA7FD) es relleno: pestañas, puntos y barras. Nunca lleva texto blanco (1,7:1): encima va rosa 900 (8,2:1) o verde forest (5,7:1).</>,
+  <>Para textos del flujo rosa, <strong>rosa 800</strong> (10,7:1 sobre blanco) o rosa 700 (7,4:1). Las bandas van de 800 a 600 y el texto blanco queda en 5,3:1 o más.</>,
+  <><strong>Violeta y rosa son vecinos</strong>: en los fondos suaves casi no se distinguen y, con daltonismo, se ven iguales. Nunca son lo único que diferencia algo: siempre van con un título o una etiqueta.</>,
+  <>El rosa no es un estado: los errores siguen en rojo, los avisos en ámbar y lo resuelto en verde, también dentro de una tarjeta rosa.</>,
+  <><strong>Arena queda neutra</strong>: fondos, bordes y texto secundario. Ya no marca ningún flujo.</>,
 ];
 
 const TONES: Tone[] = ["neutral", "brand", "success", "warning", "error", "info"];
@@ -42,8 +58,48 @@ export default function EstiloPage() {
 
         <Section title="Sistema de color">
           <p className="max-w-2xl text-body text-text-muted">
-            Cuatro escalas construidas en OKLCH con la misma luminosidad en cada paso. La estructura viene de Dambar (bandas en degradé, fichas, bloques de datos); los colores son propios de Amarí Dul.
+            Cinco escalas construidas en OKLCH con la misma luminosidad en cada paso. Tres marcan los flujos (verde, violeta y rosa); ámbar y arena acompañan. De Dambar vienen la estructura (bandas en degradé, fichas, bloques de datos) y el rosa.
           </p>
+          <div id="paleta" className="scroll-mt-6 space-y-4">
+            <h3 className="text-lg font-medium text-foreground">Tres flujos, tres colores</h3>
+            <ul className="grid gap-4 md:grid-cols-3">
+              {FLOWS.map((f) => (
+                <li key={f.tone} className="flex flex-col overflow-hidden !rounded-card border border-mist-line bg-white">
+                  <TechBand tone={f.tone} className="px-5 pt-4 pb-5">
+                    <p className="text-[11px] font-medium tracking-[0.18em] text-white/80 uppercase">{f.color}</p>
+                    <p className="mt-1 text-xl font-title">{f.flow}</p>
+                  </TechBand>
+                  <div className="flex flex-1 flex-col gap-4 p-5">
+                    <p className="text-small text-text-muted">{f.where}</p>
+                    <div className="flex flex-wrap items-end gap-3">
+                      <SectionTab tone={f.tone} className="border-x border-mist-line">
+                        Pestaña
+                      </SectionTab>
+                      <Chip tone={f.tone}>Etiqueta</Chip>
+                    </div>
+                    <ul className="mt-auto grid grid-cols-3 overflow-hidden !rounded-control border border-mist-line text-[10px] leading-tight">
+                      {SCALES.find((sc) => sc.token === f.token)!
+                        .steps.filter(([step]) => step === 100 || step === 300 || step === 800)
+                        .map(([step, hex]) => (
+                          <li key={step} className="flex min-h-14 flex-col justify-end p-2" style={{ background: hex, color: step >= 600 ? "#fff" : "#1a1a18" }}>
+                            <span className="font-medium">{step}</span>
+                            <span className="font-mono">{hex}</span>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <ul className="space-y-2 text-[0.9375rem] leading-relaxed text-foreground">
+              {FLOW_RULES.map((rule, i) => (
+                <li key={i} className="flex items-start gap-3 !rounded-control border border-mist-line bg-white px-4 py-3 [&_strong]:font-medium">
+                  <span aria-hidden className="mt-2 size-2 shrink-0 !rounded-full bg-rosa-300 ring-1 ring-lila-800/30" />
+                  <span>{rule}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
           <div className="space-y-6">
             {SCALES.map((sc) => (
               <div key={sc.token} className="space-y-2">
@@ -93,6 +149,7 @@ export default function EstiloPage() {
               <Button>Primario</Button>
               <Button variant="accent">Acento</Button>
               <Button variant="secondary">Secundario</Button>
+              <Button variant="neutral">Neutro · copiar</Button>
               <Button variant="ghost">Ghost</Button>
               <Button variant="danger">Peligro</Button>
               <Button disabled>Deshabilitado</Button>
@@ -157,7 +214,7 @@ export default function EstiloPage() {
 
         <Section title="Componentes de información · a la manera de Dambar">
           <p className="max-w-2xl text-body text-text-muted">
-            Pestañas de carpeta, bandas, bloques de dato clave, reglas, pasos numerados y barras de proporción, con la paleta propia de Amarí Dul: los verdes de la planta, con lila y ámbar como toques. Se usan en toda la web.
+            Pestañas de carpeta, bandas, bloques de dato clave, reglas, pasos numerados y barras de proporción, con la paleta de Amarí Dul: los verdes de la planta, el violeta y el rosa de Dambar. Se usan en toda la web.
           </p>
           <div className="grid gap-6 md:grid-cols-2">
             <div>
@@ -192,7 +249,7 @@ export default function EstiloPage() {
             tabs={[
               { id: "comunidad", label: "Socios", tone: "green", content: <p className="text-body">Verde: asociación, acceso, socios y trazabilidad.</p> },
               { id: "trazabilidad", label: "Asociarse", tone: "lilac", content: <p className="text-body">Lila: Sumate, invitación y solicitud formal.</p> },
-              { id: "tramites", label: "Trámites", tone: "sand", content: <p className="text-body">Arena: trámites, documentación, salud y dispensas.</p> },
+              { id: "tramites", label: "Trámites", tone: "magenta", content: <p className="text-body">Rosa: REPROCANN, credencial, código de vinculación y salud.</p> },
             ]}
           />
           <StepCards

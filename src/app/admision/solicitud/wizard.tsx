@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowLeft, ArrowRight, CircleCheck, FileText, IdCard, Pencil, Stamp } from "lucide-react";
+import { ArrowLeft, ArrowRight, CircleCheck, ExternalLink, FileText, Pencil, Stamp } from "lucide-react";
 import { Button, LinkButton } from "@/components/ui/button";
 import { Checkbox, RadioGroup } from "@/components/ui/choice";
 import { Alert, Card, DevTag, LoadingBlock } from "@/components/ui/display";
@@ -9,6 +9,8 @@ import { Dialog } from "@/components/ui/dialog";
 import { Select, TextField, Textarea } from "@/components/ui/field";
 import { StepIndicator, type StepStatus } from "@/components/ui/steps";
 import { documents, membershipFee, privacySummary, provinces, reprocannOptions, requestableCategories } from "@/demo/content";
+import { LinkCodeVideo } from "@/components/reprocann/link-code-video";
+import { REPROCANN_OFFICIAL_SITE } from "@/lib/reprocann-help";
 import { STEP_IDS, type StepId } from "./steps";
 import { openInvitation } from "../actions";
 import { ExpiredInvitation, InvalidInvitation } from "../invitation";
@@ -19,7 +21,7 @@ const STEP_LABELS: Record<StepId, string> = {
   A: "Datos personales",
   B: "Contacto",
   C: "Solicitud asociativa",
-  D: "Acreditación de identidad",
+  D: "Credencial REPROCANN",
   E: "Estatuto y reglamentos",
   F: "Cuota social",
   G: "Declaraciones",
@@ -449,14 +451,36 @@ export default function AdmissionWizard({ initialStep, demoState, demo }: { init
         </div>
       )}
 
+      {/* No files here: not the DNI (its number, in step A, identifies the person) and not the
+          credential, which is sent from the member's space once admitted. Nothing in this step is
+          required, so whoever starts REPROCANN with the association is never held back. */}
       {view === "D" && (
-        <Card variant="outline" className="space-y-4 border-dashed border-border-strong/60 py-10 text-center">
-          <IdCard aria-hidden className="mx-auto size-10 text-accent" strokeWidth={1.25} />
-          <p className="text-h3 text-foreground">Método de acreditación pendiente de definición institucional.</p>
-          <p className="mx-auto max-w-md text-small text-text-muted">
-            Acá vas a ver cómo acreditar tu identidad cuando la asociación lo defina. Por ahora podés continuar.
-          </p>
-          <DevTag>Sin carga de archivos</DevTag>
+        <Card className="space-y-5">
+          <p className="text-body text-text-muted">No hace falta adjuntar tu DNI: alcanza con el número que cargaste en «Datos personales». Tampoco necesitás tu credencial REPROCANN para enviar la solicitud.</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="min-w-0 space-y-2 !rounded-control border border-border bg-background/60 px-4 py-4">
+              <p className="text-eyebrow text-accent">Si ya tenés tu credencial</p>
+              <p className="text-lg font-title text-foreground">La cargás en tu espacio de socio</p>
+              <p className="text-small text-text-muted">Cuando la Comisión Directiva apruebe tu solicitud, activás tu cuenta y la subís desde «REPROCANN» para que la asociación la revise.</p>
+            </div>
+            <div className="min-w-0 space-y-2 !rounded-control border border-border bg-background/60 px-4 py-4">
+              <p className="text-eyebrow text-accent">Si todavía no la tenés</p>
+              <p className="text-lg font-title text-foreground">La gestionás con la asociación</p>
+              <p className="text-small text-text-muted">
+                El primer paso es tu código de vinculación REPROCANN: está en tu «Registro de paciente», en el{" "}
+                <a href={REPROCANN_OFFICIAL_SITE} target="_blank" rel="noopener noreferrer" className="!text-forest !underline underline-offset-4">
+                  sitio oficial <ExternalLink aria-hidden className="inline size-3.5 align-[-0.125em]" strokeWidth={1.5} />
+                  <span className="sr-only">(se abre en otra pestaña)</span>
+                </a>
+                , con tu cuenta de Mi Argentina. Después del alta lo cargás en tu espacio y te acompañamos con el equipo médico.
+              </p>
+            </div>
+          </div>
+          <details className="!rounded-control border border-border bg-background/60 px-4 py-3 [&[open]>summary]:mb-4">
+            <summary className="cursor-pointer text-[0.9375rem] font-medium text-forest">¿Dónde está el código de vinculación? Mirá el video (30 segundos)</summary>
+            <LinkCodeVideo className="mx-auto max-w-[14rem]" />
+          </details>
+          <Alert tone="info">Nada de este paso es obligatorio: podés continuar.</Alert>
         </Card>
       )}
 
@@ -624,7 +648,7 @@ function Summary({ data, onEdit }: { data: Data; onEdit: (id: StepId) => void })
     ["A", `${data.nombres} ${data.apellidos} · DNI ${data.dni.replace(/\D/g, "").replace(/(\d+)(\d{3})(\d{3})$/, "$1.$2.$3")} · ${data.localidad}, ${data.provincia}`],
     ["B", `${data.email} · ${data.telefono}`],
     ["C", `Categoría ${category} · obligaciones: ${yes(data.obligaciones)}`],
-    ["D", "Pendiente de definición institucional"],
+    ["D", "Sin archivos adjuntos: la credencial se carga en tu espacio después del alta"],
     ["E", yes(data.estatuto)],
     ["F", data.cuota ? "Informada" : "Pendiente"],
     ["G", data.veracidad && data.cambios ? "Declaradas" : "Pendiente"],

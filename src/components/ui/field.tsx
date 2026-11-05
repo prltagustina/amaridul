@@ -3,7 +3,7 @@ import { CircleAlert } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 export const controlClasses = cn(
-  "block w-full !rounded-control border border-border-strong bg-white px-3.5 py-2.5 text-base text-foreground",
+  "block w-full min-w-0 max-w-full !rounded-control border border-border-strong bg-white px-3.5 py-2.5 text-base text-foreground",
   "placeholder:text-text-muted/80 focus:outline-2 focus:outline-offset-2 focus:outline-forest",
   "aria-[invalid=true]:border-error-fg disabled:cursor-not-allowed disabled:bg-surface-sunken disabled:opacity-70",
 );
@@ -18,10 +18,10 @@ type FieldShellProps = {
   className?: string;
 };
 
-/** Label + control + hint + error, with ids wired for aria-describedby. */
+/** Label + control + hint + error, with ids wired for aria-describedby. Shrinks with its grid column. */
 export function FieldShell({ id, label, hint, error, optional, children, className }: FieldShellProps) {
   return (
-    <div className={cn("space-y-1.5", className)}>
+    <div className={cn("min-w-0 space-y-1.5", className)}>
       <label htmlFor={id} className="block text-label text-foreground">
         {label}
         {optional && <span className="ml-1 font-light text-text-muted">(opcional)</span>}

@@ -4,15 +4,17 @@ import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
 import { getKeyrings } from "@/server/crypto";
 import { categoryLabel, getMemberProfile } from "@/server/member-profile";
-import { DOCUMENT_KIND, INFO_SOURCE, LINKAGE_STATUS, MANAGEMENT_SOURCE, PERMIT_STATUS, REVIEW_STATUS, labelIn } from "@/server/reprocann";
+import { CREDENTIAL_KINDS, DOCUMENT_KIND, INFO_SOURCE, isActiveDocument, LINKAGE_STATUS, MANAGEMENT_SOURCE, PERMIT_STATUS, REVIEW_STATUS, labelIn } from "@/server/reprocann";
 import { categoryOptions, provinces } from "@/demo/content";
 import { fileSizeLabel } from "@/lib/file-size";
-import { expiryLine } from "@/lib/credential-validity";
+import { credentialStatus, currentCredential, expiryLine } from "@/lib/credential-validity";
+import { dispensingEligibility } from "@/lib/dispensing";
 import { uploadMode } from "@/server/storage";
 import { adminLinkCode } from "@/server/reprocann-link";
 import { memberStatus } from "../../../status";
 import { AdminPageHeader } from "../../../ui";
 import { AccountBlock, ContactBlock, FeeBlock, MembershipBlock, NotesBlock, PersonalBlock } from "./profile-blocks";
+import { DispensingBlock } from "./dispensing-block";
 import ReprocannPanel, { type ReprocannView } from "./reprocann-panel";
 
 const stamp = new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short", hourCycle: "h23", timeZone: "America/Argentina/Buenos_Aires" });
@@ -24,8 +26,10 @@ const DIMENSIONS: Record<string, { name: string; list: readonly { value: string;
 };
 const LEGAJO = { imported: "Importado del padrón histórico", pending_update: "Pendiente de actualizar", updated: "Actualizado" } as const;
 
-/** Audit entries of the REPROCANN case, in words. */
-function describe(action: string, m: Record<string, string | number | boolean | null> | null): string {
+const CREDENTIAL_STATUS_WORDS: Record<string, string> = { none: "sin credencial", pending: "en revisión", observed: "observada", verified: "verificada", expiring: "vence pronto", expired: "vencida" };
+
+/** Audit entries of the REPROCANN case, in words. `docLabel` names a document of the case by its id. */
+function describe(action: string, m: Record<string, string | number | boolean | null> | null, docLabel: (id: unknown) => string): string {
   if (action === "reprocann.case_opened") return "Se abrió el trámite.";
   if (action === "reprocann.document_added") return `Documento registrado: ${labelIn(DOCUMENT_KIND, String(m?.kind))} (${labelIn(INFO_SOURCE, String(m?.source))})${m?.importRun ? " · importación del padrón" : ""}.`;
   if (action === "reprocann.document_uploaded") return `El socio envió un archivo desde su cuenta: ${labelIn(DOCUMENT_KIND, String(m?.kind))}${m?.replaces ? " (reemplaza al anterior)" : ""}.`;
@@ -42,6 +46,8 @@ function describe(action: string, m: Record<string, string | number | boolean | 
     ].filter(Boolean);
     return `Documento revisado${parts.length ? `: ${parts.join(" · ")}` : ""}.`;
   }
+  if (action === "reprocann.document_withdrawn")
+    return `Documento retirado por duplicado (${docLabel(m?.document)}); se conserva ${docLabel(m?.kept)}. Credencial vigente: ${CREDENTIAL_STATUS_WORDS[String(m?.status_before)] ?? "—"} → ${CREDENTIAL_STATUS_WORDS[String(m?.status_after)] ?? "—"}.`;
   if (action === "reprocann.case_updated")
     return Object.entries(DIMENSIONS)
       .filter(([k]) => m && `${k}_after` in m)
@@ -53,19 +59,46 @@ function describe(action: string, m: Record<string, string | number | boolean | 
   return action;
 }
 
-export default async function SocioPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function SocioPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requireAdmin();
   const { id } = await params;
+  const { revisar } = await searchParams;
   const p = await getMemberProfile(await getDb(), getKeyrings(), id);
   if (!p) notFound();
   const name = p.personal.lastNames && p.personal.firstNames ? `${p.personal.firstNames} ${p.personal.lastNames}` : p.personal.fullName;
   const ms = p.membership;
 
   const rep = p.reprocann;
+  const docs = rep?.documents ?? [];
+  // How each document reads in a list, to tell repeated ones apart: kind, who sent it and when.
+  const docLabel = (docId: unknown) => {
+    const d = docs.find((x) => x.id === docId);
+    if (!d) return "un documento";
+    return `${labelIn(DOCUMENT_KIND, d.kind).toLowerCase()} que ${d.fromMember ? "envió el socio" : `cargó ${d.recordedBy ?? "la administración"}`} el ${stamp.format(d.createdAt)}`;
+  };
+  // Active credentials (neither replaced nor withdrawn): more than one is a duplicate to resolve.
+  const activeCredentials = docs.filter((d) => isActiveDocument(d) && (CREDENTIAL_KINDS as readonly string[]).includes(d.kind));
+  const inForce = currentCredential(activeCredentials);
+  const linkCode = await adminLinkCode(await getDb(), getKeyrings().field, p.id);
   const reprocann: ReprocannView = {
     case: rep ? { permitStatus: rep.case.permitStatus, managementSource: rep.case.managementSource, responsibleName: rep.case.responsibleName ?? "", linkageStatus: rep.case.linkageStatus } : null,
-    documents: (rep?.documents ?? []).map((d) => ({
+    documents: docs.map((d) => ({
       id: d.id,
+      label: docLabel(d.id),
+      active: isActiveDocument(d),
+      credential: (CREDENTIAL_KINDS as readonly string[]).includes(d.kind),
+      inForce: d.id === inForce?.id,
+      reviewed: d.reviewedAt ? { at: stamp.format(d.reviewedAt), by: d.reviewedByName ?? "administración" } : null,
+      withdrawn: d.withdrawnAt ? { at: stamp.format(d.withdrawnAt), by: d.withdrawnByName ?? "administración", kept: docLabel(d.keptDocumentId) } : null,
+      // If this one were withdrawn as a duplicate, which credential would be in force and how it would read.
+      ifWithdrawn:
+        activeCredentials.length > 1 && activeCredentials.some((c) => c.id === d.id)
+          ? (() => {
+              const after = currentCredential(activeCredentials.filter((c) => c.id !== d.id));
+              const status = credentialStatus(after);
+              return { inForce: after ? docLabel(after.id) : null, statusLabel: status.label, statusTone: status.tone, loses: p.credentialStatus.key === "verified" || p.credentialStatus.key === "expiring" ? !(status.key === "verified" || status.key === "expiring") : false };
+            })()
+          : null,
       kind: d.kind,
       permitIdentifier: d.permitIdentifier,
       issuedOn: d.issuedOn,
@@ -82,11 +115,12 @@ export default async function SocioPage({ params }: { params: Promise<{ id: stri
       files: d.files.map((f) => ({
         href: `/admin/socios/${p.id}/reprocann/${f.id}`,
         page: f.page,
+        image: f.contentType !== "application/pdf",
         label: `${f.contentType === "application/pdf" ? "PDF" : f.contentType === "image/png" ? "PNG" : "JPG"} · ${fileSizeLabel(f.size)}`,
         uploaded: `${f.uploaderRole === "MEMBER" ? "el socio" : (f.uploaderName ?? "administración")} · ${stamp.format(f.uploadedAt)}`,
       })),
     })),
-    history: (rep?.history ?? []).map((h) => ({ at: stamp.format(h.at), actor: h.actor ?? "Sistema", text: describe(h.action, h.metadata) })),
+    history: (rep?.history ?? []).map((h) => ({ at: stamp.format(h.at), actor: h.actor ?? "Sistema", text: describe(h.action, h.metadata, docLabel) })),
     credential: {
       statusLabel: p.credentialStatus.label,
       statusTone: p.credentialStatus.tone,
@@ -96,8 +130,9 @@ export default async function SocioPage({ params }: { params: Promise<{ id: stri
       digitized: !!rep?.documents.find((d) => d.id === p.credential?.id)?.files.length,
     },
     uploads: uploadMode(),
-    linkCode: await adminLinkCode(await getDb(), getKeyrings().field, p.id),
+    linkCode,
   };
+  const eligibility = dispensingEligibility({ membership: ms.status, credential: p.credentialStatus, linkage: rep ? { verified: rep.case.linkageStatus === "verificada", codeReceived: !!linkCode } : null }, "admin");
 
   const ac = p.access;
   const access = {
@@ -114,6 +149,7 @@ export default async function SocioPage({ params }: { params: Promise<{ id: stri
   return (
     <>
       <AdminPageHeader back={{ href: "/admin/socios", label: "Socios" }} eyebrow={ms.memberNumber ? `Socio ${ms.memberNumber}` : "Socio · número a confirmar"} title={name} />
+      <DispensingBlock eligibility={eligibility} className="mb-6" />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="space-y-6">
           <PersonalBlock id={p.id} data={p.personal} />
@@ -154,6 +190,8 @@ export default async function SocioPage({ params }: { params: Promise<{ id: stri
       <div className="mt-10">
         <ReprocannPanel
           memberId={p.id}
+          member={{ name, number: ms.memberNumber }}
+          openReview={typeof revisar === "string" ? revisar : null}
           view={reprocann}
           options={{
             permit: [...PERMIT_STATUS],

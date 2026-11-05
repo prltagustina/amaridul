@@ -1,15 +1,17 @@
 // REPROCANN, minimum for now: once a member is identified, the admin records the documentation
 // Amarí Dul already holds (or receives) and the state of each dimension. Administrative and
-// documentary only. Recording or verifying a document never enables dispensing: the rule is not
-// defined yet, so eligibility is not stored nor computed here.
+// documentary only. Recording or verifying a document never enables dispensing by itself: the
+// eligibility is derived from three conditions in `src/lib/dispensing.ts` and never stored.
 import { randomUUID } from "node:crypto";
-import { asc, desc, eq, and, inArray } from "drizzle-orm";
+import { asc, desc, eq, and, inArray, ne } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import * as z from "zod";
 import type { Database } from "@/server/db/client";
 import { auditLogs, reprocannCases, reprocannDocumentFiles, reprocannDocuments, user } from "@/server/db/schema";
 import { audit } from "@/server/audit/log";
 import { decryptField, encryptField } from "@/server/crypto/field-encryption";
 import type { Keyring } from "@/server/crypto/keyring";
+import { credentialStatus, currentCredential, todayInArgentina } from "@/lib/credential-validity";
 
 export const PERMIT_STATUS = [
   { value: "no_informado", label: "Sin informar" },
@@ -48,6 +50,11 @@ export const INFO_SOURCE = [
 
 const values = <T extends readonly { value: string }[]>(list: T) => list.map((o) => o.value) as [T[number]["value"], ...T[number]["value"][]];
 export const labelIn = (list: readonly { value: string; label: string }[], v: string | null | undefined) => list.find((o) => o.value === v)?.label ?? "—";
+
+/** The kinds that count as the member's credential (see `currentCredential`). */
+export const CREDENTIAL_KINDS = ["credencial", "certificado"] as const;
+/** Part of the active documentation: not replaced by a newer one and not withdrawn as a duplicate. */
+export const isActiveDocument = (d: { replacedBy: string | null; withdrawnAt: Date | null }) => !d.replacedBy && !d.withdrawnAt;
 
 const todayAR = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires" }).format(new Date());
 const optionalDate = z.union([z.iso.date(), z.literal("")]).transform((v) => v || null);
@@ -121,10 +128,14 @@ export class ReprocannError extends Error {}
 export async function getReprocann(db: Database, field: Keyring, memberId: string) {
   const [c] = await db.select().from(reprocannCases).where(eq(reprocannCases.memberId, memberId));
   if (!c) return null;
+  const reviewer = alias(user, "reviewer");
+  const withdrawer = alias(user, "withdrawer");
   const docs = await db
-    .select({ doc: reprocannDocuments, uploaderRole: user.role, uploaderName: user.name })
+    .select({ doc: reprocannDocuments, uploaderRole: user.role, uploaderName: user.name, reviewerName: reviewer.name, withdrawnByName: withdrawer.name })
     .from(reprocannDocuments)
     .leftJoin(user, eq(user.id, reprocannDocuments.createdBy))
+    .leftJoin(reviewer, eq(reviewer.id, reprocannDocuments.reviewedBy))
+    .leftJoin(withdrawer, eq(withdrawer.id, reprocannDocuments.withdrawnBy))
     .where(eq(reprocannDocuments.caseId, c.id))
     .orderBy(desc(reprocannDocuments.createdAt));
   const files = docs.length
@@ -148,14 +159,18 @@ export async function getReprocann(db: Database, field: Keyring, memberId: strin
     .select({ action: auditLogs.action, at: auditLogs.at, metadata: auditLogs.metadata, actor: user.name })
     .from(auditLogs)
     .leftJoin(user, eq(user.id, auditLogs.actorUserId))
-    .where(and(eq(auditLogs.entityType, "reprocann_case"), eq(auditLogs.entityId, c.id)))
+    // Thumbnails are logged as previews; the case history lists what was done and opened.
+    .where(and(eq(auditLogs.entityType, "reprocann_case"), eq(auditLogs.entityId, c.id), ne(auditLogs.action, "reprocann.document_previewed")))
     .orderBy(asc(auditLogs.at));
   return {
     case: c,
-    documents: docs.map(({ doc: d, uploaderRole, uploaderName }) => ({
+    documents: docs.map(({ doc: d, uploaderRole, uploaderName, reviewerName, withdrawnByName }) => ({
       ...d,
       /** Who recorded it: a member from their account, or an admin. */
       recordedBy: uploaderName ?? null,
+      /** Who saved the last review, and who withdrew it as a duplicate. */
+      reviewedByName: reviewerName ?? null,
+      withdrawnByName: withdrawnByName ?? null,
       files: files.filter((f) => f.documentId === d.id),
       permitIdentifier: d.permitIdentifierEncrypted ? decryptField(field, d.permitIdentifierEncrypted, idAad(d.id)) : null,
       notes: d.notesEncrypted ? decryptField(field, d.notesEncrypted, notesAad(d.id)) : null,
@@ -243,11 +258,14 @@ export async function addDocument(db: Database, field: Keyring, actorUserId: str
 export async function reviewDocument(db: Database, field: Keyring, actorUserId: string, documentId: string, input: z.infer<typeof reviewInput>, now = new Date()) {
   if (!z.uuid().safeParse(documentId).success) throw new ReprocannError("El documento no existe.");
   if (input.reviewStatus === "verificada" && !input.verifiedOn) throw new ReprocannError("Indicá la fecha de verificación.");
+  if (input.verifiedOn && input.verifiedOn > todayInArgentina(now)) throw new ReprocannError("La fecha de verificación no puede ser posterior a hoy.");
   await db.transaction(async (tx) => {
     const t = tx as unknown as Database;
     const [d] = await t
       .select({
         caseId: reprocannDocuments.caseId,
+        kind: reprocannDocuments.kind,
+        withdrawnAt: reprocannDocuments.withdrawnAt,
         reviewStatus: reprocannDocuments.reviewStatus,
         verifiedOn: reprocannDocuments.verifiedOn,
         expiresOn: reprocannDocuments.expiresOn,
@@ -261,6 +279,10 @@ export async function reviewDocument(db: Database, field: Keyring, actorUserId: 
     if (!d) throw new ReprocannError("El documento no existe.");
     // A review is of the file the admin saw: a document replaced meanwhile is not the current one.
     if (d.replacedBy) throw new ReprocannError("El socio reemplazó este documento por uno nuevo. Recargá la página y revisá la versión actual.");
+    if (d.withdrawnAt) throw new ReprocannError("Este documento se retiró por duplicado: ya no forma parte de la documentación activa.");
+    // A credential is verified with the expiry read on it: without it, its validity cannot be followed.
+    const expiresOn = input.expiresOn === undefined ? d.expiresOn : input.expiresOn;
+    if (input.reviewStatus === "verificada" && (CREDENTIAL_KINDS as readonly string[]).includes(d.kind) && !expiresOn) throw new ReprocannError("Indicá el vencimiento que figura en la credencial para verificarla.");
     const message = input.reviewStatus === "observada" ? input.memberMessage : null;
     const messageChanged = (decryptMemberMessage(field, documentId, d.message) ?? null) !== message;
     const notesBefore = d.notes ? decryptField(field, d.notes, notesAad(documentId)) : null;
@@ -296,5 +318,63 @@ export async function reviewDocument(db: Database, field: Keyring, actorUserId: 
         verifiedOn: input.verifiedOn,
       },
     });
+  });
+}
+
+/**
+ * Withdraws a duplicate from the active documentation and keeps the other one. Both must be active
+ * credentials (or certificates) of the same member, so the member is never left without the one
+ * kept. Nothing is deleted: the withdrawn document keeps its files and its review, marked with who,
+ * when, why and which document was kept instead. The credential in force is computed, never stored:
+ * the log records which one counted before and which one counts after, with their statuses.
+ */
+export async function withdrawDuplicate(db: Database, actorUserId: string, documentId: string, keptDocumentId: string, now = new Date()) {
+  if (!z.uuid().safeParse(documentId).success || !z.uuid().safeParse(keptDocumentId).success) throw new ReprocannError("El documento no existe.");
+  if (documentId === keptDocumentId) throw new ReprocannError("Elegí cuál de los otros documentos se conserva.");
+  return db.transaction(async (tx) => {
+    const t = tx as unknown as Database;
+    const columns = {
+      id: reprocannDocuments.id,
+      caseId: reprocannDocuments.caseId,
+      kind: reprocannDocuments.kind,
+      replacedBy: reprocannDocuments.replacedBy,
+      withdrawnAt: reprocannDocuments.withdrawnAt,
+      reviewStatus: reprocannDocuments.reviewStatus,
+      expiresOn: reprocannDocuments.expiresOn,
+      createdAt: reprocannDocuments.createdAt,
+    };
+    const [d] = await t.select(columns).from(reprocannDocuments).where(eq(reprocannDocuments.id, documentId)).for("update");
+    if (!d) throw new ReprocannError("El documento no existe.");
+    // The whole case, locked: the credential in force is computed over all of it.
+    const docs = await t.select(columns).from(reprocannDocuments).where(eq(reprocannDocuments.caseId, d.caseId)).for("update");
+    const kept = docs.find((x) => x.id === keptDocumentId);
+    if (!kept) throw new ReprocannError("El documento que querés conservar no es de este socio.");
+    const isCredential = (x: { kind: string }) => (CREDENTIAL_KINDS as readonly string[]).includes(x.kind);
+    if (!isCredential(d) || !isCredential(kept)) throw new ReprocannError("Solo se retiran credenciales o certificados repetidos.");
+    if (!isActiveDocument(d)) throw new ReprocannError(d.withdrawnAt ? "Este documento ya se retiró." : "Este documento ya fue reemplazado: no forma parte de la documentación activa.");
+    if (!isActiveDocument(kept)) throw new ReprocannError("El documento que querés conservar ya no está activo. Recargá la página.");
+
+    const active = docs.filter(isActiveDocument);
+    const before = currentCredential(active);
+    const after = currentCredential(active.filter((x) => x.id !== d.id));
+    await t.update(reprocannDocuments).set({ withdrawnAt: now, withdrawnBy: actorUserId, withdrawalReason: "duplicado", keptDocumentId: kept.id, updatedAt: now }).where(eq(reprocannDocuments.id, d.id));
+    const today = todayInArgentina(now);
+    await audit(t, {
+      actorUserId,
+      action: "reprocann.document_withdrawn",
+      entityType: "reprocann_case",
+      entityId: d.caseId,
+      metadata: {
+        document: d.id,
+        kept: kept.id,
+        reason: "duplicado",
+        reviewStatus: d.reviewStatus,
+        current_before: before?.id ?? null,
+        current_after: after?.id ?? null,
+        status_before: credentialStatus(before, today).key,
+        status_after: credentialStatus(after, today).key,
+      },
+    });
+    return { caseId: d.caseId, currentAfter: after?.id ?? null };
   });
 }

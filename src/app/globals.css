@@ -95,8 +95,9 @@ html {
   }
 }
 
+/* Room for the fixed menu when a link scrolls to an anchor; a page with more bars sets --anchor-offset. */
 [id] {
-  scroll-margin-top: var(--nav-h);
+  scroll-margin-top: var(--anchor-offset, var(--nav-h));
 }
 
 a {
@@ -214,16 +215,32 @@ img {
   --warning-bg: var(--ambar-100);
   --error-fg: #8a2f2f;
   --error-bg: #f3ded8;
+  /* Information and orientation are violet (with their ⓘ icon), as part of violet's role. */
   --info-fg: var(--lila-800);
   --info-bg: var(--lila-100);
   /* ── Amarí Dul colour system ──────────────────────────────────────────────
-     Four scales built in OKLCH with the same lightness per step, so any step of
-     one scale sits well next to the same step of another. hoja-700 is the logo green.
-       hoja  · plant greens: identity, comunidad
-       lila  · purple strains: trazabilidad, producto, laboratorio
-       ámbar · pistils and resin: trámites, salud, avisos
-       arena · warm neutrals that sit on the cream background
-     Text uses 700–900; fills 100–300; gradients run 900 → 800 → 700. */
+     Amarí Dul and Dambar are one family: Dambar's indigo and pinks are part of Amarí Dul, and
+     green is what tells Amarí Dul apart. Three brand colours on scales built in OKLCH with the
+     same lightness per step, so any step of one sits well next to the same step of another:
+       hoja  · VERDE, Amarí Dul's own, and the lead: actions (primary buttons, links, focus),
+               navigation, titles, and the member's own world: membresía, cuota, productos,
+               ayuda, with its header band (800, eyebrow in 300). hoja-700 is the logo green.
+       lila  · ÍNDIGO, Dambar's (800 is its #463577, exact; 100 its lavender grey):
+               asociarse (Sumate, admisión: the 800 band, eyebrow in 300) and orientation (help
+               strips, information, ⓘ); trámites y salud, as Dambar heads its fichas (the 800
+               band with the eyebrow in its pink, its lavender grey for cards); the ink on pinks.
+       rosa  · ROSA, Dambar's pinks, exact (100, 200, 300), as Dambar uses them: in small doses
+               only, never a large area — chips, icon chips (100), the trámites eyebrow on its
+               indigo band (300), its lines (400) and icons (500). Indigo text on it.
+               Never a button nor a state.
+     How much: green leads; indigo and pink are accents in their own sections only. Each section
+     marks its colour the same way: its pages' header band (all at step 800, white text, the
+     eyebrow in a light accent), the top edge of its panel or tab, its eyebrow and its icons.
+     Indigo and pink never tell things apart on their own: always with a title or a label.
+     States, apart from the brand: success (hoja, with its check), warning (ámbar, with its
+     clock), error (brick red, with its icon), information (lila, with its ⓘ).
+     Neutrals: the cream background, white panels, arena for rules and secondary text.
+     Text uses 700–900; fills 50–300. */
   --hoja-50: #f3f9f2;
   --hoja-100: #e6f3e6;
   --hoja-200: #cfe5ce;
@@ -234,16 +251,16 @@ img {
   --hoja-700: #3f6640;
   --hoja-800: #2c4b2d;
   --hoja-900: #1d341e;
-  --lila-50: #f8f5fc;
-  --lila-100: #f1ebf9;
-  --lila-200: #e3d8f2;
-  --lila-300: #cfbfe4;
-  --lila-400: #b5a0cf;
-  --lila-500: #9780b3;
-  --lila-600: #7c6695;
-  --lila-700: #64517a;
-  --lila-800: #493b5a;
-  --lila-900: #332840;
+  --lila-50: #f6f6fa;
+  --lila-100: #eeedf4; /* Dambar's lavender grey (#ecebf1): soft surfaces */
+  --lila-200: #dedbed;
+  --lila-300: #c7c3e3;
+  --lila-400: #aba3d4;
+  --lila-500: #8e81c1;
+  --lila-600: #7464ad;
+  --lila-700: #5e4c95;
+  --lila-800: #463577; /* Dambar's indigo, exact: its text and headers; ink on the pinks; 10.3:1 on white */
+  --lila-900: #302354;
   --ambar-50: #fef5ee;
   --ambar-100: #fcebdd;
   --ambar-200: #f7d7bd;
@@ -264,6 +281,16 @@ img {
   --arena-700: #615a4d;
   --arena-800: #474238;
   --arena-900: #312d26;
+  --rosa-50: #fff5ff; /* soft surfaces of the trámites sections */
+  --rosa-100: #ffe8ff; /* Dambar pink-soft, exact */
+  --rosa-200: #ffbdfe; /* Dambar pink, exact: chips and small fills; indigo on it 6.9:1 */
+  --rosa-300: #ffa7fe; /* Dambar pink accent, exact: dots, highlights, the trámites eyebrow on the indigo band (5.6:1) */
+  --rosa-400: #dc86db; /* lines: the top edge of the trámites panels and tabs */
+  --rosa-500: #b76cb6; /* icons, 3.6:1 on white */
+  --rosa-600: #955794; /* 600–900: not in Dambar's palette (its ink is the indigo); kept tamed, unused for text */
+  --rosa-700: #784677;
+  --rosa-800: #593358;
+  --rosa-900: #3d233d;
 
   /* Semantic roles (components use these, never raw scale steps for meaning). */
   --forest: var(--hoja-800); /* primary: headings, buttons, bands; 9.8:1 on white */
@@ -338,6 +365,16 @@ img {
   --color-arena-700: var(--arena-700);
   --color-arena-800: var(--arena-800);
   --color-arena-900: var(--arena-900);
+  --color-rosa-50: var(--rosa-50);
+  --color-rosa-100: var(--rosa-100);
+  --color-rosa-200: var(--rosa-200);
+  --color-rosa-300: var(--rosa-300);
+  --color-rosa-400: var(--rosa-400);
+  --color-rosa-500: var(--rosa-500);
+  --color-rosa-600: var(--rosa-600);
+  --color-rosa-700: var(--rosa-700);
+  --color-rosa-800: var(--rosa-800);
+  --color-rosa-900: var(--rosa-900);
   --color-forest: var(--forest);
   --color-forest-hover: var(--forest-hover);
   --color-forest-soft: var(--forest-soft);
@@ -429,6 +466,18 @@ img {
   margin-inline: auto;
 }
 
+/* The member portal: header, page title and content share this column (and its left edge). */
+@utility portal-column {
+  width: 100%;
+  max-width: 64rem;
+  margin-inline: auto;
+}
+
+/* Comfortable reading width for running text. */
+@utility measure {
+  max-width: 62ch;
+}
+
 /* New views use a bone background (hueso) instead of the home's cream. Scoped so the home is untouched. */
 .theme-hueso {
   --background: #f6f3ec;
@@ -464,6 +513,46 @@ body:has(.theme-hueso) {
 /* Reserve the scrollbar's room so pages with and without scroll keep the same layout. */
 html:has(.theme-hueso) {
   scrollbar-gutter: stable;
+}
+
+/* Modal dialogs (src/components/ui/dialog.tsx). Centred in what can be seen: `--dialog-top` and
+   `--dialog-vh` follow the visual viewport, so with a phone keyboard open the dialog centres in the
+   part of the screen above it. Never wider than the screen nor taller than the visible area; only
+   the body scrolls inside. */
+.dialog-panel:modal {
+  width: calc(100% - 1.5rem);
+  margin: auto;
+  inset-block-start: var(--dialog-top, 0px);
+  inset-block-end: calc(100% - var(--dialog-top, 0px) - var(--dialog-vh, 100%));
+  max-height: calc(var(--dialog-vh, 100dvh) - 1.5rem);
+  overflow: hidden;
+}
+@media (width >= 40rem) {
+  .dialog-panel:modal {
+    width: calc(100% - 3rem);
+    max-height: calc(var(--dialog-vh, 100dvh) - 3rem);
+  }
+}
+/* The page behind a modal does not scroll; its scrollbar's room stays reserved (above), so it
+   does not shift when the dialog opens or closes. */
+html:has(dialog:modal) {
+  overflow: hidden;
+}
+
+/* Safari gives date fields an intrinsic width that ignores their column: let them shrink. On the
+   iPhone they also lose the height of the other fields and center their value: fix both. */
+input[type="date"] {
+  min-width: 0;
+}
+@supports (-webkit-touch-callout: none) {
+  input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 2.875rem;
+  }
+  input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+  }
 }
 
 /* Development-only markers: hidden unless the layout flags the demo environment. */

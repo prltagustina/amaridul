@@ -2,18 +2,22 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import heroPhoto from "@/assets/demo/qr-portada-provisoria.jpg";
-import { Fragment } from "react";
-import { ArrowRight, BadgeCheck, ChevronDown, ExternalLink, Info, MessageCircle, Sprout, UserRound } from "lucide-react";
-import { LinkCodeVideo } from "@/components/reprocann/link-code-video";
+import { ArrowRight, BadgeCheck, ChevronDown, ExternalLink, Info, Sprout, UserRound } from "lucide-react";
 import { BRAND, SHARE_DESCRIPTION, SHARE_IMAGE, SITE_URL } from "@/lib/constants";
 import { SiteFooter } from "@/components/brand/site-footer";
 import { CircleLogo } from "@/components/brand/circle-logo";
 import { EditorialSection } from "@/components/brand/editorial-section";
-import { MemberAccessLink, MinimalHeader } from "@/components/brand/headers";
+import { SectionNav } from "@/components/brand/section-nav";
+import Nav from "@/components/Nav";
 import { Accordion } from "@/components/ui/accordion";
+import { AnchorButton, LinkButton } from "@/components/ui/button";
+import { StepCards } from "@/components/ui/step-cards";
+import { LinkCodeVideo } from "@/components/reprocann/link-code-video";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { DevTag } from "@/components/ui/display";
 import { faqAnswers, faqClosingPhrase, faqPlaceholderAnswer, faqQuestions, institutionalPhrase } from "@/demo/content";
 import { isDemoEnabled } from "@/lib/demo";
+import { contactAvailable } from "@/lib/features";
 import { REPROCANN_OFFICIAL_SITE } from "@/lib/reprocann-help";
 import { officialWhatsAppLink, PUBLIC_QUESTION_MESSAGE } from "@/lib/whatsapp";
 
@@ -44,40 +48,46 @@ export const metadata: Metadata = {
   },
 };
 
+// Comunidad's four parts, in the bar under the menu.
+const SECTIONS = [
+  { id: "comunidad", label: "Sumate a Amarí Dul", short: "Sumate" },
+  { id: "sumarte", label: "Asociarse" },
+  { id: "reprocann", label: "REPROCANN" },
+  { id: "preguntas", label: "Preguntas frecuentes", short: "Preguntas" },
+];
+
 // Every way someone arrives, with its one next step. Joining in lila, members in hoja.
 const PATHS = [
-  { href: "/sumate#asociarme", title: "Quiero asociarme", detail: "Empezá con la preadmisión: lleva unos 5 minutos", Icon: Sprout, theme: "flujo-sumate", badge: "bg-[linear-gradient(135deg,var(--lila-800),var(--lila-700))]" },
+  { href: "/sumate", title: "Quiero asociarme", detail: "Empezá con la preadmisión: lleva unos 5 minutos", Icon: Sprout, theme: "flujo-sumate", badge: "bg-[linear-gradient(135deg,var(--lila-800),var(--lila-700))]" },
   { href: "/sumate/socio-existente", title: "Ya soy socio/a y no tengo cuenta", detail: "Pedí tu acceso: sin volver a asociarte", Icon: BadgeCheck, theme: "", badge: "bg-[linear-gradient(135deg,var(--hoja-800),var(--hoja-700))]" },
   { href: "/qr/login", title: "Ya tengo mi cuenta", detail: "Ingresá a tu espacio de socio", Icon: UserRound, theme: "", badge: "bg-[linear-gradient(135deg,var(--hoja-800),var(--hoja-700))]" },
 ];
 
 const JOURNEY = [
-  { meta: "Online · 5 minutos", title: "Preadmisión", detail: "Contanos quién sos y qué te acerca a Amarí Dul. Si todavía no tenés REPROCANN, contalo ahí: no hace falta tenerlo para empezar.", href: "/sumate#asociarme", cta: "Empezar" },
+  { meta: "Online · 5 minutos", title: "Preadmisión", detail: "Contanos quién sos y qué te acerca a Amarí Dul. Si todavía no tenés REPROCANN, contalo ahí: no hace falta tenerlo para empezar.", href: "/sumate", cta: "Empezar" },
   { meta: "Por invitación", title: "Solicitud formal", detail: "Completás tus datos, la categoría y aceptás el estatuto.", href: undefined, cta: undefined },
   { meta: "Comisión Directiva", title: "Admisión", detail: "Te avisamos la decisión y activás tu cuenta de socio.", href: undefined, cta: undefined },
 ];
 
-// Whole class names, so Tailwind generates them.
-const ROW = ["lg:row-start-1", "lg:row-start-2", "lg:row-start-3"];
-
-// REPROCANN with the association, step by step; the video shows step 2.
+// REPROCANN with the association, step by step, in the order Luci set: starting the procedure
+// with the association begins with the link code (the video shows where it is, after step 1).
 const REPROCANN_STEPS = [
   {
-    meta: "Sitio oficial · con Mi Argentina",
-    title: "Tramitá tu REPROCANN",
-    detail: "Se hace en el sitio oficial del Ministerio de Salud de la Nación. Si todavía no lo tenés, podés empezar la preadmisión igual: te orientamos.",
+    meta: "Primer paso · sitio oficial",
+    title: "Encontrá tu código de vinculación REPROCANN",
+    detail: "Si vas a iniciar el trámite con la asociación, empezá por acá: entrá al sitio oficial con tu cuenta de Mi Argentina y buscalo en tu Registro de paciente.",
     link: { href: REPROCANN_OFFICIAL_SITE, label: "Ir al sitio oficial", external: true },
-  },
-  {
-    meta: "En tu Registro de paciente",
-    title: "Encontrá tu código de vinculación",
-    detail: "Con ese código la asociación te vincula en REPROCANN. El video muestra dónde está, en menos de un minuto.",
-    link: null,
   },
   {
     meta: "En tu espacio de socio",
     title: "Pasáselo a la asociación",
-    detail: "Cuando seas socio/a, cargalo en tu espacio, en REPROCANN, junto con tu credencial. Ahí ves cuándo queda verificada la vinculación.",
+    detail: "Cuando seas socio/a, cargalo en tu espacio, en REPROCANN. Con ese código la asociación gestiona tu vinculación con Amarí Dul y te acompaña en el trámite; ahí ves cuándo queda verificada.",
+    link: null,
+  },
+  {
+    meta: "Si ya tenés tu credencial",
+    title: "Cargala para que la revisemos",
+    detail: "Subila desde tu espacio, en REPROCANN. Hasta que la asociación la revise, figura «en revisión».",
     link: { href: "/qr/login", label: "Ingresar a mi espacio", external: false },
   },
 ];
@@ -88,6 +98,7 @@ export default function QRPage() {
   const whatsapp = officialWhatsAppLink(PUBLIC_QUESTION_MESSAGE);
   return (
     <>
+      <Nav showContact={contactAvailable()} memberAccess />
       {/* Portada: photograph first, circular lockup, institutional phrase. */}
       <section aria-label="Portada" className="relative isolate flex min-h-[100svh] flex-col overflow-hidden">
         {/* Provisional photo taken from the visual reference; replace with the commissioned shoot. */}
@@ -101,11 +112,10 @@ export default function QRPage() {
         </div>
         <div aria-hidden className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(29_52_30/0.45)_0%,rgb(29_52_30/0.05)_45%,rgba(26,44,31,0.7)_100%)]" />
         {demo && <DevTag className="absolute right-3 bottom-3 z-10">Foto provisoria del mockup</DevTag>}
-        <MinimalHeader tone="over-photo" right={<MemberAccessLink tone="over-photo" />} />
         <h1 className="sr-only">Amarí Dul, asociación civil</h1>
         <div className="page-gutter flex flex-1 flex-col items-center justify-center gap-6 pt-18 pb-20 text-center sm:gap-8 sm:pt-20 sm:pb-24">
           <CircleLogo className="w-[min(78vw,50svh,26rem)] lg:w-[min(56svh,30rem)]" />
-          <p className="mx-auto max-w-[24ch] font-display text-[clamp(1.5rem,1.2rem+1.3vw,2.25rem)] leading-[1.15] font-medium text-white [text-shadow:0_1px_16px_rgba(0,0,0,0.4)] sm:max-w-[26ch]">{institutionalPhrase}</p>
+          <p className="mx-auto max-w-[22ch] font-title !font-semibold text-[clamp(1.375rem,1.15rem+1vw,1.875rem)] leading-[1.2] !tracking-[-0.01em] text-white [text-shadow:0_1px_16px_rgba(0,0,0,0.4)]">{institutionalPhrase}</p>
         </div>
         <a
           href="#comunidad"
@@ -116,7 +126,10 @@ export default function QRPage() {
         </a>
       </section>
 
-      <main>
+      <SectionNav label="En Comunidad" items={SECTIONS} />
+
+      {/* The sections leave room for the menu and the section bar when a link scrolls to them. */}
+      <main className="[--anchor-offset:calc(var(--nav-h)+3rem)]">
         <EditorialSection
           id="comunidad"
           eyebrow="Comunidad"
@@ -126,7 +139,6 @@ export default function QRPage() {
               {faqClosingPhrase} {demo && <DevTag className="mt-2">Frase pendiente</DevTag>}
             </>
           }
-          className="scroll-mt-0"
         >
           <ul className="divide-y divide-mist-line border-y border-mist-line">
             {PATHS.map((path) => (
@@ -188,52 +200,62 @@ export default function QRPage() {
           </p>
         </EditorialSection>
 
-        <EditorialSection id="reprocann" eyebrow="REPROCANN" title="Tu REPROCANN, paso a paso" intro="El registro del Ministerio de Salud para el cannabis medicinal. No hace falta tenerlo para empezar a asociarte: te acompañamos en el camino." className="bg-arena-50">
-          <div className="grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,1fr)_15rem]">
-            {REPROCANN_STEPS.map((step, i) => (
-              <Fragment key={step.title}>
-                <div className={`grid grid-cols-[auto_minmax(0,1fr)] gap-x-5 border-t border-arena-200 pt-7 sm:gap-x-8 lg:col-start-1 ${ROW[i]} ${i === 0 ? "border-t-0 pt-0" : ""}`}>
-                  <p aria-hidden className="font-display text-[clamp(2.75rem,2.2rem+2.4vw,4rem)] leading-[0.9] font-medium text-arena-500">
-                    {String(i + 1).padStart(2, "0")}
-                  </p>
-                  <div>
-                    <p className="text-eyebrow text-arena-700">{step.meta}</p>
-                    <h3 className="mt-1 font-title text-[clamp(1.25rem,1.1rem+0.6vw,1.5rem)] text-foreground">
-                      <span className="sr-only">Paso {i + 1}: </span>
-                      {step.title}
-                    </h3>
-                    <p className="mt-2 text-body text-text-muted">{step.detail}</p>
-                    {step.link && (
-                      <a
-                        href={step.link.href}
-                        {...(step.link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                        className="font-ui mt-2 inline-flex min-h-11 items-center gap-1.5 !text-forest underline-offset-4 hover:underline"
-                      >
-                        {step.link.label}
-                        {step.link.external ? <ExternalLink aria-hidden className="size-4" strokeWidth={1.5} /> : <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />}
-                        {step.link.external && <span className="sr-only">(se abre en otra pestaña)</span>}
-                      </a>
-                    )}
-                  </div>
-                </div>
-                {/* On a phone the video follows step 2; on a wide screen it stays beside the three steps. */}
-                {i === 1 && (
-                  <figure className="mx-auto w-full max-w-[15rem] space-y-2 lg:sticky lg:top-8 lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:mx-0">
-                    <LinkCodeVideo />
-                    <figcaption className="text-center text-small text-text-muted">Dónde está tu código de vinculación · 30 segundos</figcaption>
-                  </figure>
-                )}
-              </Fragment>
-            ))}
-          </div>
+        <EditorialSection
+          id="reprocann"
+          eyebrow={
+            <span className="inline-flex items-center gap-2">
+              <span aria-hidden className="size-1.5 !rounded-full bg-rosa-400" />
+              REPROCANN
+            </span>
+          }
+          title={
+            <>
+              Tu REPROCANN,
+              <br /> paso a paso
+            </>
+          }
+          intro="Es el registro del Ministerio de Salud para el uso medicinal del cannabis. Si todavía no lo tenés, te acompañamos a tramitarlo."
+          stacked
+          className="bg-lila-50"
+        >
+          <StepCards
+            label="Tu REPROCANN, paso a paso"
+            bleed="-mx-6 px-6 scroll-px-6 sm:-mx-4 sm:px-4 sm:scroll-px-4"
+            aside={
+              <figure className="mx-auto flex w-full max-w-[16rem] flex-col items-center gap-2 md:mx-0 md:h-full md:w-auto md:max-w-none md:justify-center">
+                <LinkCodeVideo className="md:!h-[22rem] md:!w-auto" />
+                <figcaption className="text-center text-sm text-text-muted">Dónde está tu código · 30 segundos</figcaption>
+              </figure>
+            }
+            steps={REPROCANN_STEPS.map((step) => ({
+              meta: step.meta,
+              title: step.title,
+              detail: step.detail,
+              action: step.link ? (
+                step.link.external ? (
+                  <AnchorButton href={step.link.href} target="_blank" rel="noopener noreferrer" size="sm">
+                    {step.link.label} <ExternalLink aria-hidden strokeWidth={1.5} />
+                    <span className="sr-only">(se abre en otra pestaña)</span>
+                  </AnchorButton>
+                ) : (
+                  <LinkButton href={step.link.href} size="sm">
+                    {step.link.label} <ArrowRight aria-hidden strokeWidth={1.5} />
+                  </LinkButton>
+                )
+              ) : undefined,
+            }))}
+          />
           {whatsapp && (
-            <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="font-ui mt-10 inline-flex min-h-11 items-center gap-2 !rounded-full border border-forest/60 px-5 !text-forest hover:bg-white/60">
-              <MessageCircle aria-hidden className="size-4" strokeWidth={1.5} /> ¿Dudas con tu REPROCANN o con el ingreso? Escribinos por WhatsApp
-            </a>
+            <div className="mt-10 flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-lila-200 pt-7">
+              <p className="text-body text-foreground">¿Dudas con tu REPROCANN o con el ingreso?</p>
+              <AnchorButton href={whatsapp} target="_blank" rel="noopener noreferrer" variant="primary">
+                <WhatsAppIcon /> Escribinos<span className="sr-only"> por WhatsApp</span>
+              </AnchorButton>
+            </div>
           )}
         </EditorialSection>
 
-        <EditorialSection id="preguntas" eyebrow="Información" title="Preguntas frecuentes" className="scroll-mt-0 bg-arena-100">
+        <EditorialSection id="preguntas" eyebrow="Información" title="Preguntas frecuentes" className="bg-arena-100">
           <Accordion
             variant="lines"
             items={faqQuestions.map((q) => ({

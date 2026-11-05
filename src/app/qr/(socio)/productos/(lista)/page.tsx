@@ -2,43 +2,28 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Package } from "lucide-react";
 import { PageBand } from "@/components/brand/page-band";
-import { DISPENSING_NOTE, ProductCard, PURCHASE_NOTICE } from "@/components/products/product-card";
-import { Alert, EmptyState } from "@/components/ui/display";
+import { EmptyState } from "@/components/ui/display";
 import { getDb } from "@/server/db";
 import { currentMember } from "@/server/member-session";
 import { listCatalog } from "@/server/products";
-import { CATALOG_BAND } from "./band";
 
 export const metadata: Metadata = { title: "Productos | Amarí Dul" };
 
 /**
- * The catalog for members with an active membership; it does not depend on REPROCANN. Read on
- * every request: a product the admin publishes, edits or deactivates shows (or goes) right away.
+ * «Productos» opens the first product's sheet: there is no list to browse, each sheet leads to the
+ * next one (and Mi espacio previews them). With nothing published yet, it says so.
  */
 export default async function ProductosPage() {
   const member = await currentMember();
   if (member !== "demo" && member.status !== "activo") redirect("/qr/mi-espacio");
-  const catalog = await listCatalog(await getDb());
+  const [first] = await listCatalog(await getDb());
+  if (first) redirect(`/qr/productos/${first.id}`);
   return (
     <main>
-      <PageBand compact tone="green" width="wide" {...CATALOG_BAND} />
-      <div className="page-gutter pt-6 pb-8">
-        <div className="admin-column space-y-6">
-          <Alert tone="info" title="Comprar desde tu cuenta todavía no está disponible">
-            {PURCHASE_NOTICE}
-          </Alert>
-          {catalog.length ? (
-            <ul className="grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-              {catalog.map((p) => (
-                <li key={p.id}>
-                  <ProductCard product={p} />
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <EmptyState icon={<Package aria-hidden className="size-9" strokeWidth={1.25} />} title="Todavía no hay productos publicados" description="Cuando la asociación publique su catálogo, lo vas a ver acá." />
-          )}
-          <p className="text-small text-text-muted">{DISPENSING_NOTE}</p>
+      <PageBand compact width="wide" eyebrow="Productos" title="Productos de la asociación" back={{ href: "/qr/mi-espacio", label: "Mi espacio" }} />
+      <div className="page-gutter pt-8 pb-12 sm:pt-10">
+        <div className="portal-column">
+          <EmptyState icon={<Package aria-hidden className="size-9" strokeWidth={1.25} />} title="Todavía no hay productos publicados" description="Cuando la asociación publique sus productos, los vas a ver acá." />
         </div>
       </div>
     </main>

@@ -11,7 +11,7 @@ export default function Home() {
   const showContact = contactAvailable();
   return (
     <div className={`${systemType} theme-hueso flex flex-col min-h-screen bg-background text-foreground`} {...demoAttr()}>
-      <Nav showContact={showContact} />
+      <Nav showContact={showContact} memberAccess />
 
       <main className="flex-1">
         <Hero />

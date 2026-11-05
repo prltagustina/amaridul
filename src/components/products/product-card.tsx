@@ -1,95 +1,77 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { PhotoPlaceholder } from "@/components/brand/placeholders";
-import { Chip, TechBand } from "@/components/ui/technical";
+import { cn } from "@/lib/cn";
 import type { CatalogItem } from "@/server/products";
-
-const day = (iso: string | null) => (iso ? iso.split("-").reverse().join("/") : null);
 
 /** The photo as members see it. Its URL changes with every new photo, so it is never stale. */
 export const photoSrc = (p: Pick<CatalogItem, "id" | "photo">) => (p.photo ? `/qr/productos/${p.id}/foto?v=${p.photo.version}` : null);
 
-/** What describes the product, and only that: nothing about lots, deliveries or certificates. Empty fields are left out. */
-export function productFacts(p: CatalogItem): { label: string; value: string }[] {
-  const facts = [
-    { label: "Tipo", value: p.type },
-    { label: "Variedad", value: p.variety },
-    { label: "Quimiotipo", value: p.chemotype },
-    { label: "Cultivo", value: p.cultivation },
-    { label: "Fecha de cultivo", value: day(p.cultivatedOn) },
-  ];
-  return facts.filter((f): f is { label: string; value: string } => !!f.value);
-}
-
-export function FactList({ facts, className }: { facts: { label: string; value: string }[]; className?: string }) {
-  return (
-    <dl className={className ?? "grid grid-cols-2 content-start gap-x-5 gap-y-3"}>
-      {facts.map((f) => (
-        <div key={f.label} className="min-w-0">
-          <dt className="text-xs text-forest/85">{f.label}</dt>
-          <dd className="mt-0.5 font-medium break-words text-forest">{f.value}</dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
-/** A product in the members' catalog, drawn like the lot sheet: green band, photo, data. The whole card opens its sheet. */
-export function ProductCard({ product }: { product: CatalogItem }) {
+/** The product's photo, or the leaf placeholder, filling its frame. */
+function Photo({ product, sizes, className }: { product: CatalogItem; sizes: string; className?: string }) {
   const src = photoSrc(product);
   return (
-    <article className="group relative flex h-full flex-col overflow-hidden !rounded-card border border-mist-line bg-white shadow-[0_18px_40px_-28px_rgba(26,26,24,0.35)] transition-shadow hover:shadow-[0_22px_44px_-24px_rgba(26,26,24,0.45)] has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-forest">
-      <TechBand tone="green" className="relative overflow-hidden px-5 pt-4 pb-5">
-        <span aria-hidden className="pointer-events-none absolute -top-16 -right-12 size-44 !rounded-full bg-hoja-500/25 blur-3xl" />
-        <p className="relative text-[11px] font-medium tracking-[0.18em] text-white/75 uppercase">{product.type}</p>
-        <h2 className="relative mt-1 font-display text-2xl leading-tight [overflow-wrap:anywhere]">{product.name}</h2>
-      </TechBand>
-      <div className="flex flex-1 flex-col gap-4 bg-mist/60 p-4">
-        {src ? (
-          <div className="relative aspect-[4/3] overflow-hidden !rounded-[14px] bg-mist">
-            <Image src={src} alt="" fill unoptimized sizes="(min-width: 1024px) 22rem, (min-width: 640px) 45vw, 92vw" className="object-cover" />
-          </div>
-        ) : (
-          <PhotoPlaceholder label="Foto pendiente" className="aspect-[4/3] !rounded-[14px]" />
-        )}
-        <FactList facts={productFacts(product).filter((f) => f.label !== "Tipo")} className="grid grid-cols-2 content-start gap-x-5 gap-y-3 px-1" />
-        <Composition product={product} />
-        {product.description && <p className="line-clamp-3 px-1 text-small leading-relaxed text-forest/85">{product.description}</p>}
-        <p aria-hidden className="mt-auto flex items-center gap-1.5 px-1 pt-1 text-[0.9375rem] font-medium text-forest">
-          Ver ficha <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" strokeWidth={1.5} />
-        </p>
-      </div>
-      <Link href={`/qr/productos/${product.id}`} className="absolute inset-0 z-10 focus-visible:outline-none">
-        <span className="sr-only">Ver la ficha de {product.name}</span>
-      </Link>
-    </article>
-  );
-}
-
-const UNIT = { porcentaje: "%", mg_ml: "mg/ml", mg_g: "mg/g" } as const;
-
-/** THC and CBD as chips, when the association loaded them. */
-function Composition({ product }: { product: CatalogItem }) {
-  const { thc, cbd, unit } = product.sheet;
-  if (thc === null && cbd === null) return null;
-  const u = unit ? UNIT[unit] : "";
-  const n = (x: number) => x.toLocaleString("es-AR", { maximumFractionDigits: 2 });
-  return (
-    <div className="flex flex-wrap gap-2 px-1">
-      {thc !== null && (
-        <Chip tone="green">
-          THC ~{n(thc)} {u}
-        </Chip>
-      )}
-      {cbd !== null && (
-        <Chip tone="green">
-          CBD ~{n(cbd)} {u}
-        </Chip>
+    <div className={cn("relative overflow-hidden bg-mist", className)}>
+      {src ? (
+        <Image src={src} alt="" fill unoptimized sizes={sizes} className="object-cover transition-transform duration-300 motion-safe-only group-hover:scale-[1.03]" />
+      ) : (
+        <PhotoPlaceholder label="Foto pendiente" className="size-full max-sm:[&>span]:hidden" />
       )}
     </div>
   );
 }
 
+/**
+ * A product in a short preview (Mi espacio, the next product on a sheet): the photo, its type and
+ * name, and «Ver ficha», one click to its sheet. In a row beside a small photo on a phone; photo on
+ * top from 640 px. `eyebrow` replaces the type over the name (the type then goes under it).
+ */
+export function ProductPreview({ product, eyebrow }: { product: CatalogItem; eyebrow?: string }) {
+  return (
+    <Link
+      href={`/qr/productos/${product.id}`}
+      aria-label={`${eyebrow ? `${eyebrow}: ` : "Ver la ficha de "}${product.name}`}
+      className="group grid grid-cols-[5.5rem_minmax(0,1fr)] items-center gap-4 !rounded-control focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forest sm:grid-cols-1 sm:items-start sm:gap-3"
+    >
+      <Photo product={product} sizes="(min-width: 640px) 16rem, 6rem" className="aspect-square !rounded-control sm:aspect-[4/3]" />
+      <div className="min-w-0 space-y-0.5">
+        <p className="text-eyebrow text-accent">{eyebrow ?? product.type}</p>
+        <p className="font-title text-lg leading-snug text-forest underline-offset-4 [overflow-wrap:anywhere] group-hover:underline">{product.name}</p>
+        {(eyebrow ? product.type : product.variety) && <p className="truncate text-sm text-text-muted">{eyebrow ? product.type : product.variety}</p>}
+        <p className="flex items-center gap-1.5 pt-1.5 text-sm font-medium text-forest">
+          Ver ficha <ArrowRight aria-hidden className="size-4 transition-transform motion-safe-only group-hover:translate-x-0.5" strokeWidth={1.5} />
+        </p>
+      </div>
+    </Link>
+  );
+}
+
+/**
+ * Going through the catalog from a sheet, without going back to it: «‹ Anterior · Producto 2 de 3
+ * · Siguiente ›», in the catalog's order. It wraps around, so there is always a next one.
+ */
+export function ProductStepper({ position, total, prev, next }: { position: number; total: number; prev: CatalogItem | null; next: CatalogItem | null }) {
+  // It sits in the page's coloured header: white, like the rest of it.
+  const link = "inline-flex min-h-11 items-center gap-1 font-medium !text-white underline-offset-4 hover:underline focus-visible:!outline-white";
+  return (
+    <nav aria-label="Recorrer los productos" className="mt-4 flex flex-wrap items-center gap-x-5 text-sm">
+      {prev && (
+        <Link href={`/qr/productos/${prev.id}`} className={cn(link, "-ml-1")}>
+          <ChevronLeft aria-hidden className="size-4" strokeWidth={1.75} /> Anterior<span className="sr-only">: {prev.name}</span>
+        </Link>
+      )}
+      <span className="text-white tabular-nums">
+        Producto {position} de {total}
+      </span>
+      {next && (
+        <Link href={`/qr/productos/${next.id}`} className={link}>
+          Siguiente<span className="sr-only"> producto: {next.name}</span> <ChevronRight aria-hidden className="size-4" strokeWidth={1.75} />
+        </Link>
+      )}
+    </nav>
+  );
+}
+
 export const PURCHASE_NOTICE = "Próximamente vas a poder comprar productos desde tu cuenta. Te avisaremos cuando esté disponible.";
-export const DISPENSING_NOTE = "Ver los productos no significa estar habilitado para recibir una dispensa: esas condiciones las define la asociación.";
+export const DISPENSING_NOTE = "Ver los productos no habilita una dispensa: para eso hacen falta tres condiciones (membresía activa, credencial REPROCANN verificada y vinculación con Amarí Dul verificada). Las ves en Mi espacio, en Trámites.";

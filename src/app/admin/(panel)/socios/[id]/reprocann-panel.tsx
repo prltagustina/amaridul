@@ -2,60 +2,114 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { FilePlus2, FileText, FileUp, Info, Pencil } from "lucide-react";
+import { Archive, FilePlus2, FileUp, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Alert, Card, StatusBadge } from "@/components/ui/display";
+import { Checkbox } from "@/components/ui/choice";
+import { Alert, Card, StatusBadge, type Tone } from "@/components/ui/display";
 import { Dialog } from "@/components/ui/dialog";
 import { Select, TextField, Textarea } from "@/components/ui/field";
 import { CopyValue } from "@/components/ui/copy-value";
-import { addDocumentAction, reviewDocumentAction, saveCaseAction, saveLinkCodeAction, type ReprocannResult } from "./reprocann-actions";
+import { DocumentThumbnails } from "@/components/reprocann/document-thumbnails";
+import { addDocumentAction, reviewDocumentAction, saveCaseAction, saveLinkCodeAction, withdrawDuplicateAction, type ReprocannResult } from "./reprocann-actions";
 import { UploadDialog } from "./upload-dialog";
 
 type Option = { value: string; label: string };
+type ReviewStatus = "pendiente" | "observada" | "verificada";
+export type ReprocannDocumentView = {
+  id: string;
+  /** How it reads in a list, to tell repeated ones apart: «credencial que envió el socio el …». */
+  label: string;
+  kind: string;
+  /** Part of the active documentation: neither replaced nor withdrawn. */
+  active: boolean;
+  /** A credential or certificate: what counts as the member's credential. */
+  credential: boolean;
+  /** The credential in force right now (the most recent active one). */
+  inForce: boolean;
+  permitIdentifier: string | null;
+  issuedOn: string | null;
+  expiresOn: string | null;
+  source: string;
+  reviewStatus: ReviewStatus;
+  verifiedOn: string | null;
+  /** Who saved the last review, and when. */
+  reviewed: { at: string; by: string } | null;
+  /** Internal: only the team reads it. */
+  notes: string | null;
+  /** What the member reads while the document is observed. */
+  memberMessage: string | null;
+  createdAt: string;
+  /** Sent by the member from their account. */
+  fromMember: boolean;
+  /** Name of who recorded it (the member or an admin). */
+  recordedBy: string | null;
+  replaced: boolean;
+  /** Withdrawn as a duplicate: by whom, when, and the document kept instead. */
+  withdrawn: { at: string; by: string; kept: string } | null;
+  /** Offered while there is more than one active credential: what withdrawing this one would leave in force. */
+  ifWithdrawn: { inForce: string | null; statusLabel: string; statusTone: "success" | "warning" | "error" | "neutral"; loses: boolean } | null;
+  /** One per page, in order. */
+  files: { href: string; page: number; label: string; uploaded: string; image: boolean }[];
+};
 export type ReprocannView = {
   case: { permitStatus: string; managementSource: string; responsibleName: string; linkageStatus: string } | null;
-  documents: {
-    id: string;
-    kind: string;
-    permitIdentifier: string | null;
-    issuedOn: string | null;
-    expiresOn: string | null;
-    source: string;
-    reviewStatus: "pendiente" | "observada" | "verificada";
-    verifiedOn: string | null;
-    /** Internal: only the team reads it. */
-    notes: string | null;
-    /** What the member reads while the document is observed. */
-    memberMessage: string | null;
-    createdAt: string;
-    /** Sent by the member from their account. */
-    fromMember: boolean;
-    /** Name of who recorded it (the member or an admin). */
-    recordedBy: string | null;
-    replaced: boolean;
-    /** One per page, in order. */
-    files: { href: string; page: number; label: string; uploaded: string }[];
-  }[];
+  documents: ReprocannDocumentView[];
   history: { at: string; actor: string; text: string }[];
   /** The current credential with the same single status the member sees. */
-  credential: { statusLabel: string; statusTone: "success" | "warning" | "error" | "neutral"; expiry: string; review: "pendiente" | "observada" | "verificada" | null; source: string | null; digitized: boolean };
+  credential: { statusLabel: string; statusTone: "success" | "warning" | "error" | "neutral"; expiry: string; review: ReviewStatus | null; source: string | null; digitized: boolean };
   /** How files can be loaded here: through this server locally, to the private store on a deployment. */
   uploads: "local" | "blob" | "unavailable";
-  /** The member's «código de vinculación», in full (admins only). */
+  /** The member's «código de vinculación» REPROCANN, in full (admins only). */
   linkCode: { code: string; sentOn: string | null; byMember: boolean } | null;
 };
 export type ReprocannOptions = { permit: Option[]; management: Option[]; linkage: Option[]; kind: Option[]; review: Option[]; source: Option[] };
 
 const day = (iso: string | null) => (iso ? iso.split("-").reverse().join("/") : "—");
 const label = (list: Option[], v: string | null) => list.find((o) => o.value === v)?.label ?? "—";
+const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires" }).format(new Date());
-const reviewTone = { pendiente: "warning", observada: "error", verificada: "success" } as const;
+const reviewTone: Record<ReviewStatus, Tone> = { pendiente: "warning", observada: "error", verificada: "success" };
 
-export default function ReprocannPanel({ memberId, view, options }: { memberId: string; view: ReprocannView; options: ReprocannOptions }) {
+type Review = { id: string; reviewStatus: ReviewStatus; verifiedOn: string; expiresOn: string; memberMessage: string; notes: string };
+const reviewOf = (d: ReprocannDocumentView): Review => ({ id: d.id, reviewStatus: d.reviewStatus, verifiedOn: d.verifiedOn ?? "", expiresOn: d.expiresOn ?? "", memberMessage: d.memberMessage ?? "", notes: d.notes ?? "" });
+type ReviewErrors = Partial<Record<"verifiedOn" | "expiresOn" | "memberMessage", string>>;
+
+/** The pages of a document as thumbnails (a photo, or a PDF's first page); each opens the whole file in a new tab. */
+function DocumentFiles({ files, size = "sm" }: { files: ReprocannDocumentView["files"]; size?: "sm" | "md" | "lg" }) {
+  if (!files.length) return <p className="text-small text-text-muted">Sin archivo: registrado a partir de la documentación en poder de la asociación.</p>;
+  const uploaded = [...new Set(files.map((f) => f.uploaded))];
+  return (
+    <div className="space-y-2">
+      <DocumentThumbnails size={size} pages={files.map((f) => ({ href: f.href, page: f.page, pdf: !f.image, caption: f.label }))} />
+      <p className="text-small text-text-muted">Cargado por {uploaded.join(" · ")}</p>
+    </div>
+  );
+}
+
+/** What a document is, at a glance: enough to recognise it and tell it from a repeated one. */
+function DocumentSummary({ d, options }: { d: ReprocannDocumentView; options: ReprocannOptions }) {
+  return (
+    <div className="space-y-2 !rounded-control border border-border bg-white px-4 py-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="font-medium">{capital(d.label)}</p>
+        {d.inForce && <StatusBadge tone="brand">Vigente</StatusBadge>}
+        <StatusBadge tone={reviewTone[d.reviewStatus]}>{label(options.review, d.reviewStatus)}</StatusBadge>
+      </div>
+      <p className="text-small text-text-muted [overflow-wrap:anywhere]">
+        Vencimiento{d.reviewStatus === "verificada" ? "" : " sin verificar"}: {day(d.expiresOn)}
+        {d.verifiedOn ? ` · verificada el ${day(d.verifiedOn)}` : ""}
+        {d.reviewed ? ` · revisó ${d.reviewed.by} el ${d.reviewed.at}` : ""}
+      </p>
+      <DocumentFiles files={d.files} size="lg" />
+    </div>
+  );
+}
+
+export default function ReprocannPanel({ memberId, member, openReview, view, options }: { memberId: string; member: { name: string; number: string | null }; openReview: string | null; view: ReprocannView; options: ReprocannOptions }) {
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const attachable = view.documents
-    .filter((d) => !d.files.length && !d.replaced && d.reviewStatus !== "verificada")
+    .filter((d) => !d.files.length && d.active && d.reviewStatus !== "verificada")
     .map((d) => ({ value: d.id, label: `${label(options.kind, d.kind)} registrada el ${d.createdAt.split(",")[0]} (sin archivo)` }));
   const [pending, startTransition] = useTransition();
   const [notice, setNotice] = useState<{ tone: "success" | "error"; text: string } | null>(null);
@@ -67,8 +121,31 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
   const [editingCase, setEditingCase] = useState(false);
   const [doc, setDoc] = useState({ kind: "", permitIdentifier: "", issuedOn: "", expiresOn: "", source: "en_poder_de_la_asociacion", notes: "" });
   const [docError, setDocError] = useState("");
-  const [reviewing, setReviewing] = useState<{ id: string; reviewStatus: string; verifiedOn: string; expiresOn: string; memberMessage: string; notes: string } | null>(null);
+  // From the review queue, «?revisar=<document>» opens that document's review right away.
+  const [reviewing, setReviewing] = useState<Review | null>(() => {
+    const d = openReview ? view.documents.find((x) => x.id === openReview && x.active) : undefined;
+    return d ? reviewOf(d) : null;
+  });
   const [reviewError, setReviewError] = useState("");
+  const [reviewErrors, setReviewErrors] = useState<ReviewErrors>({});
+  const [withdrawing, setWithdrawing] = useState<{ id: string; kept: string; compared: boolean } | null>(null);
+  const [withdrawError, setWithdrawError] = useState("");
+
+  const activeCredentials = view.documents.filter((d) => d.active && d.credential);
+  const reviewed = reviewing ? view.documents.find((d) => d.id === reviewing.id) : undefined;
+  const withdrawn = withdrawing ? view.documents.find((d) => d.id === withdrawing.id) : undefined;
+  const keepOptions = withdrawing ? activeCredentials.filter((d) => d.id !== withdrawing.id) : [];
+
+  const startReview = (d: ReprocannDocumentView) => {
+    setReviewing(reviewOf(d));
+    setReviewError("");
+    setReviewErrors({});
+  };
+  const startWithdrawal = (d: ReprocannDocumentView) => {
+    const others = activeCredentials.filter((x) => x.id !== d.id);
+    setWithdrawing({ id: d.id, kept: others.length === 1 ? others[0].id : "", compared: false });
+    setWithdrawError("");
+  };
 
   const run = (action: () => Promise<ReprocannResult>, success: string, onError?: (e: string) => void, after?: () => void) =>
     startTransition(async () => {
@@ -83,8 +160,20 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
       router.refresh();
     });
 
+  const saveReview = () => {
+    if (!reviewing || !reviewed) return;
+    const errors: ReviewErrors = {};
+    if (reviewing.reviewStatus === "verificada" && !reviewing.verifiedOn) errors.verifiedOn = "Indicá la fecha de verificación.";
+    if (reviewing.verifiedOn && reviewing.verifiedOn > today()) errors.verifiedOn = "La fecha de verificación no puede ser posterior a hoy.";
+    if (reviewing.reviewStatus === "verificada" && reviewed.credential && !reviewing.expiresOn) errors.expiresOn = "Indicá el vencimiento que figura en la credencial: sin él no se puede seguir su vigencia.";
+    if (reviewing.reviewStatus === "observada" && !reviewing.memberMessage.trim()) errors.memberMessage = "Escribí qué tiene que corregir el socio: es lo que va a leer en su cuenta.";
+    setReviewErrors(errors);
+    if (Object.keys(errors).length) return;
+    run(() => reviewDocumentAction(memberId, reviewing.id, reviewing), "Revisión guardada. El socio ya ve el resultado en su espacio.", setReviewError, () => setReviewing(null));
+  };
+
   return (
-    <section aria-labelledby="reprocann" className="space-y-4">
+    <section aria-labelledby="reprocann" className="scroll-mt-6 space-y-4">
       <div className="space-y-1">
         <h2 id="reprocann" className="text-h2 text-forest">
           Trámites · REPROCANN
@@ -127,7 +216,7 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
           </dl>
           <div className="space-y-1.5 border-t border-border pt-3 text-small">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-text-muted">Código de vinculación</p>
+              <p className="text-text-muted">Código de vinculación REPROCANN</p>
               <Button
                 variant="ghost"
                 shape="admin"
@@ -144,23 +233,19 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
             {view.linkCode ? (
               <>
                 <CopyValue label="código" value={view.linkCode.code} />
-                <p className="text-xs text-text-muted">{`${view.linkCode.byMember ? "Lo envió el socio" : "Lo cargó la administración"}${view.linkCode.sentOn ? ` el ${view.linkCode.sentOn.split("-").reverse().join("/")}` : ""}. Cuando lo vincules en REPROCANN, marcá «Vinculación verificada» en Editar.`}</p>
+                <p className="text-xs text-text-muted">{`${view.linkCode.byMember ? "Lo envió el socio" : "Lo cargó la administración"}${view.linkCode.sentOn ? ` el ${view.linkCode.sentOn.split("-").reverse().join("/")}` : ""}. Tener el código no es la vinculación: cuando la hagas en REPROCANN, marcá «Vinculación verificada» en Editar.`}</p>
               </>
             ) : (
-              <p className="text-text-muted">Todavía no lo tenemos. El socio lo puede enviar desde su espacio, en REPROCANN.</p>
+              <p className="text-text-muted">Todavía no lo tenemos. El socio lo puede enviar desde su espacio, en REPROCANN, o se carga acá si lo pasa por otro medio.</p>
             )}
           </div>
-          <p className="flex items-start gap-2 border-t border-border pt-3 text-small text-text-muted">
-            <Info aria-hidden className="mt-0.5 size-4 shrink-0" strokeWidth={1.5} />
-            <span>Dispensa: pendiente de definición. Cargar o verificar documentos no la habilita.</span>
-          </p>
         </Card>
       </div>
 
       <Dialog
         open={editingLink}
         onClose={() => setEditingLink(false)}
-        title="Código de vinculación"
+        title="Código de vinculación REPROCANN"
         description="Tal como figura en el «Registro de paciente» del socio. Se guarda cifrado y el cambio queda registrado; si lo dejás vacío, se quita."
         confirmLabel={pending ? "Guardando…" : "Guardar"}
         confirmDisabled={pending}
@@ -173,7 +258,7 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
           })
         }
       >
-        <TextField id="link-code-admin" label="Código de vinculación" optional autoComplete="off" spellCheck={false} maxLength={40} value={linkDraft} onChange={(e) => setLinkDraft(e.target.value)} error={linkError || undefined} className="font-mono tracking-wider" />
+        <TextField id="link-code-admin" label="Código de vinculación REPROCANN" optional autoComplete="off" spellCheck={false} maxLength={40} value={linkDraft} onChange={(e) => setLinkDraft(e.target.value)} error={linkError || undefined} className="font-mono tracking-wider" />
       </Dialog>
 
       <Dialog
@@ -206,13 +291,27 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
             </Button>
           </div>
         </div>
+        {activeCredentials.length > 1 && (
+          <Alert tone="warning" title={`Hay ${activeCredentials.length} credenciales activas`}>
+            Cuenta la más reciente (marcada «Vigente»). Si una está repetida, abrí los archivos, comparalos y usá «Retirar duplicado» en la que sobra: no se borra, queda en el historial.
+          </Alert>
+        )}
         {view.documents.length ? (
           <ul className="space-y-3">
             {view.documents.map((d) => (
-              <li key={d.id} className={`space-y-2 !rounded-control border border-border px-4 py-3 ${d.replaced ? "opacity-70" : ""}`}>
+              <li key={d.id} id={`documento-${d.id}`} className={`scroll-mt-24 space-y-2 !rounded-control border border-border px-4 py-3 ${d.active ? "" : "opacity-75"}`}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-medium">{label(options.kind, d.kind)}</p>
-                  {d.replaced ? <StatusBadge tone="neutral">Reemplazado por un archivo nuevo</StatusBadge> : <StatusBadge tone={reviewTone[d.reviewStatus]}>{label(options.review, d.reviewStatus)}</StatusBadge>}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {d.inForce && <StatusBadge tone="brand">Vigente</StatusBadge>}
+                    {d.withdrawn ? (
+                      <StatusBadge tone="neutral">Retirado · duplicado</StatusBadge>
+                    ) : d.replaced ? (
+                      <StatusBadge tone="neutral">Reemplazado por un archivo nuevo</StatusBadge>
+                    ) : (
+                      <StatusBadge tone={reviewTone[d.reviewStatus]}>{label(options.review, d.reviewStatus)}</StatusBadge>
+                    )}
+                  </div>
                 </div>
                 <p className="text-small text-text-muted [overflow-wrap:anywhere]">
                   {d.fromMember ? `Enviado por el socio desde su cuenta · ${d.createdAt}` : `${label(options.source, d.source)} · registrado por ${d.recordedBy ?? "administración"} · ${d.createdAt}`}
@@ -220,28 +319,28 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
                 <p className="text-small text-text-muted [overflow-wrap:anywhere]">
                   {d.permitIdentifier ? `Identificador: ${d.permitIdentifier} · ` : ""}Emisión: {day(d.issuedOn)} · Vencimiento: {day(d.expiresOn)}
                   {d.verifiedOn ? ` · Verificado el ${day(d.verifiedOn)}` : ""}
+                  {d.reviewed ? ` · Revisó ${d.reviewed.by} el ${d.reviewed.at}` : ""}
                 </p>
-                {d.memberMessage && <p className="!rounded-control bg-warning-bg px-3 py-2 text-small text-warning-fg">Motivo para el socio: {d.memberMessage}</p>}
-                {d.notes && <p className="text-small">Nota interna: {d.notes}</p>}
-                {d.files.length > 0 && (
-                  <ul className="space-y-1">
-                    {d.files.map((f) => (
-                      <li key={f.href} className="flex flex-wrap items-center gap-x-2 text-small">
-                        <a href={f.href} target="_blank" rel="noopener" className="inline-flex min-h-9 items-center gap-1.5 !text-forest underline underline-offset-2">
-                          <FileText aria-hidden className="size-4" strokeWidth={1.5} /> {d.files.length > 1 ? `Ver hoja ${f.page}` : "Ver archivo"} · {f.label}
-                        </a>
-                        <span className="text-text-muted">cargado por {f.uploaded}</span>
-                      </li>
-                    ))}
-                  </ul>
+                {d.withdrawn && (
+                  <p className="text-small text-text-muted [overflow-wrap:anywhere]">
+                    Retirado por duplicado por {d.withdrawn.by} el {d.withdrawn.at}. Se conservó: {d.withdrawn.kept}.
+                  </p>
                 )}
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
-                  {!d.replaced && (
-                    <Button variant="ghost" shape="admin" className="min-h-9" onClick={() => { setReviewing({ id: d.id, reviewStatus: d.reviewStatus, verifiedOn: d.verifiedOn ?? "", expiresOn: d.expiresOn ?? "", memberMessage: d.memberMessage ?? "", notes: d.notes ?? "" }); setReviewError(""); }}>
+                {d.memberMessage && d.active && <p className="!rounded-control bg-warning-bg px-3 py-2 text-small text-warning-fg">Motivo para el socio: {d.memberMessage}</p>}
+                {d.notes && <p className="text-small">Nota interna: {d.notes}</p>}
+                {d.files.length > 0 && <DocumentFiles files={d.files} />}
+                {d.active && (
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <Button variant="ghost" shape="admin" className="min-h-9" onClick={() => startReview(d)}>
                       Revisar
                     </Button>
-                  )}
-                </div>
+                    {d.ifWithdrawn && (
+                      <Button variant="ghost" shape="admin" className="min-h-9" onClick={() => startWithdrawal(d)}>
+                        <Archive aria-hidden className="size-4" strokeWidth={1.5} /> Retirar duplicado
+                      </Button>
+                    )}
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -288,7 +387,7 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
           <Select id="doc-kind" label="Tipo de documento" placeholder="Elegí el tipo" options={options.kind} value={doc.kind} onChange={(e) => setDoc((d) => ({ ...d, kind: e.target.value }))} />
           <Select id="doc-source" label="Fuente" options={options.source} value={doc.source} onChange={(e) => setDoc((d) => ({ ...d, source: e.target.value }))} />
           <TextField id="doc-id" label="Identificador del permiso" optional hint="Como figura en la documentación oficial." value={doc.permitIdentifier} onChange={(e) => setDoc((d) => ({ ...d, permitIdentifier: e.target.value }))} maxLength={80} autoComplete="off" />
-          <span />
+          <span aria-hidden className="hidden sm:block" />
           <TextField id="doc-issued" type="date" label="Fecha de emisión" optional max={today()} value={doc.issuedOn} onChange={(e) => setDoc((d) => ({ ...d, issuedOn: e.target.value }))} />
           <TextField id="doc-expires" type="date" label="Fecha de vencimiento" optional value={doc.expiresOn} onChange={(e) => setDoc((d) => ({ ...d, expiresOn: e.target.value }))} />
         </div>
@@ -299,19 +398,54 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
         open={reviewing !== null}
         onClose={() => setReviewing(null)}
         title="Revisar documento"
-        description="Este cambio quedará registrado. Verificado no significa habilitado para la dispensa."
+        description="Queda registrado quién revisó y cuándo. Verificar la credencial es una de las tres condiciones para la dispensa, no la habilitación."
         confirmLabel={pending ? "Guardando…" : "Guardar revisión"}
         confirmDisabled={pending}
-        onConfirm={() => reviewing && run(() => reviewDocumentAction(memberId, reviewing.id, reviewing), "Revisión guardada.", setReviewError, () => setReviewing(null))}
+        onConfirm={saveReview}
         wide
       >
         {reviewError && <Alert tone="error" live>{reviewError}</Alert>}
-        {reviewing && (
-          <div className="space-y-5">
+        {reviewing && reviewed && (
+          <>
+            <div className="space-y-2">
+              <p className="text-small text-text-muted">
+                Socio: <span className="font-medium text-foreground">{member.name}</span>
+                {member.number ? ` · N.º ${member.number}` : " · número a confirmar"}
+              </p>
+              <DocumentSummary d={reviewed} options={options} />
+            </div>
             <div className="grid gap-5 sm:grid-cols-2">
-              <Select id="review-status" label="Resultado" options={options.review} value={reviewing.reviewStatus} onChange={(e) => setReviewing((r) => r && { ...r, reviewStatus: e.target.value })} />
-              <TextField id="review-date" type="date" label="Fecha de verificación" optional={reviewing.reviewStatus !== "verificada"} max={today()} value={reviewing.verifiedOn} onChange={(e) => setReviewing((r) => r && { ...r, verifiedOn: e.target.value })} />
-              <TextField id="review-expires" type="date" label="Vencimiento según el documento" optional hint="Si el socio lo declaró, corregilo si el documento dice otra fecha." value={reviewing.expiresOn} onChange={(e) => setReviewing((r) => r && { ...r, expiresOn: e.target.value })} />
+              <Select
+                id="review-status"
+                label="Resultado"
+                options={options.review}
+                value={reviewing.reviewStatus}
+                onChange={(e) => {
+                  const reviewStatus = e.target.value as ReviewStatus;
+                  setReviewing((r) => r && { ...r, reviewStatus, verifiedOn: reviewStatus === "verificada" && !r.verifiedOn ? today() : r.verifiedOn });
+                  setReviewErrors({});
+                }}
+              />
+              <TextField
+                id="review-date"
+                type="date"
+                label="Fecha de verificación"
+                optional={reviewing.reviewStatus !== "verificada"}
+                max={today()}
+                value={reviewing.verifiedOn}
+                onChange={(e) => setReviewing((r) => r && { ...r, verifiedOn: e.target.value })}
+                error={reviewErrors.verifiedOn}
+              />
+              <TextField
+                id="review-expires"
+                type="date"
+                label="Vencimiento según el documento"
+                optional={!(reviewing.reviewStatus === "verificada" && reviewed.credential)}
+                hint={reviewing.reviewStatus === "verificada" && reviewed.credential ? "Necesario para verificar: la vigencia se controla con esta fecha." : "Si el socio lo declaró, corregilo si el documento dice otra fecha."}
+                value={reviewing.expiresOn}
+                onChange={(e) => setReviewing((r) => r && { ...r, expiresOn: e.target.value })}
+                error={reviewErrors.expiresOn}
+              />
             </div>
             {reviewing.reviewStatus === "observada" && (
               <Textarea
@@ -320,6 +454,7 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
                 hint="Lo lee el socio en su cuenta. Decile qué tiene que corregir, sin datos clínicos."
                 value={reviewing.memberMessage}
                 onChange={(e) => setReviewing((r) => r && { ...r, memberMessage: e.target.value })}
+                error={reviewErrors.memberMessage}
                 maxLength={300}
                 rows={2}
               />
@@ -334,7 +469,52 @@ export default function ReprocannPanel({ memberId, view, options }: { memberId: 
               maxLength={500}
               rows={2}
             />
-          </div>
+          </>
+        )}
+      </Dialog>
+
+      <Dialog
+        open={withdrawing !== null}
+        onClose={() => setWithdrawing(null)}
+        title="Retirar duplicado"
+        description="Sale de la documentación activa del socio, pero no se borra: queda en el historial con sus archivos, y se registra quién lo retiró y cuál se conservó."
+        confirmLabel={pending ? "Retirando…" : "Retirar duplicado"}
+        confirmVariant="danger"
+        confirmDisabled={pending || !withdrawing?.kept || !withdrawing?.compared}
+        onConfirm={() => withdrawing && run(() => withdrawDuplicateAction(memberId, withdrawing.id, withdrawing.kept), "Duplicado retirado. La credencial vigente ya se recalculó para el socio.", setWithdrawError, () => setWithdrawing(null))}
+        wide
+      >
+        {withdrawError && <Alert tone="error" live>{withdrawError}</Alert>}
+        {withdrawing && withdrawn && (
+          <>
+            <div className="space-y-2">
+              <h3 className="text-label text-foreground">Vas a retirar</h3>
+              <DocumentSummary d={withdrawn} options={options} />
+            </div>
+            <fieldset className="space-y-2">
+              <legend className="text-label text-foreground">Se conserva</legend>
+              {keepOptions.map((k) => (
+                <label key={k.id} className="flex cursor-pointer items-start gap-3 !rounded-control has-[:checked]:outline-2 has-[:checked]:outline-forest">
+                  <input type="radio" name="kept" value={k.id} checked={withdrawing.kept === k.id} onChange={() => setWithdrawing((w) => w && { ...w, kept: k.id })} className="mt-4 ml-1 size-4 shrink-0 accent-[var(--forest)]" />
+                  <span className="min-w-0 flex-1">
+                    <DocumentSummary d={k} options={options} />
+                  </span>
+                </label>
+              ))}
+            </fieldset>
+            {withdrawn.ifWithdrawn && (
+              <Alert tone={withdrawn.ifWithdrawn.loses ? "warning" : "info"} title="Después del retiro">
+                {withdrawn.ifWithdrawn.inForce ? `Queda vigente: ${withdrawn.ifWithdrawn.inForce}. El estado de la credencial pasa a «${withdrawn.ifWithdrawn.statusLabel}».` : "El socio queda sin credencial vigente."}
+                {withdrawn.ifWithdrawn.loses && " Deja de cumplirse la condición de la credencial para la dispensa."}
+              </Alert>
+            )}
+            <Checkbox
+              id="withdraw-compared"
+              label="Abrí y comparé los archivos: este es el repetido."
+              checked={withdrawing.compared}
+              onChange={(e) => setWithdrawing((w) => w && { ...w, compared: e.target.checked })}
+            />
+          </>
         )}
       </Dialog>
     </section>

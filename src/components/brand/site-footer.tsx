@@ -1,20 +1,23 @@
 import Link from "next/link";
 import { BRAND } from "@/lib/constants";
+import { contactAvailable } from "@/lib/features";
 import { BrandLockup } from "./headers";
 
-/** Footer links. */
+/** Footer links: the public site's route (Sobre Amarí Dul, Comunidad, Contacto) and the members' access. */
 function FooterLinks({ link, className }: { link: string; className?: string }) {
   return (
     <nav aria-label="Pie de página" className={className}>
-      <Link href="/" className={`inline-flex min-h-11 items-center ${link}`}>
-        Sitio institucional
+      <Link href="/#sobre" className={`inline-flex min-h-11 items-center ${link}`}>
+        Sobre Amarí Dul
       </Link>
       <Link href="/qr" className={`inline-flex min-h-11 items-center ${link}`}>
-        Producto
+        Comunidad
       </Link>
-      <Link href="/qr#preguntas" className={`inline-flex min-h-11 items-center ${link}`}>
-        Preguntas frecuentes
-      </Link>
+      {contactAvailable() && (
+        <Link href="/#contacto" className={`inline-flex min-h-11 items-center ${link}`}>
+          Contacto
+        </Link>
+      )}
       <Link href="/qr/login" className={`inline-flex min-h-11 items-center ${link}`}>
         Acceso socios
       </Link>
@@ -28,7 +31,8 @@ function FooterLinks({ link, className }: { link: string; className?: string }) 
  * so short pages fit the screen without scrolling (links from `sm` up).
  */
 export function SiteFooter({ wide = false, tone = "forest", compact = false }: { wide?: boolean; tone?: "forest" | "neutral"; compact?: boolean }) {
-  const column = wide ? "admin-column" : "nav-column";
+  // The member portal's footer shares its column (and left edge) with the rest of the portal.
+  const column = wide ? "portal-column" : "nav-column";
   if (compact) {
     return (
       <footer className="page-gutter border-t border-arena-200 bg-arena-50 text-xs text-arena-700">

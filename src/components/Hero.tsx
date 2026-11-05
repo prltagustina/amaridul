@@ -4,6 +4,8 @@ import { ArrowRight, ChevronDown } from "lucide-react";
 import heroPhoto from "@/assets/demo/qr-portada-provisoria.jpg";
 import { CircleLogo } from "@/components/brand/circle-logo";
 import { institutionalPhrase } from "@/demo/content";
+import { buttonClasses } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
 
 /** Same photographic ground as /qr: portrait photo, soft-focus middle on wide screens, light green veil. */
 export default function Hero() {
@@ -23,9 +25,11 @@ export default function Hero() {
 
       <div className="page-gutter flex flex-1 flex-col items-center justify-center gap-6 pt-20 pb-24 text-center sm:gap-8">
         <CircleLogo className="w-[min(78vw,50svh,26rem)] lg:w-[min(56svh,30rem)]" />
-        <p className="mx-auto max-w-[24ch] font-display text-[clamp(1.5rem,1.2rem+1.3vw,2.25rem)] leading-[1.15] font-medium text-white [text-shadow:0_1px_16px_rgba(0,0,0,0.4)] sm:max-w-[26ch]">{institutionalPhrase}</p>
-        <Link href="/qr" className="font-ui inline-flex min-h-11 items-center gap-2 border-b border-white/50 text-[0.8125rem] tracking-[0.18em] !text-white uppercase transition-colors hover:border-white motion-safe-only">
-          Más información <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
+        <p className="mx-auto max-w-[22ch] font-title !font-semibold text-[clamp(1.375rem,1.15rem+1vw,1.875rem)] leading-[1.2] !tracking-[-0.01em] text-white [text-shadow:0_1px_16px_rgba(0,0,0,0.4)]">{institutionalPhrase}</p>
+        {/* One clear next step: straight to where each person picks their way in (join, ask for
+            access or sign in), without a second cover. Who wants to know more scrolls down. */}
+        <Link href="/qr#comunidad" className={cn(buttonClasses({ variant: "light", size: "lg", editorial: true }), "shadow-[0_10px_30px_-12px_rgb(0_0_0/0.45)]")}>
+          Sumate a la comunidad <ArrowRight aria-hidden strokeWidth={1.5} />
         </Link>
       </div>
 

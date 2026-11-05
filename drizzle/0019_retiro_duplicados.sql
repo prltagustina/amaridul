@@ -1,0 +1,8 @@
+CREATE TYPE "public"."reprocann_withdrawal_reason" AS ENUM('duplicado');--> statement-breakpoint
+ALTER TABLE "reprocann_documents" ADD COLUMN "withdrawn_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "reprocann_documents" ADD COLUMN "withdrawn_by" uuid;--> statement-breakpoint
+ALTER TABLE "reprocann_documents" ADD COLUMN "withdrawal_reason" "reprocann_withdrawal_reason";--> statement-breakpoint
+ALTER TABLE "reprocann_documents" ADD COLUMN "kept_document_id" uuid;--> statement-breakpoint
+ALTER TABLE "reprocann_documents" ADD CONSTRAINT "reprocann_documents_withdrawn_by_user_id_fk" FOREIGN KEY ("withdrawn_by") REFERENCES "public"."user"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "reprocann_documents" ADD CONSTRAINT "reprocann_documents_kept_document_id_reprocann_documents_id_fk" FOREIGN KEY ("kept_document_id") REFERENCES "public"."reprocann_documents"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "reprocann_documents" ADD CONSTRAINT "reprocann_documents_withdrawal_check" CHECK (("reprocann_documents"."withdrawn_at" is null and "reprocann_documents"."withdrawn_by" is null and "reprocann_documents"."withdrawal_reason" is null and "reprocann_documents"."kept_document_id" is null) or ("reprocann_documents"."withdrawn_at" is not null and "reprocann_documents"."withdrawn_by" is not null and "reprocann_documents"."withdrawal_reason" is not null and "reprocann_documents"."kept_document_id" is not null and "reprocann_documents"."kept_document_id" <> "reprocann_documents"."id"));

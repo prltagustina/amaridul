@@ -28,8 +28,8 @@ export const faqPlaceholderAnswer =
 
 export const labNote = "Los análisis son realizados por laboratorio habilitado y forman parte de nuestro sistema de control de calidad.";
 
-export const sumateIntro =
-  "Contanos quién sos y qué te acerca a Amarí Dul. Con esta información el equipo te va a orientar sobre el recorrido que corresponde. Enviar la solicitud no implica la admisión como socio.";
+export const sumateIntro = "Contanos quién sos y qué te acerca a Amarí Dul.";
+export const sumateNote = "Con esta información el equipo te va a orientar sobre el recorrido que corresponde. Enviar la solicitud no implica la admisión como socio.";
 
 export const privacySummary =
   "Usamos estos datos solo para gestionar tu solicitud y contactarte por ella. El aviso de privacidad completo se publica cuando esté aprobado.";

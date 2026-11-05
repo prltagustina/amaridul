@@ -2,19 +2,30 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { SectionTab, TONE, type InfoTone } from "@/components/ui/technical";
+import type { InfoTone } from "@/components/ui/technical";
 
-const columns = { content: "content-column", nav: "nav-column", narrow: "mx-auto w-full max-w-md", wide: "admin-column" } as const;
+const columns = { content: "content-column", nav: "nav-column", narrow: "mx-auto w-full max-w-md", wide: "portal-column" } as const;
+
+// The section's colour as a solid fill at the same depth (step 800, as Dambar heads its fichas),
+// with white text (9.8:1 or more) and the eyebrow in a light accent of the family: green with a
+// light green; trámites in Dambar's indigo with its pink; asociarse in the indigo with a lavender.
+// The pink is never a large area: only that small accent.
+const BAND: Record<InfoTone, { fill: string; eyebrow: string }> = {
+  green: { fill: "bg-hoja-800", eyebrow: "text-hoja-300" },
+  lilac: { fill: "bg-lila-800", eyebrow: "text-lila-300" },
+  magenta: { fill: "bg-lila-800", eyebrow: "text-rosa-300" },
+};
 
 /**
- * Page header band in the manner of the Dambar fichas: forest → violet gradient, title,
- * and a folder tab resting on the bottom edge that opens into the page.
+ * Page header: a band in the section's solid colour (green for the member's own world and its
+ * help, Dambar's indigo for trámites and for asociarse) with the way back, where you are, the title
+ * in Cormorant and one short line, in white. Same rhythm on every page, so nothing shifts between
+ * sections. `children` sit under the line and inherit the white.
  */
 export function PageBand({
   eyebrow,
   title,
   description,
-  tab,
   width = "content",
   align = "left",
   tone = "green",
@@ -27,42 +38,40 @@ export function PageBand({
   back?: { href: string; label: string };
   title: ReactNode;
   description?: ReactNode;
+  /** Kept for compatibility: the header no longer carries a folder tab. */
   tab?: ReactNode;
   width?: keyof typeof columns;
   align?: "left" | "center";
+  /** The section's colour (green, magenta for trámites, lilac for asociarse). */
   tone?: InfoTone;
-  /** Member portal: same fixed rhythm on every page so the band never changes height. */
+  /** Member portal: the same fixed rhythm on every page. */
   compact?: boolean;
   children?: ReactNode;
 }) {
+  const center = align === "center";
+  const band = BAND[tone];
   return (
-    <section className={cn("page-gutter relative overflow-hidden text-white", compact ? "pt-6 sm:pt-8" : "pt-10 sm:pt-14", TONE[tone].band)}>
-      <span aria-hidden className="pointer-events-none absolute -top-24 -right-24 size-72 !rounded-full bg-white/10 blur-3xl" />
-      <span aria-hidden className="pointer-events-none absolute -bottom-32 left-1/4 size-72 !rounded-full bg-white/5 blur-3xl" />
-      <div className={cn("relative", columns[width], align === "center" && "text-center")}>
-        {back ? (
-          // Breadcrumb on the eyebrow line, so a band with a way back keeps the same height as one without.
-          <div className={cn("flex items-center gap-2.5 text-[11px] font-medium tracking-[0.2em] uppercase", align === "center" && "justify-center")}>
-            <Link href={back.href} className="-my-3 inline-flex items-center gap-1 py-3 !text-white underline-offset-4 hover:underline">
-              <ChevronLeft aria-hidden className="size-3.5" strokeWidth={2} />
-              {back.label}
-            </Link>
-            {eyebrow && (
-              <>
-                <span aria-hidden className="text-white/50">·</span>
-                <p className="text-white/80">{eyebrow}</p>
-              </>
+    <section className={cn("page-gutter text-white", band.fill, compact ? "pt-7 pb-8 sm:pt-10 sm:pb-9" : "pt-10 pb-10 sm:pt-14 sm:pb-12")}>
+      <div className={cn(columns[width], center && "text-center")}>
+        {(back || eyebrow) && (
+          <div className={cn("flex min-h-6 flex-wrap items-center gap-x-2.5 gap-y-1 text-sm", center && "justify-center")}>
+            {back && (
+              <Link href={back.href} className="-my-2.5 -ml-1 inline-flex items-center gap-1 py-2.5 pr-1 pl-1 font-medium !text-white underline-offset-4 hover:underline focus-visible:!outline-white">
+                <ChevronLeft aria-hidden className="size-4" strokeWidth={2} />
+                {back.label}
+              </Link>
             )}
+            {back && eyebrow && (
+              <span aria-hidden className="text-white/60">
+                /
+              </span>
+            )}
+            {eyebrow && <p className={cn("text-eyebrow", band.eyebrow)}>{eyebrow}</p>}
           </div>
-        ) : (
-          eyebrow && <p className="text-[11px] font-medium tracking-[0.2em] text-white/80 uppercase">{eyebrow}</p>
         )}
-        <h1 className={cn("mt-10 font-display leading-[1.08] font-medium text-balance", compact ? "text-[clamp(1.9rem,1.6rem+1.4vw,2.5rem)]" : "text-[clamp(2.1rem,1.6rem+2.4vw,3rem)]")}>{title}</h1>
-        {description && <p className={cn("max-w-xl text-[1.0625rem] leading-relaxed font-light text-white/85", compact ? "mt-1.5" : "mt-3", align === "center" && "mx-auto")}>{description}</p>}
+        <h1 className={cn("text-h1 text-balance", back || eyebrow ? "mt-3" : "")}>{title}</h1>
+        {description && <p className={cn("mt-2 measure text-[1.0625rem] leading-relaxed", center && "mx-auto")}>{description}</p>}
         {children}
-        <div className={cn("flex", compact ? "mt-5" : "mt-8", align === "center" && "justify-center", !tab && "h-4")}>
-          {tab && <SectionTab tone={tone} className="!bg-background">{tab}</SectionTab>}
-        </div>
       </div>
     </section>
   );

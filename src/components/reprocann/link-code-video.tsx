@@ -2,9 +2,10 @@ import { LINK_CODE_STEPS, LINK_CODE_VIDEO } from "@/lib/reprocann-help";
 import { cn } from "@/lib/cn";
 
 /** The association's 30-second video on where to find the «código de vinculación», played on the page. */
-export function LinkCodeVideo({ className }: { className?: string }) {
+export function LinkCodeVideo({ id, className }: { id?: string; className?: string }) {
   return (
     <video
+      id={id}
       controls
       playsInline
       preload="none"

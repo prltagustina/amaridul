@@ -3,8 +3,10 @@ import { getDb } from "@/server/db";
 import { CHEMOTYPES, chemotypeLabel, CULTIVATION_MODES, cultivationLabel, listProducts, listVarieties, PRODUCT_TYPES, productTypeLabel, varietyLabel } from "@/server/products";
 import ProductsManager, { type ProductRow, type VarietyRow } from "./products-manager";
 
-export default async function ProductosPage() {
+export default async function ProductosPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requireAdmin();
+  // From the panel search: «?editar=<product>» opens that product.
+  const { editar } = await searchParams;
   const db = await getDb();
   const [products, varieties] = await Promise.all([listProducts(db), listVarieties(db)]);
   const rows: ProductRow[] = products.map((p) => ({
@@ -38,6 +40,7 @@ export default async function ProductosPage() {
   return (
     <ProductsManager
       rows={rows}
+      initialEdit={typeof editar === "string" ? editar : null}
       varieties={varietyRows}
       options={{ types: PRODUCT_TYPES, cultivation: [...CULTIVATION_MODES], chemotypes: [...CHEMOTYPES] }}
     />

@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { BrandLockup } from "@/components/brand/headers";
+import { BrandLockup, MemberAccessLink } from "@/components/brand/headers";
 
+// The public site's three places. Comunidad is /qr: joining, REPROCANN and the questions.
 const LINKS = [
   { href: "/#sobre", label: "Sobre Amarí Dul", section: "sobre" },
-  { href: "/qr", label: "Producto" },
-  { href: "#contacto", label: "Contacto", section: "contacto" },
+  { href: "/qr", label: "Comunidad" },
+  { href: "/#contacto", label: "Contacto", section: "contacto" },
 ];
 
 // Over the hero photo the bar is transparent with cream marks; once the page scrolls it turns bone.
@@ -16,7 +17,8 @@ const LINKS = [
 const linkBase = "font-ui data-[active=true]:underline underline-offset-[10px] decoration-1 transition-colors motion-reduce:transition-none";
 const linkTone = { photo: "!text-white/85 hover:!text-white data-[active=true]:!text-white focus-visible:!outline-background", solid: "!text-text-muted hover:!text-forest data-[active=true]:!text-forest" };
 
-export default function Nav({ showContact = true }: { showContact?: boolean }) {
+/** `memberAccess`: the «Acceso socios» button beside the menu (Comunidad, where members arrive from the QR). */
+export default function Nav({ showContact = true, memberAccess = false }: { showContact?: boolean; memberAccess?: boolean }) {
   const links = showContact ? LINKS : LINKS.filter((l) => l.section !== "contacto");
   const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
@@ -74,7 +76,7 @@ export default function Nav({ showContact = true }: { showContact?: boolean }) {
               <BrandLockup tone={solid ? "forest" : "cream"} onPhoto={!solid} />
             </Link>
 
-            <ul className="hidden md:flex items-center gap-8 -mr-[0.15em] text-[0.8125rem] uppercase tracking-[0.14em]">
+            <ul className={`hidden md:flex items-center gap-8 -mr-[0.15em] text-[0.8125rem] uppercase tracking-[0.14em] ${memberAccess ? "md:ml-auto" : ""}`}>
               {links.map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} aria-current={current(l.href)} data-active={isActive(l)} className={linkClass}>
@@ -84,12 +86,18 @@ export default function Nav({ showContact = true }: { showContact?: boolean }) {
               ))}
             </ul>
 
+            {memberAccess && (
+              <div className="ml-auto flex items-center md:ml-8">
+                <MemberAccessLink tone={solid ? "light" : "over-photo"} compact={solid} />
+              </div>
+            )}
+
             <button
               type="button"
               aria-expanded={open}
               aria-controls="menu-movil"
               onClick={() => setOpen((v) => !v)}
-              className={`md:hidden -mr-2 flex h-11 w-11 items-center justify-center ${solid ? "text-forest" : "text-white focus-visible:!outline-background"}`}
+              className={`md:hidden -mr-2 flex h-11 w-11 items-center justify-center ${memberAccess ? "ml-1" : ""} ${solid ? "text-forest" : "text-white focus-visible:!outline-background"}`}
             >
               <span className="sr-only">{open ? "Cerrar menú" : "Abrir menú"}</span>
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">

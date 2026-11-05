@@ -2,131 +2,178 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, ExternalLink, MessageCircle, Upload } from "lucide-react";
 import { PageBand } from "@/components/brand/page-band";
-import { LinkButton } from "@/components/ui/button";
-import { DevTag } from "@/components/ui/display";
-import { TabbedCard } from "@/components/ui/technical";
+import { AnchorButton, LinkButton } from "@/components/ui/button";
+import { DevTag, Panel } from "@/components/ui/display";
+import { HelpStrip, StepGuide } from "@/components/ui/guidance";
+import { StepCards } from "@/components/ui/step-cards";
+import { LinkCodeVideo } from "@/components/reprocann/link-code-video";
+import { TOP_EDGE } from "@/components/ui/technical";
+import { cn } from "@/lib/cn";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { CONTACT } from "@/lib/constants";
 import { localDemo } from "@/lib/features";
 import { FEE_PAGE } from "@/lib/fee-payment";
 import { REPROCANN_OFFICIAL_SITE } from "@/lib/reprocann-help";
-import { LinkCodeSteps, LinkCodeVideo } from "@/components/reprocann/link-code-video";
 import { MEMBER_QUESTION_MESSAGE, officialWhatsAppLink, UPDATE_DATA_MESSAGE } from "@/lib/whatsapp";
 import { currentMember } from "@/server/member-session";
 
 export const metadata: Metadata = { title: "Ayuda | Amarí Dul" };
 
-const outline = "inline-flex min-h-11 items-center gap-2 !rounded-full border border-forest/60 px-5 text-[0.9375rem] font-medium !text-forest hover:bg-forest-soft";
-const textLink = "inline-flex min-h-11 items-center gap-1.5 font-medium !text-forest underline-offset-4 hover:underline";
+const textLink = "inline-flex min-h-10 items-center gap-1.5 text-sm font-medium !text-forest !underline underline-offset-4";
 
-/** A question and where it is answered. */
-function Topic({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
+/** A short question, its answer in a line, and where to do it. */
+function Answer({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-3 py-5 first:pt-0 last:pb-0">
-      <h3 className="text-lg font-title text-forest">{title}</h3>
-      <div className="space-y-2 text-[0.9375rem] leading-relaxed text-text-muted">{children}</div>
-      {action && <div className="flex flex-wrap items-center gap-x-4 gap-y-2">{action}</div>}
-    </div>
+    <li className="grid gap-x-6 gap-y-2 py-4 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+      <div className="min-w-0 space-y-0.5">
+        <h3 className="text-base font-medium text-foreground">{title}</h3>
+        <p className="text-sm leading-relaxed text-text-muted">{children}</p>
+      </div>
+      {action && <div className="flex">{action}</div>}
+    </li>
   );
 }
 
-function WhatsApp({ message, label }: { message: string; label: string }) {
-  const href = officialWhatsAppLink(message);
-  return href ? (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={outline}>
-      <MessageCircle aria-hidden className="size-4" strokeWidth={1.5} /> {label}
-    </a>
-  ) : null;
-}
-
 /**
- * Help for members, by situation: starting the REPROCANN procedure, sending the credential,
- * finding the link code, the fee, their data and how to reach the association.
+ * Help for members, by situation and step by step. REPROCANN first, in the order Luci set:
+ * starting the procedure with the association begins with the link code (the video shows it and
+ * the written steps say the same), then sending a credential one already has. Then the
+ * membership and the fee, and how to reach the association.
  */
 export default async function AyudaPage() {
   await currentMember();
   const demo = localDemo();
+  const updateData = officialWhatsAppLink(UPDATE_DATA_MESSAGE);
+  const question = officialWhatsAppLink(MEMBER_QUESTION_MESSAGE);
   return (
     <main>
-      <PageBand compact eyebrow="Ayuda" title="Ayuda y contacto" description="Tus trámites, tu membresía y tu cuota, paso a paso." tab="Preguntas" back={{ href: "/qr/mi-espacio", label: "Mi espacio" }} width="wide" />
-      <div className="page-gutter pt-6 pb-8">
-        <div className="admin-column grid gap-x-6 gap-y-8 lg:grid-cols-2">
-          <TabbedCard tab="REPROCANN" tone="sand" fill bodyClassName="divide-y divide-mist-line">
-            <Topic
-              title="Todavía no tengo REPROCANN"
-              action={
-                <>
-                  <a href={REPROCANN_OFFICIAL_SITE} target="_blank" rel="noopener noreferrer" className={outline}>
-                    Ir al sitio oficial <ExternalLink aria-hidden className="size-4" strokeWidth={1.5} />
-                    <span className="sr-only">(se abre en otra pestaña)</span>
-                  </a>
-                  <WhatsApp message={MEMBER_QUESTION_MESSAGE} label="Consultar por WhatsApp" />
-                </>
-              }
-            >
-              <p>El trámite se hace en el sitio oficial del Registro del Programa de Cannabis (REPROCANN), del Ministerio de Salud de la Nación, con tu cuenta de Mi Argentina.</p>
-              <p>Si no sabés por dónde empezar, escribinos y te orientamos.</p>
-            </Topic>
-            <Topic
-              title="Ya tengo mi credencial: quiero cargarla"
-              action={
-                <LinkButton href="/qr/reprocann#cargar" variant="secondary">
-                  <Upload aria-hidden className="size-4" strokeWidth={1.5} /> Cargar mi credencial
-                </LinkButton>
-              }
-            >
-              <p>Subí el PDF o una foto nítida. La asociación la revisa: hasta entonces figura «en revisión».</p>
-            </Topic>
-            <Topic
-              title="¿Dónde encuentro mi código de vinculación?"
-              action={
-                <LinkButton href="/qr/reprocann#vinculacion" variant="secondary">
-                  Cargar mi código
-                </LinkButton>
-              }
-            >
-              <div id="codigo-de-vinculacion" className="grid scroll-mt-6 items-start gap-5 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
-                <LinkCodeVideo className="mx-auto max-w-[12rem]" />
-                <div className="space-y-2">
-                  <p>Con ese código la asociación te vincula en REPROCANN. Lo encontrás así:</p>
-                  <LinkCodeSteps />
-                </div>
-              </div>
-            </Topic>
-          </TabbedCard>
+      <PageBand compact eyebrow="Ayuda" title="Ayuda y contacto" description="Tus trámites, tu membresía y tu cuota." back={{ href: "/qr/mi-espacio", label: "Mi espacio" }} width="wide" />
+      <div className="page-gutter pt-8 pb-12 sm:pt-10">
+        <div className="portal-column">
+          <div className="max-w-[52rem] space-y-8">
+            <section id="codigo-de-vinculacion" aria-labelledby="codigo-de-vinculacion-title" className={cn("scroll-mt-6 !rounded-card border border-mist-line bg-white px-5 pt-6 pb-7 sm:px-8 sm:pt-8 sm:pb-9", TOP_EDGE.magenta)}>
+              <p className="flex items-center gap-2 text-eyebrow text-lila-800">
+                <span aria-hidden className="size-1.5 shrink-0 !rounded-full bg-rosa-400" />
+                Si vas a iniciar el trámite con la asociación
+              </p>
+              <h2 id="codigo-de-vinculacion-title" className="mt-2 text-h2 text-balance text-forest">
+                Primer paso para iniciar tu trámite REPROCANN
+              </h2>
+              <p className="mt-3 measure text-[1.0625rem] leading-relaxed text-text-muted">Encontrá tu código de vinculación y agregalo en tu espacio.</p>
+              <StepCards
+                className="mt-8"
+                aside={
+                  <figure className="mx-auto flex w-full max-w-[16rem] flex-col items-center gap-2 md:mx-0 md:h-full md:w-auto md:max-w-none md:justify-center">
+                    <LinkCodeVideo className="md:!h-[30rem] md:!w-auto" />
+                    <figcaption className="text-center text-sm text-text-muted">Dónde está tu código · 30 segundos</figcaption>
+                  </figure>
+                }
+                columns={2}
+                label="Cómo encontrar y enviar tu código de vinculación"
+                bleed="-mx-5 px-5 scroll-px-5 sm:-mx-8 sm:px-8 sm:scroll-px-8"
+                steps={[
+                  {
+                    title: "Entrá a REPROCANN",
+                    detail: "Con tu cuenta de Mi Argentina, en el sitio oficial del Ministerio de Salud.",
+                    action: (
+                      <AnchorButton href={REPROCANN_OFFICIAL_SITE} target="_blank" rel="noopener noreferrer" size="sm">
+                        Ir al sitio oficial <ExternalLink aria-hidden strokeWidth={1.5} />
+                        <span className="sr-only">(se abre en otra pestaña)</span>
+                      </AnchorButton>
+                    ),
+                  },
+                  { title: "Abrí tu Registro de paciente", detail: "Elegí el perfil «Paciente»." },
+                  { title: "Copiá tu código de vinculación", detail: "Está en «Identificación»." },
+                  {
+                    title: "Agregalo en tu espacio",
+                    detail: "Con ese código la asociación gestiona tu vinculación y te acompaña con el equipo médico.",
+                    action: (
+                      <LinkButton href="/qr/reprocann#vinculacion" size="sm">
+                        Agregar código
+                      </LinkButton>
+                    ),
+                  },
+                ]}
+              />
+            </section>
 
-          <TabbedCard tab="Tu membresía" fill bodyClassName="divide-y divide-mist-line">
-            <Topic
-              title="Pagar la cuota social"
-              action={
-                <Link href={FEE_PAGE} className={textLink}>
-                  Ver cuánto es y cómo pagar <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
-                </Link>
-              }
-            >
-              <p>Elegí si la pagás mes a mes, por trimestre o por semestre, y transferí a la cuenta de la asociación. Todo está en «Administración de cuota».</p>
-            </Topic>
-            <Topic title="Actualizar mis datos" action={<WhatsApp message={UPDATE_DATA_MESSAGE} label="Solicitar actualización por WhatsApp" />}>
-              <p>Si cambió tu domicilio, tu email u otro dato, avisale a la asociación para que lo actualice.</p>
-              {!CONTACT.whatsapp && demo && <DevTag className="dev-only">Vista local · falta el WhatsApp oficial (AD-003)</DevTag>}
-            </Topic>
-            <Topic
-              title="Comprar productos"
-              action={
-                <Link href="/qr/productos" className={textLink}>
-                  Ver los productos <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
-                </Link>
-              }
-            >
-              <p>Todavía no se puede comprar desde tu cuenta: te vamos a avisar cuando esté disponible. Mientras tanto podés ver lo que elabora la asociación, con su análisis.</p>
-            </Topic>
+            <Panel id="credencial" tone="magenta" eyebrow="Si ya tenés tu credencial" title="Cargala para que la revisemos">
+              <StepGuide
+                tone="magenta"
+                label="Cómo cargar tu credencial"
+                steps={[
+                  {
+                    title: "Cargá tu credencial",
+                    detail: "El PDF o una foto nítida, desde tu espacio.",
+                    action: (
+                      <LinkButton href="/qr/reprocann#cargar" size="sm">
+                        <Upload aria-hidden strokeWidth={1.5} /> Cargar credencial
+                      </LinkButton>
+                    ),
+                  },
+                  { title: "La asociación la revisa", detail: "Hasta entonces figura «En revisión»." },
+                ]}
+              />
+            </Panel>
+
+            <Panel id="membresia" tone="green" title="Tu membresía y tu cuota">
+              <ul className="divide-y divide-mist-line">
+                <Answer
+                  title="Pagar la cuota social"
+                  action={
+                    <Link href={FEE_PAGE} className={textLink}>
+                      Ver cómo pagar <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
+                    </Link>
+                  }
+                >
+                  Elegí si la pagás por mes, trimestre o semestre, y transferí a la asociación.
+                </Answer>
+                <Answer
+                  title="Comprar productos"
+                  action={
+                    <Link href="/qr/productos" className={textLink}>
+                      Ver los productos <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
+                    </Link>
+                  }
+                >
+                  Todavía no se puede desde tu cuenta: te vamos a avisar.
+                </Answer>
+                <Answer
+                  title="Actualizar tus datos"
+                  action={
+                    updateData ? (
+                      <AnchorButton href={updateData} target="_blank" rel="noopener noreferrer" size="sm" aria-label="Solicitar actualización de datos por WhatsApp" title="Solicitar actualización de datos por WhatsApp">
+                        <WhatsAppIcon /> Actualizar datos
+                      </AnchorButton>
+                    ) : (
+                      demo && <DevTag className="dev-only">Falta el WhatsApp oficial (AD-003)</DevTag>
+                    )
+                  }
+                >
+                  Si cambió tu domicilio, tu email u otro dato.
+                </Answer>
+              </ul>
+            </Panel>
+
             {CONTACT.whatsapp && (
-              <Topic title="Escribirle a la asociación" action={<WhatsApp message={MEMBER_QUESTION_MESSAGE} label="Escribir por WhatsApp" />}>
-                <p>
-                  Por cualquier otra consulta, escribinos al <span className="whitespace-nowrap text-forest">{CONTACT.whatsapp}</span>.
-                </p>
-              </Topic>
+              <section aria-label="Contacto" className="overflow-hidden !rounded-card border border-mist-line">
+                <HelpStrip
+                  icon={<MessageCircle strokeWidth={1.5} />}
+                  title="¿Otra consulta?"
+                  className="sm:px-6"
+                  action={
+                    question && (
+                      <AnchorButton href={question} target="_blank" rel="noopener noreferrer" size="sm">
+                        <WhatsAppIcon /> Escribir por WhatsApp
+                      </AnchorButton>
+                    )
+                  }
+                >
+                  Escribile a la asociación al <span className="whitespace-nowrap text-foreground">{CONTACT.whatsapp}</span>.
+                </HelpStrip>
+              </section>
             )}
-          </TabbedCard>
+          </div>
         </div>
       </div>
     </main>

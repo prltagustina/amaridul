@@ -5,10 +5,10 @@
 // verifies it, never enables anything and is not a condition to be a member. Nothing is deleted
 // automatically: how long documents are kept is not defined yet.
 import { createHash, randomUUID } from "node:crypto";
-import { and, asc, count, desc, eq, gte, inArray, isNull } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import * as z from "zod";
 import type { Database } from "@/server/db/client";
-import { admissions, existingMemberRequests, members, personIdentities, persons, reprocannCases, reprocannDocumentFiles, reprocannDocuments } from "@/server/db/schema";
+import { admissions, auditLogs, existingMemberRequests, members, personIdentities, persons, reprocannCases, reprocannDocumentFiles, reprocannDocuments } from "@/server/db/schema";
 import { audit } from "@/server/audit/log";
 import { dniLookupCandidates, InvalidDniError, maskDni, normalizeDni } from "@/server/crypto/dni";
 import type { Keyrings } from "@/server/identity/person-identity";
@@ -127,7 +127,7 @@ export async function registerMemberUpload(db: Database, storage: ObjectStorage,
       const [current] = await t
         .select({ expiresOn: reprocannDocuments.expiresOn })
         .from(reprocannDocuments)
-        .where(and(eq(reprocannDocuments.caseId, caseId), inArray(reprocannDocuments.kind, ["credencial", "certificado"]), isNull(reprocannDocuments.replacedBy)))
+        .where(and(eq(reprocannDocuments.caseId, caseId), inArray(reprocannDocuments.kind, ["credencial", "certificado"]), isNull(reprocannDocuments.replacedBy), isNull(reprocannDocuments.withdrawnAt)))
         .orderBy(desc(reprocannDocuments.createdAt))
         .limit(1);
       const expiresOn = input.expiresOn ?? (current?.expiresOn && current.expiresOn >= todayInArgentina(now) ? current.expiresOn : null);
@@ -140,6 +140,7 @@ export async function registerMemberUpload(db: Database, storage: ObjectStorage,
             eq(reprocannDocuments.kind, "credencial"),
             eq(reprocannDocuments.createdBy, who.userId),
             isNull(reprocannDocuments.replacedBy),
+            isNull(reprocannDocuments.withdrawnAt),
             inArray(reprocannDocuments.reviewStatus, ["pendiente", "observada"]),
           ),
         )
@@ -160,7 +161,7 @@ export async function registerMemberUpload(db: Database, storage: ObjectStorage,
         ? await t
             .update(reprocannDocuments)
             .set({ replacedBy: id, updatedAt: now })
-            .where(and(inArray(reprocannDocuments.id, previous.map((p) => p.id)), isNull(reprocannDocuments.replacedBy), inArray(reprocannDocuments.reviewStatus, ["pendiente", "observada"])))
+            .where(and(inArray(reprocannDocuments.id, previous.map((p) => p.id)), isNull(reprocannDocuments.replacedBy), isNull(reprocannDocuments.withdrawnAt), inArray(reprocannDocuments.reviewStatus, ["pendiente", "observada"])))
             .returning({ id: reprocannDocuments.id })
         : [];
       // What was sent and how big; never the file name, which may carry personal data.
@@ -307,12 +308,12 @@ export async function addAdminDocument(db: Database, storage: ObjectStorage, rin
       } else {
         // Only a document of this member, still without files, not replaced and not verified.
         const [d] = await t
-          .select({ id: reprocannDocuments.id, caseId: reprocannDocuments.caseId, reviewStatus: reprocannDocuments.reviewStatus, replacedBy: reprocannDocuments.replacedBy })
+          .select({ id: reprocannDocuments.id, caseId: reprocannDocuments.caseId, reviewStatus: reprocannDocuments.reviewStatus, replacedBy: reprocannDocuments.replacedBy, withdrawnAt: reprocannDocuments.withdrawnAt })
           .from(reprocannDocuments)
           .where(eq(reprocannDocuments.id, input.target))
           .for("update");
         const [hasFiles] = await t.select({ n: count() }).from(reprocannDocumentFiles).where(eq(reprocannDocumentFiles.documentId, input.target));
-        if (!d || d.caseId !== caseId || d.replacedBy || d.reviewStatus === "verificada" || hasFiles.n > 0) throw new AttachError();
+        if (!d || d.caseId !== caseId || d.replacedBy || d.withdrawnAt || d.reviewStatus === "verificada" || hasFiles.n > 0) throw new AttachError();
         id = d.id;
         await t.update(reprocannDocuments).set({ updatedAt: now }).where(eq(reprocannDocuments.id, id));
       }
@@ -453,7 +454,7 @@ export async function previewImport(db: Database, rings: Keyrings, rows: ImportR
       .from(reprocannDocuments)
       .innerJoin(reprocannCases, eq(reprocannCases.id, reprocannDocuments.caseId))
       .leftJoin(reprocannDocumentFiles, eq(reprocannDocumentFiles.documentId, reprocannDocuments.id))
-      .where(and(eq(reprocannCases.memberId, m.id), eq(reprocannDocuments.kind, "credencial"), isNull(reprocannDocuments.replacedBy)))
+      .where(and(eq(reprocannCases.memberId, m.id), eq(reprocannDocuments.kind, "credencial"), isNull(reprocannDocuments.replacedBy), isNull(reprocannDocuments.withdrawnAt)))
       .groupBy(reprocannDocuments.id)
       .orderBy(desc(reprocannDocuments.createdAt));
     if (credentials.some((c) => c.files > 0)) {
@@ -501,12 +502,17 @@ async function whyNoMember(db: Database, lookups: string[]): Promise<string> {
 
 export type FileViewer = { role: "admin"; userId: string; memberId: string } | { role: "member"; userId: string; memberId: string };
 export type DocumentFile = { bytes: Uint8Array; contentType: FileType; filename: string };
+/** A thumbnail is logged as a preview, at most once a day per person and document; an opening, every time. */
+export const PREVIEW_ACTION = "reprocann.document_previewed";
+const PREVIEW_LOG_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 /**
  * One file (page) of a document, for an admin looking at that member or for the member it belongs
- * to. Null in every other case, without saying whether it exists. Each opening is logged.
+ * to (a withdrawn duplicate, only for admins). Null in every other case, without saying whether
+ * it exists. Each opening is logged; a thumbnail (`preview`), once a day per person and document,
+ * so the record still says who saw each document without one entry per page load.
  */
-export async function openDocumentFile(db: Database, storage: ObjectStorage, fileId: string, viewer: FileViewer): Promise<DocumentFile | null> {
+export async function openDocumentFile(db: Database, storage: ObjectStorage, fileId: string, viewer: FileViewer, opts: { preview?: boolean; now?: Date } = {}): Promise<DocumentFile | null> {
   if (!UUID.test(fileId) || !UUID.test(viewer.memberId)) return null;
   const [f] = await db
     .select({
@@ -518,6 +524,7 @@ export async function openDocumentFile(db: Database, storage: ObjectStorage, fil
       documentId: reprocannDocuments.id,
       kind: reprocannDocuments.kind,
       caseId: reprocannDocuments.caseId,
+      withdrawnAt: reprocannDocuments.withdrawnAt,
       memberId: reprocannCases.memberId,
     })
     .from(reprocannDocumentFiles)
@@ -525,10 +532,31 @@ export async function openDocumentFile(db: Database, storage: ObjectStorage, fil
     .innerJoin(reprocannCases, eq(reprocannCases.id, reprocannDocuments.caseId))
     .where(eq(reprocannDocumentFiles.id, fileId));
   if (!f || f.memberId !== viewer.memberId) return null;
+  // A withdrawn duplicate left the member's documentation; the association keeps it for the record.
+  if (f.withdrawnAt && viewer.role === "member") return null;
   const bytes = await storage.get(f.fileKey);
   // What is served is exactly what was checked when it arrived.
   if (!bytes || sha256Hex(bytes) !== f.sha256 || detectFileType(bytes) !== f.contentType) return null;
-  await audit(db, { actorUserId: viewer.userId, action: "reprocann.document_viewed", entityType: "reprocann_case", entityId: f.caseId, metadata: { document: f.documentId, page: f.page, by: viewer.role } });
+  if (opts.preview) {
+    const now = opts.now ?? new Date();
+    const [seen] = await db
+      .select({ id: auditLogs.id })
+      .from(auditLogs)
+      .where(
+        and(
+          eq(auditLogs.entityType, "reprocann_case"),
+          eq(auditLogs.entityId, f.caseId),
+          eq(auditLogs.action, PREVIEW_ACTION),
+          eq(auditLogs.actorUserId, viewer.userId),
+          sql`${auditLogs.metadata}->>'document' = ${f.documentId}`,
+          gte(auditLogs.at, new Date(now.getTime() - PREVIEW_LOG_WINDOW_MS)),
+        ),
+      )
+      .limit(1);
+    if (!seen) await audit(db, { actorUserId: viewer.userId, action: PREVIEW_ACTION, entityType: "reprocann_case", entityId: f.caseId, metadata: { document: f.documentId, by: viewer.role } });
+  } else {
+    await audit(db, { actorUserId: viewer.userId, action: "reprocann.document_viewed", entityType: "reprocann_case", entityId: f.caseId, metadata: { document: f.documentId, page: f.page, by: viewer.role } });
+  }
   const type = f.contentType as FileType;
   return { bytes, contentType: type, filename: `reprocann-${f.kind.replace(/_/g, "-")}-hoja-${f.page}.${FILE_EXTENSION[type]}` };
 }
@@ -600,7 +628,7 @@ export async function documentsToReview(db: Database) {
     .innerJoin(reprocannCases, eq(reprocannCases.id, reprocannDocuments.caseId))
     .innerJoin(members, eq(members.id, reprocannCases.memberId))
     .innerJoin(persons, eq(persons.id, members.personId))
-    .where(and(eq(reprocannDocuments.reviewStatus, "pendiente"), isNull(reprocannDocuments.replacedBy)))
+    .where(and(eq(reprocannDocuments.reviewStatus, "pendiente"), isNull(reprocannDocuments.replacedBy), isNull(reprocannDocuments.withdrawnAt)))
     .orderBy(asc(reprocannDocuments.createdAt));
   return rows.map(({ fullName, firstNames, lastNames, ...r }) => ({ ...r, name: lastNames && firstNames ? `${lastNames}, ${firstNames}` : fullName }));
 }

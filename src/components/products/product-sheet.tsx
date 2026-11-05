@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Droplet, FileBadge, FlaskConical, Info, Sprout } from "lucide-react";
 import { PhotoPlaceholder } from "@/components/brand/placeholders";
 import { FolderSwitcher } from "@/components/ui/folder-tabs";
-import { Chip, KeyFact, RatioBar, TechBand, VarietyBadge } from "@/components/ui/technical";
+import { Chip, KeyFact, RatioBar, VarietyBadge } from "@/components/ui/technical";
 import { labNote } from "@/demo/content";
 import type { CatalogItem } from "@/server/products";
 
@@ -19,8 +19,9 @@ function ratioLabel(thc: number, cbd: number) {
 }
 
 /**
- * A product's sheet for members, drawn like the old lot sheet: origin, composition and analysis.
- * Only what the association loaded is shown; a missing part says it is not published yet.
+ * A product's sheet for members: origin, composition and analysis, as tabs of one sheet (the
+ * page's title already names the product). Only what the association loaded is shown; a missing
+ * part says it is not published yet.
  */
 export function ProductSheet({ product, photoSrc }: { product: CatalogItem; photoSrc: string | null }) {
   const s = product.sheet;
@@ -42,18 +43,8 @@ export function ProductSheet({ product, photoSrc }: { product: CatalogItem; phot
   const perDrop = s.unit === "mg_ml" && s.dropsPerMl && total ? total / s.dropsPerMl : null;
 
   return (
-    <article aria-labelledby="ficha-producto" className="@container overflow-hidden !rounded-card border border-mist-line bg-white shadow-[0_18px_40px_-28px_rgba(26,26,24,0.35)]">
-      <TechBand tone="green" className="relative overflow-hidden px-5 pt-4 pb-5 @md:px-6">
-        <span aria-hidden className="pointer-events-none absolute -top-16 -right-12 size-44 !rounded-full bg-hoja-500/25 blur-3xl" />
-        <p className="relative text-[11px] font-medium tracking-[0.18em] text-white/75 uppercase">Ficha del producto · {product.type}</p>
-        <h2 id="ficha-producto" className="relative mt-1 font-display text-2xl leading-tight [overflow-wrap:anywhere]">
-          {product.name}
-        </h2>
-      </TechBand>
-
-      <div className="bg-mist/60 px-3 pt-4 pb-4 @md:px-5 @md:pb-5">
-        <FolderSwitcher
-          flat
+    <div className="@container min-w-0">
+      <FolderSwitcher
           label={`Ficha de ${product.name}`}
           tabs={[
             {
@@ -68,7 +59,7 @@ export function ProductSheet({ product, photoSrc }: { product: CatalogItem; phot
                       <Image src={photoSrc} alt={`Foto de ${product.name}`} width={product.photo.width} height={product.photo.height} unoptimized priority className="h-auto max-h-[26rem] w-auto max-w-full" />
                     </div>
                   ) : (
-                    <PhotoPlaceholder label="Foto pendiente" className="aspect-[4/3] !rounded-[14px]" />
+                    <PhotoPlaceholder label="Foto pendiente" className="aspect-[4/3] max-h-[22rem] w-full !rounded-[14px]" />
                   )}
                   {facts.length > 0 && (
                     <dl className="grid grid-cols-2 gap-x-5 gap-y-4 @md:grid-cols-3">
@@ -190,7 +181,6 @@ export function ProductSheet({ product, photoSrc }: { product: CatalogItem; phot
             },
           ]}
         />
-      </div>
-    </article>
+    </div>
   );
 }

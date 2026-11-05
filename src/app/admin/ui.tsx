@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowLeft, LogOut } from "lucide-react";
+import { ChevronLeft, LogOut } from "lucide-react";
 import { logout } from "./actions";
 import { AdminNav } from "./admin-nav";
 
@@ -27,7 +27,7 @@ export function AdminShell({ email, children }: { email: string; children: React
       <EnvironmentNotice />
       <div className="flex flex-1 flex-col lg:flex-row">
         <AdminNav email={email} signOut={signOut} />
-        <main id="contenido" className="min-w-0 flex-1 page-gutter pt-8 pb-24 lg:px-10 lg:pt-10">
+        <main id="contenido" className="min-w-0 flex-1 page-gutter pt-7 pb-20 lg:px-10 lg:pt-9">
           <div className="admin-column">{children}</div>
         </main>
       </div>
@@ -35,21 +35,26 @@ export function AdminShell({ email, children }: { email: string; children: React
   );
 }
 
+/**
+ * The admin's page header: the way back (always top left, with the same chevron as the portal),
+ * where you are, the title, one short line and the page's actions at the right. Denser than the
+ * portal's: a smaller title and a shorter description, so lists start high on the screen.
+ */
 export function AdminPageHeader({ title, eyebrow, description, actions, back }: { title: ReactNode; eyebrow?: ReactNode; description?: ReactNode; actions?: ReactNode; back?: { href: string; label: string } }) {
   return (
-    <header className="mb-8 space-y-4">
+    <header className="mb-7 space-y-3 border-b border-mist-line pb-6">
       {back && (
-        <Link href={back.href} className="inline-flex min-h-10 items-center gap-1.5 text-small !text-text-muted hover:!text-forest">
-          <ArrowLeft aria-hidden className="size-4" strokeWidth={1.5} /> {back.label}
+        <Link href={back.href} className="-ml-1 inline-flex min-h-9 items-center gap-1 pr-1 text-sm font-medium !text-forest underline-offset-4 hover:underline">
+          <ChevronLeft aria-hidden className="size-4" strokeWidth={2} /> {back.label}
         </Link>
       )}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-1.5">
-          {eyebrow && <p className="text-eyebrow text-accent">{eyebrow}</p>}
-          <h1 className="text-h1 text-forest">{title}</h1>
-          {description && <p className="max-w-2xl text-body text-text-muted">{description}</p>}
+        <div className="min-w-0 space-y-1.5">
+          {eyebrow && <p className="text-eyebrow text-text-muted">{eyebrow}</p>}
+          <h1 className="text-h2 text-balance text-forest">{title}</h1>
+          {description && <p className="measure text-small text-text-muted">{description}</p>}
         </div>
-        {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+        {actions && <div className="flex flex-wrap gap-2 sm:justify-end">{actions}</div>}
       </div>
     </header>
   );

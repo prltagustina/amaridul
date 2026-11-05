@@ -134,6 +134,13 @@
       "when": 1793753605701,
       "tag": "0018_codigo_vinculacion",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793813982398,
+      "tag": "0019_retiro_duplicados",
+      "breakpoints": true
     }
   ]
 }

@@ -1,11 +1,11 @@
 // What a member sees about themselves in the portal. Membership, REPROCANN documentation and the
-// fee are separate pieces of information; none of them is shown as an enablement for dispensing,
-// whose condition the association has not defined yet.
+// fee are separate pieces of information; none of them alone is an enablement for dispensing,
+// which `src/lib/dispensing.ts` derives from three conditions.
 import { asc, desc, eq, inArray } from "drizzle-orm";
 import type { Database } from "@/server/db/client";
 import { reprocannCases, reprocannDocumentFiles, reprocannDocuments, user } from "@/server/db/schema";
 import type { Keyring } from "@/server/crypto/keyring";
-import { decryptMemberMessage, labelIn, MANAGEMENT_SOURCE, PERMIT_STATUS, REVIEW_STATUS } from "@/server/reprocann";
+import { decryptMemberMessage, isActiveDocument, labelIn, MANAGEMENT_SOURCE, PERMIT_STATUS, REVIEW_STATUS } from "@/server/reprocann";
 import { documentKindLabel } from "@/server/reprocann-files";
 import { credentialStatus, currentCredential, todayInArgentina, type CredentialStatus } from "@/lib/credential-validity";
 
@@ -21,9 +21,11 @@ export type PortalDocument = {
   sentOn: string;
   /** Sent by the member from their account; otherwise the association loaded or recorded it. */
   fromMember: boolean;
-  /** One per page, in order. */
-  files: { id: string; page: number }[];
+  /** One per page, in order. Empty for a withdrawn duplicate: it is no longer part of their documentation. */
+  files: { id: string; page: number; pdf: boolean }[];
   replaced: boolean;
+  /** Withdrawn by the association because it was repeated. */
+  withdrawn: boolean;
   /** Why it was observed, written for the member. Only while it is observed. */
   memberMessage: string | null;
 };
@@ -59,6 +61,7 @@ export async function memberReprocann(db: Database, field: Keyring, memberId: st
       reviewStatus: reprocannDocuments.reviewStatus,
       createdAt: reprocannDocuments.createdAt,
       replacedBy: reprocannDocuments.replacedBy,
+      withdrawnAt: reprocannDocuments.withdrawnAt,
       message: reprocannDocuments.memberMessageEncrypted,
       uploaderRole: user.role,
     })
@@ -68,7 +71,7 @@ export async function memberReprocann(db: Database, field: Keyring, memberId: st
     .orderBy(desc(reprocannDocuments.createdAt));
   const files = rows.length
     ? await db
-        .select({ id: reprocannDocumentFiles.id, documentId: reprocannDocumentFiles.documentId, page: reprocannDocumentFiles.page })
+        .select({ id: reprocannDocumentFiles.id, documentId: reprocannDocumentFiles.documentId, page: reprocannDocumentFiles.page, contentType: reprocannDocumentFiles.contentType })
         .from(reprocannDocumentFiles)
         .where(inArray(reprocannDocumentFiles.documentId, rows.map((r) => r.id)))
         .orderBy(asc(reprocannDocumentFiles.page))
@@ -83,11 +86,12 @@ export async function memberReprocann(db: Database, field: Keyring, memberId: st
     expiresOn: d.expiresOn,
     sentOn: todayInArgentina(d.createdAt),
     fromMember: d.uploaderRole === "MEMBER",
-    files: files.filter((f) => f.documentId === d.id).map((f) => ({ id: f.id, page: f.page })),
+    files: d.withdrawnAt ? [] : files.filter((f) => f.documentId === d.id).map((f) => ({ id: f.id, page: f.page, pdf: f.contentType === "application/pdf" })),
     replaced: !!d.replacedBy,
+    withdrawn: !!d.withdrawnAt,
     memberMessage: d.reviewStatus === "observada" ? decryptMemberMessage(field, d.id, d.message) : null,
   }));
-  const current = currentCredential(rows.filter((r) => !r.replacedBy));
+  const current = currentCredential(rows.filter(isActiveDocument));
   const shown = current ? documents.find((d) => d.id === current.id)! : null;
   const status = credentialStatus(current, today);
   return {

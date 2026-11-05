@@ -1,17 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, LifeBuoy, MessageCircle, Upload } from "lucide-react";
+import { ArrowRight, Check, CircleHelp, FileCheck2, IdCard, Link2, Package, Upload, UserRound, Wallet } from "lucide-react";
 import { readState } from "@/lib/demo";
 import { localDemo } from "@/lib/features";
 import { credentialStatus, expiryLine, type CredentialStatus } from "@/lib/credential-validity";
-import { FEE_PAGE, FEE_PAYMENT, FEE_PLANS, monthlyFee, periodLabel, pesos } from "@/lib/fee-payment";
+import { cn } from "@/lib/cn";
+import { dispensingEligibility, LINKAGE_TEXT, linkageState, type ConditionKey, type DispensingEligibility } from "@/lib/dispensing";
+import { FEE_PLANS, monthlyFee, periodLabel, pesos } from "@/lib/fee-payment";
 import { officialWhatsAppLink, UPDATE_DATA_MESSAGE } from "@/lib/whatsapp";
 import { PageBand } from "@/components/brand/page-band";
-import { LinkButton } from "@/components/ui/button";
-import { DetailList } from "@/components/ui/data-list";
+import { ProductPreview } from "@/components/products/product-card";
+import { AnchorButton, LinkButton } from "@/components/ui/button";
 import { DevStateBar } from "@/components/ui/dev-state-bar";
-import { Alert, DevTag, LoadingBlock, StatusBadge } from "@/components/ui/display";
-import { TabbedCard } from "@/components/ui/technical";
+import { Alert, DevTag, LoadingBlock, StatusBadge, type Tone } from "@/components/ui/display";
+import { FolderSwitcher } from "@/components/ui/folder-tabs";
+import { HelpStrip } from "@/components/ui/guidance";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { demoMember } from "@/demo/fixtures";
 import { getDb } from "@/server/db";
 import { getKeyrings } from "@/server/crypto";
@@ -19,7 +23,9 @@ import { currentMember } from "@/server/member-session";
 import { memberFeePlan } from "@/server/fee-plan";
 import { memberReprocann } from "@/server/member-portal";
 import { memberLinkage } from "@/server/reprocann-link";
-import { listCatalog } from "@/server/products";
+import { listCatalog, type CatalogItem } from "@/server/products";
+import { FeeOverview } from "../cuota/payment-details";
+import { PlanChooser } from "../cuota/plan-chooser";
 
 export const metadata: Metadata = { title: "Mi espacio | Amarí Dul" };
 
@@ -27,34 +33,74 @@ const STATES = ["default", "loading", "error"] as const;
 const day = (iso: string | null) => (iso ? iso.split("-").reverse().join("/") : "—");
 const NOT_ACTIVE = { suspendido: "suspendida", baja: "dada de baja" } as const;
 
-/** Bottom strip of a dashboard card: always aligned across the row. */
-function CardFoot({ children }: { children: React.ReactNode }) {
-  return <div className="mt-auto border-t border-mist-line pt-4">{children}</div>;
+/** A tab's title, with its state or action at the right. */
+function PanelTitle({ children, aside }: { children: React.ReactNode; aside?: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+      <h2 className="text-h3 text-forest">{children}</h2>
+      {aside}
+    </div>
+  );
 }
 
-/** What the member should do about their credential, in one sentence and one action. */
-function credentialTask(status: CredentialStatus, managedByAssociation: boolean, reason: string | null) {
+/** The actions of a tab, under its content. */
+function PanelActions({ children }: { children: React.ReactNode }) {
+  return <div className="flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-mist-line pt-5">{children}</div>;
+}
+
+/**
+ * One of the three conditions as a card. Pending, in Dambar's lavender grey (trámites are its
+ * world): the icon on a pink chip and the name in its indigo, then what comes next and its action.
+ * Met, it reads as done: the green of success, a tick in place of the icon and the name in green,
+ * so what is missing stands out on its own. The state closes every card at its foot, aligned across
+ * the three, always in words too (never colour alone).
+ */
+function ConditionCard({ c, icon, tone, children }: { c: DispensingEligibility["conditions"][number]; icon: React.ReactNode; tone: Tone; children?: React.ReactNode }) {
+  return (
+    <li className={cn("flex min-w-0 gap-3.5 !rounded-card p-4 sm:p-5 md:flex-col md:gap-3", c.met ? "bg-hoja-100" : "bg-lila-100")}>
+      <span aria-hidden className={cn("flex size-10 shrink-0 items-center justify-center !rounded-full [&_svg]:size-5", c.met ? "bg-hoja-600 text-white" : "bg-rosa-100 text-lila-800")}>
+        {c.met ? <Check strokeWidth={2.5} /> : icon}
+      </span>
+      {/* Beside the icon on a phone, under it in the row of three; the action stays at the foot. */}
+      <div className="flex min-w-0 flex-1 flex-col gap-3">
+        <h3 className={cn("font-title text-[1.0625rem] leading-snug", c.met ? "text-forest" : "text-lila-800")}>{c.label}</h3>
+        {children}
+        <div className="mt-auto pt-1">
+          {/* On a tinted card a badge of the same tint would vanish: white under it then. */}
+          <StatusBadge tone={tone} compact className={c.met || tone === "info" || tone === "neutral" ? "!bg-white/80" : undefined}>
+            {c.state}
+          </StatusBadge>
+        </div>
+      </div>
+    </li>
+  );
+}
+
+/** What comes next with the credential, in a line (its state is beside it), and the action when it is the member's. */
+function credentialTask(status: CredentialStatus, managedByAssociation: boolean, reason: string | null): { detail: string; action: string | null } {
   switch (status.key) {
     case "none":
-      return managedByAssociation
-        ? { headline: "La asociación gestiona tu REPROCANN", detail: "Si ya tenés tu credencial, podés cargarla. Es opcional.", action: "Cargar mi credencial", upload: true }
-        : { headline: "Si ya tenés tu credencial REPROCANN, cargala", detail: "Todavía no hay una credencial tuya en el sistema.", action: "Cargar mi credencial", upload: true };
+      return { detail: managedByAssociation ? "Cuando salga, la carga la asociación o la cargás vos." : "Cargala para que la asociación la revise.", action: "Cargar credencial" };
     case "pending":
-      return { headline: "Tu credencial está en revisión", detail: expiryLine(status.expiry), action: "Ver mi credencial", upload: false };
+      return { detail: "La asociación la está revisando.", action: null };
     case "observed":
-      return { headline: "Hay que corregir tu credencial", detail: reason ?? "La asociación la observó.", action: "Corregir y reemplazar", upload: true };
+      return { detail: reason ?? "La asociación la observó: hay que corregirla.", action: "Corregir credencial" };
     case "expired":
-      return { headline: "Tu credencial venció", detail: expiryLine(status.expiry), action: "Cargar la credencial nueva", upload: true };
+      return { detail: expiryLine(status.expiry), action: "Cargar la nueva" };
     case "expiring":
-      return { headline: "Tu credencial vence pronto", detail: expiryLine(status.expiry), action: "Cargar la renovación", upload: true };
+      return { detail: expiryLine(status.expiry), action: "Cargar la renovación" };
     case "verified":
-      return { headline: "Todo en orden por ahora", detail: expiryLine(status.expiry), action: "Ver mi credencial", upload: false };
+      return { detail: expiryLine(status.expiry), action: null };
   }
 }
 
 // Only for reviewing the screens locally without a session: a fictitious member.
-type CredentialSummary = { status: CredentialStatus; managedByAssociation: boolean; reason: string | null; documents: number; products: number; plan: string | null; linkage: { verified: boolean; sent: boolean } };
-const DEMO: CredentialSummary = { status: credentialStatus({ reviewStatus: "pendiente", expiresOn: "2027-03-01" }), managedByAssociation: false, reason: null, documents: 1, products: 2, plan: null, linkage: { verified: false, sent: false } };
+type CredentialSummary = { status: CredentialStatus; managedByAssociation: boolean; reason: string | null; documents: number; plan: string | null; linkage: { verified: boolean; sent: boolean } };
+const DEMO: CredentialSummary = { status: credentialStatus({ reviewStatus: "pendiente", expiresOn: "2027-03-01" }), managedByAssociation: false, reason: null, documents: 1, plan: null, linkage: { verified: false, sent: false } };
+
+// The preview of the catalog: up to three, in as many columns as there are.
+const PREVIEW = 3;
+const PREVIEW_COLUMNS = ["", "sm:grid-cols-[minmax(0,14rem)]", "sm:grid-cols-[repeat(2,minmax(0,14rem))]", "sm:grid-cols-3"] as const;
 
 export default async function MiEspacioPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const state = await readState(searchParams, STATES);
@@ -64,10 +110,10 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
   if (m !== "demo" && m.status !== "activo") {
     return (
       <main>
-        <PageBand compact eyebrow="Mi espacio" title={`Hola, ${m.firstName}`} description="Tu membresía no está activa." tab="Resumen" width="wide" />
-        <div className="page-gutter pt-6 pb-8">
-          <div className="admin-column max-w-2xl">
-            <Alert tone="warning" title={`Tu membresía figura como ${NOT_ACTIVE[m.status]}`}>
+        <PageBand compact eyebrow="Mi espacio" title={`Hola, ${m.firstName}`} description="Tu membresía no está activa." width="wide" />
+        <div className="page-gutter pt-8 pb-12">
+          <div className="portal-column">
+            <Alert tone="warning" title={`Tu membresía figura como ${NOT_ACTIVE[m.status]}`} className="max-w-2xl">
               Mientras tanto no podés usar tu espacio de socio. Para saber más o regularizarla, comunicate con la asociación.
             </Alert>
           </div>
@@ -81,171 +127,199 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
       ? { firstName: demoMember.name.split(" ")[0], number: demoMember.number, category: demoMember.category, since: demoMember.since }
       : { firstName: m.firstName, number: m.memberNumber ?? "A confirmar", category: m.categoryLabel ?? "A confirmar", since: m.since ? day(m.since) : "—" };
   let credential = DEMO;
+  const db = await getDb();
+  // The catalog is the same for everyone (and the local demo shows the real one).
+  const catalog: CatalogItem[] = await listCatalog(db);
   if (m !== "demo") {
-    const db = await getDb();
     const reprocann = await memberReprocann(db, getKeyrings().field, m.id);
     credential = {
       status: reprocann?.status ?? credentialStatus(null),
       managedByAssociation: !!reprocann?.managedByAssociation,
       reason: reprocann?.credential?.memberMessage ?? null,
-      documents: reprocann?.documents.filter((d) => !d.replaced).length ?? 0,
-      products: (await listCatalog(db)).length,
+      documents: reprocann?.documents.filter((d) => !d.replaced && !d.withdrawn).length ?? 0,
       plan: (await memberFeePlan(db, m.id)).plan,
       linkage: await memberLinkage(db, getKeyrings().field, m.id).then((l) => ({ verified: l.verified, sent: !!l.masked })),
     };
   }
   const task = credentialTask(credential.status, credential.managedByAssociation, credential.reason);
+  const linkage = linkageState({ verified: credential.linkage.verified, codeReceived: credential.linkage.sent });
+  const eligibility = dispensingEligibility({ membership: "activo", credential: credential.status, linkage: { verified: credential.linkage.verified, codeReceived: credential.linkage.sent } }, "member");
+  const condition = (key: ConditionKey) => eligibility.conditions.find((c) => c.key === key)!;
+  const missing = eligibility.pending.length;
   const whatsapp = officialWhatsAppLink(UPDATE_DATA_MESSAGE);
   const demo = localDemo();
+  const plan = FEE_PLANS.find((x) => x.id === credential.plan);
+  const planOptions = FEE_PLANS.map((p) => ({ id: p.id, label: p.label, amount: pesos(p.amount), period: periodLabel(p.months) }));
+  const preview = catalog.slice(0, PREVIEW);
+
+  const membershipPanel = (
+    <div className="space-y-7">
+      <PanelTitle aside={<StatusBadge tone="success">Activa</StatusBadge>}>Tu membresía</PanelTitle>
+      {/* The key data in Cormorant, as the fee's figure: the tabs speak the same language. */}
+      <dl className="grid gap-x-8 gap-y-5 sm:grid-cols-3">
+        {[
+          ["Número de socio", view.number],
+          ["Categoría", view.category],
+          ["Socio desde", view.since],
+        ].map(([k, v]) => (
+          <div key={k} className="min-w-0 space-y-1">
+            <dt className="text-sm text-text-muted">{k}</dt>
+            <dd className="font-display text-[1.75rem] leading-tight text-forest lining-nums [overflow-wrap:anywhere]">{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <PanelActions>
+        {whatsapp ? (
+          <AnchorButton href={whatsapp} target="_blank" rel="noopener noreferrer" variant="primary" size="sm" aria-label="Solicitar actualización de datos por WhatsApp" title="Solicitar actualización de datos por WhatsApp">
+            <WhatsAppIcon /> Actualizar datos
+          </AnchorButton>
+        ) : (
+          demo && (
+            // Local preview only: how the action looks, without a number to write to.
+            <span className="dev-only inline-flex items-center gap-2">
+              <span aria-disabled className="inline-flex min-h-10 cursor-not-allowed items-center gap-2 !rounded-full border border-forest/30 px-4 text-sm text-forest/60">
+                <WhatsAppIcon className="size-4" /> Actualizar datos
+              </span>
+              <DevTag>Falta el número oficial (AD-003)</DevTag>
+            </span>
+          )
+        )}
+        <p className="text-sm text-text-muted">Si cambió tu domicilio, tu email u otro dato.</p>
+      </PanelActions>
+    </div>
+  );
+
+  const feePanel = (
+    <div className="space-y-7">
+      <PanelTitle aside={plan ? undefined : <StatusBadge tone="warning">Sin elegir</StatusBadge>}>Tu cuota social</PanelTitle>
+      <FeeOverview planId={credential.plan} />
+      <PanelActions>
+        <PlanChooser options={planOptions} current={credential.plan} canSave={m !== "demo"} monthly={pesos(monthlyFee)} label={plan ? "Cambiar forma de pago" : "Elegir forma de pago"} />
+        {!plan && <p className="text-sm text-text-muted">Mes a mes, por trimestre o por semestre.</p>}
+      </PanelActions>
+    </div>
+  );
+
+  const met = eligibility.conditions.filter((c) => c.met).length;
+  const proceduresPanel = (
+    <div className="space-y-7">
+      {/* Where the member stands, as a figure like the other tabs' key data; then each condition. */}
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0">
+          <h2 className="text-h3 text-forest">Habilitación a dispensa</h2>
+          <p className="mt-2 flex flex-wrap items-baseline gap-x-2.5">
+            <span className="font-display text-[2.5rem] leading-none text-forest lining-nums tabular-nums">{met} de 3</span>
+            <span className="text-sm text-text-muted">condiciones cumplidas</span>
+          </p>
+        </div>
+        {eligibility.eligible ? <StatusBadge tone="success">Completa</StatusBadge> : <StatusBadge tone="warning">{missing === 1 ? "Falta 1" : `Faltan ${missing}`}</StatusBadge>}
+      </div>
+      {/* In the order the procedure goes for whoever starts it with the association: the link code first. */}
+      <ol aria-label="Las tres condiciones" className="grid gap-3 md:grid-cols-3">
+        <ConditionCard c={condition("membership")} icon={<UserRound strokeWidth={1.75} />} tone="success" />
+        <ConditionCard c={condition("linkage")} icon={<Link2 strokeWidth={1.75} />} tone={LINKAGE_TEXT[linkage].member.tone}>
+          {linkage !== "verified" && <p className="text-sm leading-relaxed text-text-muted">{LINKAGE_TEXT[linkage].member.help}</p>}
+          {linkage === "missing" && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <LinkButton href="/qr/reprocann#vinculacion" size="sm">
+                Agregar código
+              </LinkButton>
+              <Link href="/qr/ayuda#codigo-de-vinculacion" className="inline-flex min-h-10 items-center text-sm font-medium !text-lila-800 !underline underline-offset-4">
+                ¿Dónde lo encuentro?
+              </Link>
+            </div>
+          )}
+          {linkage === "received" && (
+            <Link href="/qr/reprocann#vinculacion" className="inline-flex min-h-10 items-center self-start text-sm font-medium !text-lila-800 !underline underline-offset-4">
+              Ver o corregir el código
+            </Link>
+          )}
+        </ConditionCard>
+        <ConditionCard c={condition("credential")} icon={<IdCard strokeWidth={1.75} />} tone={credential.status.tone}>
+          <p className="text-sm leading-relaxed text-text-muted">{task.detail}</p>
+          {task.action && (
+            <div>
+              <LinkButton href="/qr/reprocann#cargar" size="sm">
+                <Upload aria-hidden strokeWidth={1.5} /> {task.action}
+              </LinkButton>
+            </div>
+          )}
+        </ConditionCard>
+      </ol>
+      <PanelActions>
+        <LinkButton href="/qr/reprocann" variant="secondary" size="sm">
+          Ver mi REPROCANN
+        </LinkButton>
+        <p className="text-sm text-text-muted">{credential.documents ? `${credential.documents} ${credential.documents === 1 ? "documento" : "documentos"} en tu legajo` : "Todavía no hay documentos tuyos"}</p>
+      </PanelActions>
+    </div>
+  );
+
+  const productsPanel = (
+    <div className="space-y-7">
+      <PanelTitle>Productos de la asociación</PanelTitle>
+      {preview.length ? (
+        <ul className={cn("grid gap-4 sm:gap-5", PREVIEW_COLUMNS[preview.length])}>
+          {preview.map((p) => (
+            <li key={p.id} className="min-w-0">
+              <ProductPreview product={p} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-[1.0625rem] text-text-muted">Todavía no hay productos publicados.</p>
+      )}
+      <PanelActions>
+        {preview.length > 0 && (
+          <LinkButton href="/qr/productos" variant="secondary" size="sm">
+            Ver las fichas
+          </LinkButton>
+        )}
+        <p className="text-sm text-text-muted">Comprar desde tu cuenta va a estar disponible más adelante.</p>
+      </PanelActions>
+    </div>
+  );
+
+  // Help closes the sheet under every tab: always in reach, in the violet of orientation.
+  const help = (
+    <HelpStrip
+      icon={<CircleHelp strokeWidth={1.5} />}
+      title="¿Necesitás ayuda?"
+      className="sm:px-7"
+      action={
+        <LinkButton href="/qr/ayuda" variant="secondary" size="sm">
+          Ir a Ayuda <ArrowRight aria-hidden strokeWidth={1.5} />
+        </LinkButton>
+      }
+    >
+      El trámite REPROCANN, tu credencial y la cuota, paso a paso.
+    </HelpStrip>
+  );
 
   return (
     <main>
-      <PageBand compact eyebrow="Mi espacio" title={`Hola, ${view.firstName}`} description={`Socio ${view.number} · categoría ${view.category}`} tab="Resumen" width="wide" />
-      <div className="page-gutter pt-6 pb-8">
-        <div className="admin-column">
-          {state === "loading" && <LoadingBlock label="Cargando tu información…" lines={6} />}
+      <PageBand compact eyebrow="Mi espacio" title={`Hola, ${view.firstName}`} description={`Socio ${view.number} · categoría ${view.category}`} width="wide" />
+      <div className="page-gutter pt-8 pb-12 sm:pt-10">
+        <div className="portal-column">
+          {state === "loading" && <LoadingBlock label="Cargando tu información…" lines={6} className="max-w-2xl" />}
           {state === "error" && (
-            <Alert tone="error" title="No pudimos cargar tu información" live>
+            <Alert tone="error" title="No pudimos cargar tu información" live className="max-w-2xl">
               Probá recargar la página en unos minutos.
             </Alert>
           )}
 
           {state === "default" && (
-            <div className="grid items-stretch gap-x-6 gap-y-8 md:grid-cols-2">
-              <TabbedCard tab="Trámites" tone="sand" fill bodyClassName="gap-5">
-                <p className="text-xl font-title text-arena-800">{task.headline}</p>
-                <ul className="divide-y divide-mist-line">
-                  <li className="flex items-center justify-between gap-3 py-2.5 first:pt-0">
-                    <span className="text-[0.9375rem]">Alta como socio/a</span>
-                    <StatusBadge tone="success">Completa</StatusBadge>
-                  </li>
-                  <li className="space-y-1 py-2.5">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-[0.9375rem]">Credencial REPROCANN</span>
-                      <StatusBadge tone={credential.status.tone}>{credential.status.label}</StatusBadge>
-                    </div>
-                    <p className="text-small text-text-muted">{task.detail}</p>
-                  </li>
-                  <li className="flex items-center justify-between gap-3 py-2.5">
-                    <Link href="/qr/reprocann#vinculacion" className="text-[0.9375rem] !text-foreground underline-offset-4 hover:underline">
-                      Vinculación con Amarí Dul
-                    </Link>
-                    <StatusBadge tone={credential.linkage.verified ? "success" : credential.linkage.sent ? "info" : "warning"}>
-                      {credential.linkage.verified ? "Verificada" : credential.linkage.sent ? "Código enviado" : "Falta tu código"}
-                    </StatusBadge>
-                  </li>
-                </ul>
-                <CardFoot>
-                  <div className="space-y-4">
-                    <LinkButton href="/qr/reprocann" variant={task.upload ? "primary" : "secondary"} full>
-                      {task.upload && <Upload aria-hidden className="size-4" strokeWidth={1.5} />} {task.action}
-                    </LinkButton>
-                    <dl className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 text-small">
-                      <dt className="text-text-muted">Documentación</dt>
-                      <dd className="text-arena-800">{credential.documents ? `${credential.documents} ${credential.documents === 1 ? "documento" : "documentos"}` : "Sin documentos"}</dd>
-                    </dl>
-                  </div>
-                </CardFoot>
-              </TabbedCard>
-
-              <TabbedCard tab="Asociación" fill bodyClassName="gap-5">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-xl font-title text-forest">Tu membresía</p>
-                  <StatusBadge tone="success">Activa</StatusBadge>
-                </div>
-                <DetailList
-                  items={[
-                    { label: "Número", value: view.number },
-                    { label: "Categoría", value: view.category },
-                    { label: "Socio desde", value: view.since },
-                  ]}
-                />
-                <CardFoot>
-                  <div className="space-y-3">
-                    <p className="text-small text-text-muted">Si cambió algún dato, avisanos para actualizarlo.</p>
-                    {whatsapp ? (
-                      <a
-                        href={whatsapp}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex min-h-11 w-full items-center justify-center gap-2 !rounded-full border border-forest/60 px-5 text-[0.9375rem] font-medium !text-forest hover:bg-forest-soft"
-                      >
-                        <MessageCircle aria-hidden className="size-4" strokeWidth={1.5} /> Solicitar actualización por WhatsApp
-                      </a>
-                    ) : (
-                      demo && (
-                        // Local preview only: how the action will look, without a number to write to.
-                        <div className="dev-only space-y-2">
-                          <span aria-disabled className="inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center gap-2 !rounded-full border border-forest/40 px-5 text-[0.9375rem] font-medium text-forest/60">
-                            <MessageCircle aria-hidden className="size-4" strokeWidth={1.5} /> Solicitar actualización por WhatsApp
-                          </span>
-                          <DevTag>Vista previa local · falta el número oficial (AD-003)</DevTag>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </CardFoot>
-              </TabbedCard>
-
-              <TabbedCard tab="Productos" fill bodyClassName="gap-5">
-                <p className="text-xl font-title text-forest">Productos de la asociación</p>
-                <p className="text-[0.9375rem] leading-relaxed text-text-muted">
-                  {credential.products
-                    ? `Podés consultar ${credential.products === 1 ? "el producto que elabora" : `los ${credential.products} productos que elabora`} Amarí Dul, con su variedad y su cultivo.`
-                    : "Todavía no hay productos publicados."}
-                </p>
-                <div className="flex flex-wrap items-center gap-2 text-small text-text-muted">
-                  <StatusBadge tone="warning">Próximamente</StatusBadge> Comprar desde tu cuenta
-                </div>
-                <CardFoot>
-                  <LinkButton href="/qr/productos" variant="secondary" full>
-                    Ver productos
-                  </LinkButton>
-                </CardFoot>
-              </TabbedCard>
-
-              <TabbedCard tab="Cuota" fill bodyClassName="gap-5">
-                <p className="text-xl font-title text-forest">Administración de cuota</p>
-                <p className="text-[0.9375rem] leading-relaxed text-text-muted">
-                  La cuota social es de {pesos(monthlyFee)} por mes. Se paga por transferencia a la cuenta de {FEE_PAYMENT.platform} de la asociación.
-                </p>
-                <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-2 text-[0.9375rem]">
-                  <dt className="text-small text-text-muted">Tu forma de pago</dt>
-                  <dd className="text-forest">
-                    {(() => {
-                      const p = FEE_PLANS.find((x) => x.id === credential.plan);
-                      return p ? `${p.label} · ${pesos(p.amount)} ${periodLabel(p.months)}` : <span className="text-text-muted">Todavía no la elegiste</span>;
-                    })()}
-                  </dd>
-                  <dt className="text-small text-text-muted">Alias</dt>
-                  <dd className="font-mono tracking-wide break-all text-forest">{FEE_PAYMENT.alias}</dd>
-                </dl>
-                <CardFoot>
-                  <LinkButton href={FEE_PAGE} variant="secondary" full>
-                    {credential.plan ? "Ver datos de pago" : "Elegir forma de pago"}
-                  </LinkButton>
-                </CardFoot>
-              </TabbedCard>
-            </div>
-          )}
-
-          {state === "default" && (
-            <aside aria-labelledby="ayuda" className="mt-8 flex flex-col gap-4 !rounded-card border border-mist-line bg-white/70 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-              <div className="flex items-start gap-4">
-                <span aria-hidden className="flex size-11 shrink-0 items-center justify-center !rounded-full bg-forest-soft text-forest">
-                  <LifeBuoy className="size-5" strokeWidth={1.5} />
-                </span>
-                <div className="space-y-1">
-                  <h2 id="ayuda" className="text-lg font-title text-forest">
-                    ¿Necesitás ayuda?
-                  </h2>
-                  <p className="text-small text-text-muted">Cómo iniciar el trámite REPROCANN, cargar tu credencial, pagar la cuota o actualizar tus datos.</p>
-                </div>
-              </div>
-              <Link href="/qr/ayuda" className="inline-flex min-h-11 shrink-0 items-center gap-1.5 self-start font-medium !text-forest underline-offset-4 hover:underline sm:self-center">
-                Ir a Ayuda <ArrowRight aria-hidden className="size-4" strokeWidth={1.5} />
-              </Link>
-            </aside>
+            <FolderSwitcher
+              className="max-w-[52rem]"
+              label="Tu espacio de socio"
+              tabs={[
+                { id: "membresia", label: "Membresía", tone: "green", icon: <UserRound strokeWidth={1.75} />, content: membershipPanel },
+                { id: "tramites", label: "Trámites", tone: "magenta", icon: <FileCheck2 strokeWidth={1.75} />, hint: eligibility.eligible ? undefined : "tiene algo pendiente", content: proceduresPanel },
+                { id: "cuota", label: "Cuota", tone: "green", icon: <Wallet strokeWidth={1.75} />, hint: credential.plan ? undefined : "falta elegir la forma de pago", content: feePanel },
+                { id: "productos", label: "Productos", tone: "green", icon: <Package strokeWidth={1.75} />, content: productsPanel },
+              ]}
+              footer={help}
+            />
           )}
         </div>
         <DevStateBar path="/qr/mi-espacio" states={STATES} current={state} label="Mi espacio" />

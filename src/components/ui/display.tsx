@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
-import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
+import { CircleAlert, CircleCheck, CircleDashed, CircleDot, Clock3, Info, TriangleAlert, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { EYEBROW, TOP_EDGE, type InfoTone } from "./technical";
 
 export type Tone = "neutral" | "brand" | "success" | "warning" | "error" | "info";
 
@@ -13,10 +14,32 @@ const toneClasses: Record<Tone, string> = {
   info: "bg-info-bg text-info-fg",
 };
 
-export function StatusBadge({ tone = "neutral", children, className }: { tone?: Tone; children: ReactNode; className?: string }) {
+// Each state carries its icon too: the colour is never the only way to tell them apart.
+const badgeIcon: Record<Tone, LucideIcon> = {
+  success: CircleCheck,
+  warning: Clock3,
+  error: CircleAlert,
+  info: Info,
+  brand: CircleDot,
+  neutral: CircleDashed,
+};
+
+/**
+ * A state, as a pill. Equivalent states look alike side by side: same height, padding, type and a
+ * shared minimum width, text centred on one line. `compact` drops the minimum width (inline use).
+ */
+export function StatusBadge({ tone = "neutral", children, className, compact }: { tone?: Tone; children: ReactNode; className?: string; compact?: boolean }) {
+  const Icon = badgeIcon[tone];
   return (
-    <span className={cn("inline-flex items-center gap-1.5 !rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap", toneClasses[tone], className)}>
-      <span aria-hidden className="size-1.5 rounded-full bg-current" />
+    <span
+      className={cn(
+        "inline-flex h-7 shrink-0 items-center justify-center gap-1.5 !rounded-full px-3 text-[0.8125rem] leading-none font-medium whitespace-nowrap",
+        !compact && "min-w-[7.5rem]",
+        toneClasses[tone],
+        className,
+      )}
+    >
+      <Icon aria-hidden className="size-3.5 shrink-0" strokeWidth={2} />
       {children}
     </span>
   );
@@ -29,7 +52,7 @@ export function Card({ variant = "surface", padded = true, className, ...rest }:
     <div
       className={cn(
         "!rounded-card",
-        variant === "surface" && "border border-mist-line bg-white shadow-[0_18px_40px_-34px_rgb(29_52_30/0.55)]",
+        variant === "surface" && "border border-mist-line bg-white",
         variant === "sunken" && "bg-mist",
         variant === "outline" && "border border-mist-line",
         padded && "p-5 sm:p-6",
@@ -83,7 +106,7 @@ export function Alert({ tone = "info", title, children, live, className }: { ton
   return (
     <div
       role={live ? (tone === "error" ? "alert" : "status") : undefined}
-      className={cn("flex gap-3 !rounded-control px-4 py-3.5", toneClasses[tone], className)}
+      className={cn("flex gap-3 !rounded-control border border-current/10 px-4 py-3.5", toneClasses[tone], className)}
     >
       <span className="mt-0.5 shrink-0">{alertIcon[tone]}</span>
       <div className="min-w-0 space-y-1 text-small [overflow-wrap:anywhere]">
@@ -97,11 +120,71 @@ export function Alert({ tone = "info", title, children, live, className }: { ton
 export function EmptyState({ icon, title, description, action, className }: { icon?: ReactNode; title: ReactNode; description?: ReactNode; action?: ReactNode; className?: string }) {
   return (
     <div className={cn("flex flex-col items-center gap-3 !rounded-card border border-mist-line bg-white px-6 py-10 text-center", className)}>
-      {icon && <span className="text-accent">{icon}</span>}
+      {icon && <span className="flex size-14 items-center justify-center !rounded-full bg-forest-soft text-forest [&_svg]:size-7">{icon}</span>}
       <p className="text-h3 text-forest">{title}</p>
       {description && <p className="max-w-md text-small text-text-muted">{description}</p>}
       {action && <div className="pt-2">{action}</div>}
     </div>
+  );
+}
+
+/**
+ * A group of related information with its title and, at the right, its actions: the container
+ * for what needs one (data, a form, a list). Plain white, a hairline border, no shadow.
+ */
+export function Panel({
+  title,
+  eyebrow,
+  actions,
+  description,
+  id,
+  level = 2,
+  tone,
+  footer,
+  className,
+  bodyClassName,
+  children,
+}: {
+  title?: ReactNode;
+  eyebrow?: ReactNode;
+  actions?: ReactNode;
+  description?: ReactNode;
+  id?: string;
+  level?: 2 | 3;
+  /** The panel's last line, across its width (help, for instance). */
+  footer?: ReactNode;
+  /** The section's colour: the panel's top edge and the eyebrow (green, magenta or lilac). */
+  tone?: InfoTone;
+  className?: string;
+  bodyClassName?: string;
+  children: ReactNode;
+}) {
+  const Heading = level === 2 ? "h2" : "h3";
+  return (
+    <section id={id} aria-labelledby={title && id ? `${id}-title` : undefined} className={cn("relative scroll-mt-6 !rounded-card border border-mist-line bg-white", tone && TOP_EDGE[tone], footer ? "overflow-hidden" : null, className)}>
+      {(title || actions) && (
+        <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-5 pt-5 sm:px-6 sm:pt-6">
+          <div className="min-w-0 space-y-1">
+            {eyebrow && (
+              <p className={cn("text-eyebrow", tone ? EYEBROW[tone] : "text-text-muted", tone === "magenta" && "flex items-center gap-2")}>
+                {/* Trámites carry a touch of Dambar's pink by their eyebrow. */}
+                {tone === "magenta" && <span aria-hidden className="size-1.5 shrink-0 !rounded-full bg-rosa-400" />}
+                {eyebrow}
+              </p>
+            )}
+            {title && (
+              <Heading id={id ? `${id}-title` : undefined} className="text-h3 text-forest">
+                {title}
+              </Heading>
+            )}
+            {description && <p className="measure text-small text-text-muted">{description}</p>}
+          </div>
+          {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+        </header>
+      )}
+      <div className={cn("px-5 pt-4 pb-5 sm:px-6 sm:pb-6", !(title || actions) && "pt-5 sm:pt-6", bodyClassName)}>{children}</div>
+      {footer && <div className="border-t border-mist-line">{footer}</div>}
+    </section>
   );
 }
 

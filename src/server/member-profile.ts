@@ -25,7 +25,7 @@ import { dniLookupCandidates, maskDni, normalizeDni } from "@/server/crypto/dni"
 import { readPersonDni, setPersonDni, type Keyrings } from "@/server/identity/person-identity";
 import { ACTIVATION_KIND, deliveryEmail, grantMemberAccess, MemberAccessError, memberNumberTaken, type Deps } from "@/server/members";
 import { feePlanInput, memberFeePlan, setFeePlan } from "@/server/fee-plan";
-import { getReprocann } from "@/server/reprocann";
+import { getReprocann, isActiveDocument } from "@/server/reprocann";
 import { credentialStatus, credentialValidity, currentCredential, todayInArgentina } from "@/lib/credential-validity";
 import { categoryOptions, provinces } from "@/demo/content";
 
@@ -133,13 +133,13 @@ export async function listRegister(db: Database, today = todayInArgentina()) {
   const caseIds = rows.flatMap((r) => (r.caseId ? [r.caseId] : []));
   const docs = caseIds.length
     ? await db
-        .select({ caseId: reprocannDocuments.caseId, kind: reprocannDocuments.kind, expiresOn: reprocannDocuments.expiresOn, reviewStatus: reprocannDocuments.reviewStatus, createdAt: reprocannDocuments.createdAt, replacedBy: reprocannDocuments.replacedBy })
+        .select({ caseId: reprocannDocuments.caseId, kind: reprocannDocuments.kind, expiresOn: reprocannDocuments.expiresOn, reviewStatus: reprocannDocuments.reviewStatus, createdAt: reprocannDocuments.createdAt, replacedBy: reprocannDocuments.replacedBy, withdrawnAt: reprocannDocuments.withdrawnAt })
         .from(reprocannDocuments)
         .where(inArray(reprocannDocuments.caseId, caseIds))
     : [];
 
   return rows.map((r) => {
-    const credential = currentCredential(docs.filter((d) => d.caseId === r.caseId && !d.replacedBy));
+    const credential = currentCredential(docs.filter((d) => d.caseId === r.caseId && isActiveDocument(d)));
     return {
       id: r.id,
       memberNumber: r.memberNumber,
@@ -196,7 +196,7 @@ export async function getMemberProfile(db: Database, rings: Keyrings, id: string
     .orderBy(desc(existingMemberRequests.createdAt))
     .limit(1);
   const reprocann = await getReprocann(db, rings.field, id);
-  const credential = currentCredential((reprocann?.documents ?? []).filter((d) => !d.replacedBy));
+  const credential = currentCredential((reprocann?.documents ?? []).filter(isActiveDocument));
   const access = await accessView(
     db,
     { memberId: id, personId: m.member.personId, hasDni: !!dni, accountStatus: m.accountStatus, to: deliveryEmail({ notificationEmail: m.notificationEmail, email: m.person.email }) },
