@@ -108,6 +108,59 @@ export function RatioBar({ thc, cbd, label, tone = "green", className }: { thc: 
   );
 }
 
+/** "1:2" or "5:1", rounded to the nearest whole ratio. */
+export function ratioLabel(thc: number, cbd: number) {
+  if (!thc || !cbd) return thc ? "THC" : "CBD";
+  return thc >= cbd ? `${Math.round(thc / cbd)}:1` : `1:${Math.round(cbd / thc)}`;
+}
+
+/**
+ * The two main cannabinoids as large figures, each on its own tint (THC green, CBD lilac), and
+ * under them their proportion as a bar in the same two colours. Only the values the lab gave.
+ */
+export function CannabinoidFigures({ thc, cbd, unit, className }: { thc: number | null; cbd: number | null; /** As shown after the figure: «%», «mg/ml». */ unit: string; className?: string }) {
+  const figures = [
+    { key: "THC", name: "Tetrahidrocannabinol", value: thc, tint: "bg-hoja-100", ink: "text-forest" },
+    { key: "CBD", name: "Cannabidiol", value: cbd, tint: "bg-lila-100", ink: "text-lila-800" },
+  ].filter((f): f is typeof f & { value: number } => f.value !== null);
+  const t = thc ?? 0;
+  const c = cbd ?? 0;
+  // The thinner part never vanishes: at least 4 % of the bar.
+  const share = Math.min(96, Math.max(4, (t / (t + c || 1)) * 100));
+  return (
+    <div className={cn("space-y-5", className)}>
+      <dl className={cn("grid gap-3", figures.length > 1 ? "grid-cols-2" : null)}>
+        {figures.map((f) => (
+          <div key={f.key} className={cn("flex min-w-0 flex-col !rounded-card px-4 pt-4 pb-5 @md:px-5 @md:pt-5", f.tint)}>
+            <dt>
+              <span className={cn("block text-eyebrow", f.ink)}>{f.key}</span>
+              <span lang="es" className="mt-1 block text-sm text-text-muted hyphens-auto">
+                {f.name}
+              </span>
+            </dt>
+            <dd className={cn("mt-auto pt-4 font-display text-[2.75rem] leading-none lining-nums tabular-nums @md:text-[3.25rem]", f.ink)}>
+              {f.value.toLocaleString("es-AR", { maximumFractionDigits: 2 })}
+              <span className="ml-1.5 font-sans text-base text-text-muted">{unit}</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {t > 0 && c > 0 && (
+        <div>
+          <p className="flex items-baseline justify-between gap-3 text-sm">
+            <span className="text-text-muted">Proporción THC:CBD</span>
+            <span className="font-medium text-forest tabular-nums">≈ {ratioLabel(t, c)}</span>
+          </p>
+          <div role="img" aria-label={`Proporción THC:CBD aproximada: ${ratioLabel(t, c)}`} className="mt-2 flex h-2.5 gap-0.5">
+            <span className="!rounded-full bg-hoja-700" style={{ width: `${share}%` }} />
+            <span className="flex-1 !rounded-full bg-lila-400" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Big fact block ("1 gota = 1 mg") with label/value pairs, in the information tone. */
 export function KeyFact({ value, caption, rows, tone = "green", className }: { value: ReactNode; caption: ReactNode; rows: [string, ReactNode][]; tone?: InfoTone; className?: string }) {
   return (

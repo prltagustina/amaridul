@@ -222,10 +222,9 @@ export default function QRPage() {
             label="Tu REPROCANN, paso a paso"
             bleed="-mx-6 px-6 scroll-px-6 sm:-mx-4 sm:px-4 sm:scroll-px-4"
             aside={
-              <figure className="mx-auto flex w-full max-w-[16rem] flex-col items-center gap-2 md:mx-0 md:h-full md:w-auto md:max-w-none md:justify-center">
-                <LinkCodeVideo className="md:!h-[22rem] md:!w-auto" />
-                <figcaption className="text-center text-sm text-text-muted">Dónde está tu código · 30 segundos</figcaption>
-              </figure>
+              <div className="mx-auto w-full max-w-[16rem] lg:relative lg:mx-0 lg:h-full lg:w-[14.5rem] lg:max-w-none xl:w-[13.5rem]">
+                <LinkCodeVideo className="lg:absolute lg:inset-0 lg:size-full lg:object-cover" />
+              </div>
             }
             steps={REPROCANN_STEPS.map((step) => ({
               meta: step.meta,

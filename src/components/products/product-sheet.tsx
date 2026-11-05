@@ -4,19 +4,13 @@ import Image from "next/image";
 import { Droplet, FileBadge, FlaskConical, Info, Sprout } from "lucide-react";
 import { PhotoPlaceholder } from "@/components/brand/placeholders";
 import { FolderSwitcher } from "@/components/ui/folder-tabs";
-import { Chip, KeyFact, RatioBar, VarietyBadge } from "@/components/ui/technical";
+import { CannabinoidFigures, KeyFact } from "@/components/ui/technical";
 import { labNote } from "@/demo/content";
 import type { CatalogItem } from "@/server/products";
 
 const num = (n: number) => n.toLocaleString("es-AR", { maximumFractionDigits: 2 });
 const day = (iso: string | null) => (iso ? iso.split("-").reverse().join("/") : null);
 const UNIT = { porcentaje: "%", mg_ml: "mg/ml", mg_g: "mg/g" } as const;
-
-/** "1:2" or "5:1", rounded to the nearest whole ratio. */
-function ratioLabel(thc: number, cbd: number) {
-  if (!thc || !cbd) return thc ? "THC" : "CBD";
-  return thc >= cbd ? `${Math.round(thc / cbd)}:1` : `1:${Math.round(cbd / thc)}`;
-}
 
 /**
  * A product's sheet for members: origin, composition and analysis, as tabs of one sheet (the
@@ -36,10 +30,8 @@ export function ProductSheet({ product, photoSrc }: { product: CatalogItem; phot
   ];
   const facts = origin.filter((f): f is [string, string] => !!f[1]);
   const unit = s.unit ? UNIT[s.unit] : "";
-  const thc = s.thc ?? 0;
-  const cbd = s.cbd ?? 0;
   const hasComposition = s.thc !== null || s.cbd !== null;
-  const total = thc + cbd;
+  const total = (s.thc ?? 0) + (s.cbd ?? 0);
   const perDrop = s.unit === "mg_ml" && s.dropsPerMl && total ? total / s.dropsPerMl : null;
 
   return (
@@ -54,12 +46,13 @@ export function ProductSheet({ product, photoSrc }: { product: CatalogItem; phot
               icon: <Sprout className="size-4" strokeWidth={1.75} />,
               content: (
                 <div className="space-y-5">
+                  {/* The photo fills the sheet's width, like the product previews (4:3, lower on a computer). */}
                   {photoSrc && product.photo ? (
-                    <div className="flex justify-center overflow-hidden !rounded-[14px] bg-mist">
-                      <Image src={photoSrc} alt={`Foto de ${product.name}`} width={product.photo.width} height={product.photo.height} unoptimized priority className="h-auto max-h-[26rem] w-auto max-w-full" />
+                    <div className="relative aspect-[4/3] max-h-[26rem] w-full overflow-hidden !rounded-[14px] bg-mist">
+                      <Image src={photoSrc} alt={`Foto de ${product.name}`} fill unoptimized priority sizes="(min-width: 1024px) 42rem, 100vw" className="object-cover" />
                     </div>
                   ) : (
-                    <PhotoPlaceholder label="Foto pendiente" className="aspect-[4/3] max-h-[22rem] w-full !rounded-[14px]" />
+                    <PhotoPlaceholder label="Foto pendiente" className="aspect-[4/3] max-h-[26rem] w-full !rounded-[14px]" />
                   )}
                   {facts.length > 0 && (
                     <dl className="grid grid-cols-2 gap-x-5 gap-y-4 @md:grid-cols-3">
@@ -82,25 +75,11 @@ export function ProductSheet({ product, photoSrc }: { product: CatalogItem; phot
               icon: <Droplet className="size-4" strokeWidth={1.75} />,
               content: hasComposition ? (
                 <div className="space-y-5">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    {product.chemotype && <VarietyBadge tone="green">Quimiotipo {product.chemotype}</VarietyBadge>}
-                    {total > 0 && <RatioBar tone="green" thc={thc} cbd={cbd} label="Proporción" className="w-full max-w-[13rem]" />}
-                  </div>
                   <div>
-                    {total > 0 && <h3 className="text-xl font-title text-forest">Relación THC:CBD ≈ {ratioLabel(thc, cbd)}</h3>}
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {s.thc !== null && (
-                        <Chip tone="green">
-                          THC ~{num(s.thc)} {unit}
-                        </Chip>
-                      )}
-                      {s.cbd !== null && (
-                        <Chip tone="green">
-                          CBD ~{num(s.cbd)} {unit}
-                        </Chip>
-                      )}
-                    </div>
+                    {product.chemotype && <p className="text-[11px] font-medium tracking-[0.18em] text-accent uppercase">Quimiotipo {product.chemotype}</p>}
+                    <h3 className="mt-1 text-xl font-title text-forest">Cannabinoides principales</h3>
                   </div>
+                  <CannabinoidFigures thc={s.thc} cbd={s.cbd} unit={unit} />
                   {perDrop !== null && (
                     <KeyFact
                       tone="green"

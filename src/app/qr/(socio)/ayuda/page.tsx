@@ -63,12 +63,11 @@ export default async function AyudaPage() {
               <StepCards
                 className="mt-8"
                 aside={
-                  <figure className="mx-auto flex w-full max-w-[16rem] flex-col items-center gap-2 md:mx-0 md:h-full md:w-auto md:max-w-none md:justify-center">
-                    <LinkCodeVideo className="md:!h-[30rem] md:!w-auto" />
-                    <figcaption className="text-center text-sm text-text-muted">Dónde está tu código · 30 segundos</figcaption>
-                  </figure>
+                  <div className="mx-auto w-full max-w-[16rem] lg:relative lg:mx-0 lg:h-full lg:w-[22.5rem] lg:max-w-none">
+                    <LinkCodeVideo className="lg:absolute lg:inset-0 lg:size-full lg:object-cover" />
+                  </div>
                 }
-                columns={2}
+                layout="list"
                 label="Cómo encontrar y enviar tu código de vinculación"
                 bleed="-mx-5 px-5 scroll-px-5 sm:-mx-8 sm:px-8 sm:scroll-px-8"
                 steps={[
