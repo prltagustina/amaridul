@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Check, CircleHelp, FileCheck2, IdCard, Link2, Package, Upload, UserRound, Wallet } from "lucide-react";
+import { ArrowRight, Check, CircleHelp, FileCheck2, Package, Upload, UserRound, Wallet } from "lucide-react";
 import { readState } from "@/lib/demo";
 import { localDemo } from "@/lib/features";
 import { credentialStatus, expiryLine, type CredentialStatus } from "@/lib/credential-validity";
@@ -12,7 +12,7 @@ import { PageBand } from "@/components/brand/page-band";
 import { ProductPreview } from "@/components/products/product-card";
 import { AnchorButton, LinkButton } from "@/components/ui/button";
 import { DevStateBar } from "@/components/ui/dev-state-bar";
-import { Alert, DevTag, LoadingBlock, StatusBadge, type Tone } from "@/components/ui/display";
+import { Alert, DevTag, LoadingBlock, StatusBadge, StatusText, type Tone } from "@/components/ui/display";
 import { FolderSwitcher } from "@/components/ui/folder-tabs";
 import { HelpStrip } from "@/components/ui/guidance";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
@@ -49,31 +49,21 @@ function PanelActions({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * One of the three conditions as a card. Pending, in Dambar's lavender grey (trámites are its
- * world): the icon on a pink chip and the name in its indigo, then what comes next and its action.
- * Met, it reads as done: the green of success, a tick in place of the icon and the name in green,
- * so what is missing stands out on its own. The state is always in words too (never colour alone):
- * on a phone right under the name, beside the icon, with the text and the action across the card
- * below; in the row of three, at every card's foot, aligned across them.
+ * One condition for dispensing, as a line of the checklist: a tick on green when it is met (an
+ * empty circle when not), its name, its state in words, and what comes next with its action. The
+ * state goes under the name on a phone and at the right from 640 px; what comes next, under both.
  */
-function ConditionCard({ c, icon, tone, children }: { c: DispensingEligibility["conditions"][number]; icon: React.ReactNode; tone: Tone; children?: React.ReactNode }) {
-  // On a tinted card a badge of the same tint would vanish: white under it then.
-  const state = (
-    <StatusBadge tone={tone} compact className={c.met || tone === "info" || tone === "neutral" ? "!bg-white/80" : undefined}>
-      {c.state}
-    </StatusBadge>
-  );
+function ConditionRow({ c, tone, children }: { c: DispensingEligibility["conditions"][number]; tone: Tone; children?: React.ReactNode }) {
   return (
-    <li className={cn("grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3.5 gap-y-3 !rounded-card p-4 sm:p-5 md:flex md:flex-col md:items-stretch md:gap-3", c.met ? "bg-hoja-100" : "bg-lila-100")}>
-      <span aria-hidden className={cn("flex size-10 shrink-0 items-center justify-center !rounded-full [&_svg]:size-5", c.met ? "bg-hoja-600 text-white" : "bg-rosa-100 text-lila-800")}>
-        {c.met ? <Check strokeWidth={2.5} /> : icon}
+    <li className="grid grid-cols-[1.75rem_minmax(0,1fr)] gap-x-4 gap-y-1 py-4 sm:grid-cols-[1.75rem_minmax(0,1fr)_auto] sm:py-5">
+      <span aria-hidden className={cn("col-start-1 row-start-1 flex size-7 items-center justify-center !rounded-full", c.met ? "bg-hoja-600 text-white" : "border-2 border-lila-300")}>
+        {c.met && <Check className="size-4" strokeWidth={2.5} />}
       </span>
-      <div className="min-w-0 space-y-1.5 md:space-y-0">
-        <h3 className={cn("font-title text-[1.0625rem] leading-snug", c.met ? "text-forest" : "text-lila-800")}>{c.label}</h3>
-        <div className="md:hidden">{state}</div>
-      </div>
-      {children && <div className="col-span-2 flex min-w-0 flex-col gap-3">{children}</div>}
-      <div className="mt-auto hidden pt-1 md:block">{state}</div>
+      <h3 className="col-start-2 row-start-1 self-center font-title text-[1.0625rem] leading-snug text-forest">{c.label}</h3>
+      <p className="col-start-2 row-start-2 sm:col-start-3 sm:row-start-1 sm:self-center sm:text-right">
+        <StatusText tone={tone}>{c.state}</StatusText>
+      </p>
+      {children && <div className="col-start-2 mt-2 flex flex-col items-start gap-3 sm:col-span-2 sm:row-start-2">{children}</div>}
     </li>
   );
 }
@@ -147,7 +137,6 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
   const linkage = linkageState({ verified: credential.linkage.verified, codeReceived: credential.linkage.sent });
   const eligibility = dispensingEligibility({ membership: "activo", credential: credential.status, linkage: { verified: credential.linkage.verified, codeReceived: credential.linkage.sent } }, "member");
   const condition = (key: ConditionKey) => eligibility.conditions.find((c) => c.key === key)!;
-  const missing = eligibility.pending.length;
   const whatsapp = officialWhatsAppLink(UPDATE_DATA_MESSAGE);
   const demo = localDemo();
   const plan = FEE_PLANS.find((x) => x.id === credential.plan);
@@ -205,21 +194,24 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
   const met = eligibility.conditions.filter((c) => c.met).length;
   const proceduresPanel = (
     <div className="space-y-7">
-      {/* Where the member stands, as a figure like the other tabs' key data; then each condition. */}
-      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-        <div className="min-w-0">
+      {/* Where the member stands: how many of the three, in figures and as a bar of three parts. */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <h2 className="text-h3 text-forest">Habilitación a dispensa</h2>
-          <p className="mt-2 flex flex-wrap items-baseline gap-x-2.5">
-            <span className="font-display text-[2.5rem] leading-none text-forest lining-nums tabular-nums">{met} de 3</span>
-            <span className="text-sm text-text-muted">condiciones cumplidas</span>
+          <p className="flex items-baseline gap-2 text-sm text-text-muted">
+            <span className="font-display text-[1.75rem] leading-none text-forest lining-nums tabular-nums">{met} de 3</span> cumplidas
           </p>
         </div>
-        {eligibility.eligible ? <StatusBadge tone="success">Completa</StatusBadge> : <StatusBadge tone="warning">{missing === 1 ? "Falta 1" : `Faltan ${missing}`}</StatusBadge>}
+        <div aria-hidden className="flex gap-1.5">
+          {[0, 1, 2].map((i) => (
+            <span key={i} className={cn("h-2 flex-1 !rounded-full", i < met ? "bg-hoja-600" : "bg-arena-200")} />
+          ))}
+        </div>
       </div>
       {/* In the order the procedure goes for whoever starts it with the association: the link code first. */}
-      <ol aria-label="Las tres condiciones" className="grid gap-3 md:grid-cols-3">
-        <ConditionCard c={condition("membership")} icon={<UserRound strokeWidth={1.75} />} tone="success" />
-        <ConditionCard c={condition("linkage")} icon={<Link2 strokeWidth={1.75} />} tone={LINKAGE_TEXT[linkage].member.tone}>
+      <ol aria-label="Las tres condiciones" className="divide-y divide-mist-line border-t border-mist-line">
+        <ConditionRow c={condition("membership")} tone="success" />
+        <ConditionRow c={condition("linkage")} tone={LINKAGE_TEXT[linkage].member.tone}>
           {linkage !== "verified" && (
             <p className="text-sm leading-relaxed text-text-muted">
               {LINKAGE_TEXT[linkage].member.help}
@@ -245,8 +237,8 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
               Ver o corregir el código
             </Link>
           )}
-        </ConditionCard>
-        <ConditionCard c={condition("credential")} icon={<IdCard strokeWidth={1.75} />} tone={credential.status.tone}>
+        </ConditionRow>
+        <ConditionRow c={condition("credential")} tone={credential.status.tone}>
           <p className="text-sm leading-relaxed text-text-muted">{task.detail}</p>
           {task.action && (
             <div>
@@ -255,7 +247,7 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
               </LinkButton>
             </div>
           )}
-        </ConditionCard>
+        </ConditionRow>
       </ol>
       <PanelActions>
         <LinkButton href="/qr/reprocann" variant="secondary" size="sm">

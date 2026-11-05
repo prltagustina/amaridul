@@ -60,15 +60,36 @@ export function Dialog({
     if (!open && d.open) d.close();
   }, [open]);
 
-  // On a phone the keyboard shrinks the visible area, not the layout: follow the visual viewport
-  // so the dialog centres, with its actions, where it can be seen while typing or picking a date.
+  // While it is open the page behind stays put. On an iPhone, overflow: hidden does not stop a
+  // finger from scrolling the page under the dialog, and scrolling folds the browser's bars, which
+  // moved everything: the page is held where it was, and goes back to that place on closing.
+  useEffect(() => {
+    if (!open) return;
+    const y = window.scrollY;
+    const body = document.body.style;
+    const before = { position: body.position, top: body.top, left: body.left, right: body.right, width: body.width };
+    Object.assign(body, { position: "fixed", top: `-${y}px`, left: "0", right: "0", width: "100%" });
+    return () => {
+      Object.assign(body, before);
+      window.scrollTo({ top: y, behavior: "instant" });
+    };
+  }, [open]);
+
+  // On a phone the keyboard shrinks the visible area, not the layout: only then the dialog follows
+  // the visual viewport, so it centres, with its actions, where it can be seen while typing or
+  // picking a date. Otherwise it stays where CSS puts it, still, in the middle of the screen.
   useEffect(() => {
     const d = ref.current;
     const vv = typeof window === "undefined" ? null : window.visualViewport;
     if (!open || !d || !vv) return;
     const sync = () => {
-      d.style.setProperty("--dialog-vh", `${Math.round(vv.height)}px`);
-      d.style.setProperty("--dialog-top", `${Math.round(vv.offsetTop)}px`);
+      if (vv.height < window.innerHeight - 80) {
+        d.style.setProperty("--dialog-vh", `${Math.round(vv.height)}px`);
+        d.style.setProperty("--dialog-top", `${Math.round(vv.offsetTop)}px`);
+      } else {
+        d.style.removeProperty("--dialog-vh");
+        d.style.removeProperty("--dialog-top");
+      }
     };
     sync();
     vv.addEventListener("resize", sync);

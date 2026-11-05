@@ -28,6 +28,25 @@ const badgeIcon: Record<Tone, LucideIcon> = {
  * A state, as a pill. Equivalent states look alike side by side: same height, padding, type and a
  * shared minimum width, text centred on one line. `compact` drops the minimum width (inline use).
  */
+/** The same state as StatusBadge, as a line of text with its icon: for a list, where pills would weigh too much. */
+export function StatusText({ tone = "neutral", children, className }: { tone?: Tone; children: ReactNode; className?: string }) {
+  const Icon = badgeIcon[tone];
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 text-sm font-medium", textTone[tone], className)}>
+      <Icon aria-hidden className="size-4 shrink-0" strokeWidth={1.75} />
+      {children}
+    </span>
+  );
+}
+const textTone: Record<Tone, string> = {
+  neutral: "text-text-muted",
+  brand: "text-forest",
+  success: "text-success-fg",
+  warning: "text-warning-fg",
+  error: "text-error-fg",
+  info: "text-info-fg",
+};
+
 export function StatusBadge({ tone = "neutral", children, className, compact }: { tone?: Tone; children: ReactNode; className?: string; compact?: boolean }) {
   const Icon = badgeIcon[tone];
   return (
