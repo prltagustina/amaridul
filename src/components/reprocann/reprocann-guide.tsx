@@ -2,7 +2,7 @@ import { ArrowRight, ExternalLink } from "lucide-react";
 import { AnchorButton, LinkButton } from "@/components/ui/button";
 import { StepCards } from "@/components/ui/step-cards";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
-import { LinkCodeVideo } from "@/components/reprocann/link-code-video";
+import { LinkCodeVideoFrame } from "@/components/reprocann/link-code-video";
 import { REPROCANN_OFFICIAL_SITE } from "@/lib/reprocann-help";
 
 // REPROCANN with the association, step by step, in the order Luci set: starting the procedure
@@ -39,11 +39,7 @@ export function ReprocannGuide({ whatsapp, bleed, join = false }: { whatsapp: st
       <StepCards
         label="Tu REPROCANN, paso a paso"
         bleed={bleed}
-        aside={
-          <div className="mx-auto w-full max-w-[16rem] lg:relative lg:mx-0 lg:h-full lg:w-[14.5rem] lg:max-w-none xl:w-[13.5rem]">
-            <LinkCodeVideo className="lg:absolute lg:inset-0 lg:size-full lg:object-cover" />
-          </div>
-        }
+        aside={<LinkCodeVideoFrame className="lg:w-[14.5rem] xl:w-[13.5rem]" />}
         steps={REPROCANN_STEPS.map((step) => ({
           meta: step.meta,
           title: step.title,

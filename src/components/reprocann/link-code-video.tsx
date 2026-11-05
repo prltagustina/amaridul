@@ -1,3 +1,4 @@
+import { Download } from "lucide-react";
 import { LINK_CODE_STEPS, LINK_CODE_VIDEO } from "@/lib/reprocann-help";
 import { cn } from "@/lib/cn";
 
@@ -17,6 +18,27 @@ export function LinkCodeVideo({ id, className }: { id?: string; className?: stri
     >
       <source src={LINK_CODE_VIDEO.src} type="video/mp4" />
     </video>
+  );
+}
+
+/**
+ * The video beside the steps, with «Descargar» at its top right: an iPhone's player offers no way
+ * to save it, and it is sent on by WhatsApp. On a phone it keeps its own proportions; from 1024 px
+ * it fills its frame, as tall as the steps beside it (`className` sets the frame's width there).
+ */
+export function LinkCodeVideoFrame({ className }: { className?: string }) {
+  return (
+    <div className={cn("relative mx-auto w-full max-w-[16rem] lg:mx-0 lg:h-full lg:max-w-none", className)}>
+      <LinkCodeVideo className="lg:absolute lg:inset-0 lg:size-full lg:object-cover" />
+      <a
+        href={LINK_CODE_VIDEO.src}
+        download="amaridul-codigo-de-vinculacion.mp4"
+        className="absolute top-3 right-3 z-10 inline-flex min-h-9 items-center gap-1.5 !rounded-full bg-black/45 px-3 text-sm font-medium !text-white backdrop-blur-sm hover:bg-black/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+      >
+        <Download aria-hidden className="size-4" strokeWidth={1.75} />
+        Descargar<span className="sr-only"> el video (MP4, 0,8 MB)</span>
+      </a>
+    </div>
   );
 }
 

@@ -6,7 +6,7 @@ import { AnchorButton, LinkButton } from "@/components/ui/button";
 import { DevTag, Panel } from "@/components/ui/display";
 import { HelpStrip, StepGuide } from "@/components/ui/guidance";
 import { StepCards } from "@/components/ui/step-cards";
-import { LinkCodeVideo } from "@/components/reprocann/link-code-video";
+import { LinkCodeVideoFrame } from "@/components/reprocann/link-code-video";
 import { TOP_EDGE } from "@/components/ui/technical";
 import { cn } from "@/lib/cn";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
@@ -62,11 +62,7 @@ export default async function AyudaPage() {
               <p className="mt-3 measure text-[1.0625rem] leading-relaxed text-text-muted">Encontrá tu código de vinculación y agregalo en tu espacio.</p>
               <StepCards
                 className="mt-8"
-                aside={
-                  <div className="mx-auto w-full max-w-[16rem] lg:relative lg:mx-0 lg:h-full lg:w-[22.5rem] lg:max-w-none">
-                    <LinkCodeVideo className="lg:absolute lg:inset-0 lg:size-full lg:object-cover" />
-                  </div>
-                }
+                aside={<LinkCodeVideoFrame className="lg:w-[22.5rem]" />}
                 layout="list"
                 label="Cómo encontrar y enviar tu código de vinculación"
                 bleed="-mx-5 px-5 scroll-px-5 sm:-mx-8 sm:px-8 sm:scroll-px-8"
