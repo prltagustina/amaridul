@@ -1,6 +1,6 @@
 # Amarí Dul — Seguimiento de la etapa 1
 
-Actualizado: 3/11/2026, 21 h. Etapa 1 **abierta**. Bloques del cierre: **A** portal y catálogo, **B** credenciales, **C** cuota, **D** cierre. **Publicado el 3/11** en dos tandas (`8bc4e3b` y `3c04d74`; después `582fb9f`), con las migraciones `0013` a `0017` aplicadas en producción antes de cada deploy. **La carga de credenciales está activa** (`REPROCANN_UPLOADS=on` desde las 20:55). Sigue **apagado** el recordatorio de cuota (`FEE_REMINDERS`).
+Actualizado: 5/11/2026. **Ajustes del 4/11 (revisión con Luci) y rediseño visual del portal y el sitio público: listos para publicar el 5/11**, con la migración `0019` aplicada antes del deploy (ver «Ajustes del 4/11» y «Rediseño visual»). Etapa 1 **abierta**. Bloques del cierre: **A** portal y catálogo, **B** credenciales, **C** cuota, **D** cierre. **Publicado el 3/11** en dos tandas (`8bc4e3b` y `3c04d74`; después `582fb9f`), con las migraciones `0013` a `0017` aplicadas en producción antes de cada deploy. **La carga de credenciales está activa** (`REPROCANN_UPLOADS=on` desde las 20:55). Sigue **apagado** el recordatorio de cuota (`FEE_REMINDERS`).
 
 **Fuentes**: los pedidos de Luci (A–E), el resumen de la planilla de seguimiento (no se pudo leer: pide sesión de Google; no se editó) y lo comprobado en código, en local y en producción en solo lectura.
 
@@ -20,6 +20,76 @@ Actualizado: 3/11/2026, 21 h. Etapa 1 **abierta**. Bloques del cierre: **A** por
 | D | Cuotas y Mercado Pago | **Publicado el 3/11**: «Administración de cuota» con los datos de pago. **Publicado el 3/11**: los montos (mensual $ 5.000, trimestral $ 15.000, semestral $ 30.000) y la **forma de pago que elige cada socio** (o carga la administración), migración `0016`. Sin deudas ni vencimientos. | Acreditación automática y débito o suscripción: pendientes. Registro de pagos: propuesto, no implementado. |
 | E | Socios existentes y padrón | **Publicado el 28/10.** Acceso digital desde la ficha y «Ya soy socio/a». Categoría «Activo y paciente» publicada el 3/11. | **Revisión de duplicados en producción (pendiente).** Un integrante de la Comisión todavía no está en el padrón: importar su fila (archivo de una fila, ya con DNI y email) desde Socios → Importar y después asignarle «Activo y paciente». A otro socio le falta el DNI en la planilla (ya está importado). |
 
+## Ajustes del 4/11 (revisión con Luci)
+
+Todo **implementado y probado en local** (rama `fase-ui`). Se publica el 5/11 junto con el rediseño visual, aplicando antes la migración `0019` en producción (solo agrega columnas).
+
+| # | Pedido | Estado | Qué quedó | Falta |
+|---|---|---|---|---|
+| 1 | Admisión: sin DNI, solo la credencial | Implementado y probado en local | El paso D dejaba de ser «Acreditación de identidad» (era un cartel: el formulario nunca tuvo carga de archivos) y pasa a **«Credencial REPROCANN»**. No pide archivos ni es obligatorio. Explica los dos caminos: quien ya la tiene la carga en su espacio después del alta; quien no la tiene la gestiona con la asociación y el equipo médico, y el primer paso es el código de vinculación (con el video). El número de DNI sigue en el paso A. Decisión del 4/11: **la credencial se carga después del alta**, no en el formulario (guardar documentos de quien todavía no es socio queda para AD-012). | — |
+| 2 | Revisar credenciales y retirar duplicados | Implementado y probado en local | «Revisar documento» identifica al socio, muestra el documento (quién lo cargó, cuándo, estado, vencimiento, sus hojas para abrir y vista previa de las fotos) y guarda resultado, fecha de verificación, vencimiento y nota interna. Para verificar una credencial hay que poner su vencimiento; la fecha de verificación no puede ser futura. Queda quién revisó y cuándo. Desde «Credenciales REPROCANN» cada fila abre directo esa revisión. **Retirar duplicado**: baja lógica (migración `0019`), con confirmación, sin borrar archivos. | Publicar. Resolver el duplicado real (ver «Cómo retirar una credencial duplicada»). |
+| 3 | Ayuda: el video primero | Implementado y probado en local | «Primer paso para iniciar tu trámite REPROCANN» abre la sección: el video grande primero, a la izquierda del paso 1 (arriba en el celular), y los cuatro pasos como tarjetas y «Agregar código». Después, «Si ya tenés tu credencial». En `/qr` los pasos públicos siguen el mismo orden. | — |
+| 4 | Buscador del admin | Implementado y probado en local | «Buscar» arriba del menú (y la tecla `/`). Detalle en «Buscador del admin». | — |
+| 5 | Modal «Revisar documento» | Implementado y probado en local | Arreglado en el componente de todos los modales: ver «Modales». | **Probar en un iPhone real** (teclado y selector de fecha nativos). |
+| 6 | «Habilitado a dispensa» | Implementado y probado en local | Con las tres condiciones exactas: ver «Habilitado a dispensa». En la ficha del socio (admin) y en Mi espacio → Trámites. | — |
+| 7 | «Falta tu código» | Implementado y probado en local | Confirmado: es el código de vinculación REPROCANN (`reprocann_cases.link_code_encrypted`). Tres estados: «Falta tu código de vinculación REPROCANN», «Código recibido · vinculación pendiente» y «Vinculación verificada». Con la explicación, «Cargar código de vinculación» y «¿Dónde encuentro mi código?» (al video de Ayuda). Aclarado también en REPROCANN, el formulario, Ayuda, `/qr` y la ficha del admin: no es el número de socio ni el de la credencial. | — |
+| 8 | Miniaturas de las credenciales | Implementado y probado en local | En la ficha del socio (Documentación, «Revisar documento» y «Retirar duplicado») y en REPROCANN del socio, cada hoja se ve como miniatura en lugar de una línea de texto: la foto, o la primera hoja del PDF. Un clic abre el archivo completo en otra pestaña. Para los PDF se sumó **pdf.js 6.4.299** (el lector de Firefox; versión fija): se carga solo en esas pantallas, lee el archivo en un proceso aparte, no ejecuta nada del PDF y no hubo que aflojar la política de seguridad del sitio (comprobado también en un build de producción). Un PDF dañado muestra un ícono. Registro: abrir el archivo se sigue registrando cada vez; la miniatura, como «Vista previa de un archivo REPROCANN» una vez por día por persona y documento, en Auditoría (no en el historial de la ficha). | — |
+| 9 | Mi espacio con solapas | Implementado y probado en local | Las cuatro fichas pasan a solapas, como la ficha de producto, en el orden **Membresía, Trámites, Cuota y Productos**; abre en Membresía. Cuota y Trámites muestran un punto cuando tienen algo pendiente (y lo dicen al lector de pantalla). Se recorren con el teclado. | — |
+
+## Rediseño visual (4 y 5/11)
+
+Revisado pantalla por pantalla con la usuaria y **probado en local** (pruebas automáticas, axe y recorridos de 320 a 1440 px). Se publica el 5/11.
+
+- **Paleta Amarí Dul × Dambar**: verde (lo propio de Amarí Dul: acciones, membresía, cuota, productos y ayuda), el índigo de Dambar (`#463577`: trámites y asociarse) y sus rosas exactos, siempre en dosis chicas (volantas, líneas, pastillas de ícono). Encabezados de página en color pleno a la misma profundidad, con la volanta en un acento claro. Detalle en `globals.css`.
+- **Botones**: rellenos. Verde bosque para lo principal, verde suave para lo secundario, arena sin color para herramientas como «Copiar».
+- **Mi espacio**: una sola columna; solapas como una hoja, con la ayuda al pie. Trámites: «Habilitación a dispensa» con «N de 3» y una tarjeta por condición (cumplidas en verde, pendientes en lavanda, el estado al pie); el código de vinculación va antes que la credencial. Cuota: el monto grande y la tarjeta de transferencia con alias y CVU, cada uno con su «Copiar» al lado (el CVU siempre en una línea). Productos: vista previa con «Ver ficha».
+- **Cuota**: «Elegir forma de pago» abre un modal en dos pasos (elegir y cómo pagar, con los datos de la cuenta). «Administración de cuota» muestra el monto y la cuenta en la primera pantalla.
+- **Productos**: sin la vista de catálogo; «Productos» abre la primera ficha, que tiene «Anterior / Siguiente» y la tarjeta «Siguiente producto».
+- **Sitio público**: menú «Sobre Amarí Dul / Comunidad / Contacto» (+ «Acceso socios»); Comunidad (`/qr`) con barra de secciones; la portada lleva «Sumate a la comunidad» a los tres caminos. `/sumate` abre directo la preadmisión y «Inicio» vuelve a los tres caminos (`/qr#comunidad`).
+
+### Habilitado a dispensa
+
+Se calcula cada vez, nunca se guarda ni se marca a mano (`src/lib/dispensing.ts`, la misma regla para el admin y el socio). Las tres condiciones son las que Mi espacio ya mostraba en verde:
+1. **Alta como socio/a**: la membresía está activa. Suspendido o dado de baja: no.
+2. **Credencial REPROCANN**: la credencial vigente está **verificada** por la asociación **y no venció**. «Vence pronto» sigue valiendo hasta su fecha. En revisión, observada, vencida o sin credencial: no.
+3. **Vinculación con Amarí Dul**: la asociación la marcó **verificada**. Tener el código cargado no alcanza.
+
+Si falta alguna, dice cuál y qué sigue. Si una deja de cumplirse (vence la credencial, se suspende la membresía, se observa un documento), la habilitación desaparece sola. Cada condición tiene ícono y texto, no solo color. Una credencial verificada antes del 4/11 sin vencimiento cargado cuenta como verificada (como ya se mostraba); desde ahora no se puede verificar sin vencimiento.
+
+### Cómo retirar una credencial duplicada
+
+1. Ficha del socio → Trámites · REPROCANN → Documentación. Si hay más de una credencial activa aparece «Hay 2 credenciales activas»; la vigente es la más reciente («Vigente»).
+2. Abrir y comparar los archivos de las dos (cada una dice quién la cargó, cuándo, su estado y su vencimiento).
+3. En la que sobra: **Retirar duplicado**. Elegir cuál se conserva, leer «Después del retiro» (qué credencial queda vigente y cómo queda su estado; avisa si deja de cumplirse la condición para la dispensa) y marcar «Abrí y comparé los archivos».
+4. El retirado sale de la documentación activa y de la bandeja de revisión; queda en el historial con sus archivos, quién lo retiró, cuándo y cuál se conservó. El socio lo ve como «Retirado» y ya no lo abre; la administración sí.
+
+No se puede retirar el único documento activo ni conservar uno que no esté activo. Si hace falta, el que se conserva se revisa después como cualquier otro.
+
+### Buscador del admin
+
+Una sola búsqueda, agrupada por tipo, con 6 resultados por grupo y «Ver más» (de a 20). Sin acentos y en cualquier orden («perez juan» encuentra «Juan Pérez»). Abre directo la ficha o la pantalla de cada resultado.
+
+| Grupo | Campos |
+|---|---|
+| Socios | nombre y apellido, DNI completo (por su huella, como en el ingreso), número de socio (también uno anterior), email de contacto y email de la admisión |
+| Trámites REPROCANN | los socios que coinciden, con su credencial vigente y su vinculación; si hay una credencial para revisar, abre esa revisión |
+| Preadmisiones | nombre, email y referencia (PRE-…) |
+| Admisiones | nombre, DNI completo, email y referencia (ADM-…) |
+| Solicitudes de socios existentes | nombre, DNI completo, email, referencia (SOC-…) y número declarado |
+| Productos | nombre y variedad |
+
+Fuera, porque no hay datos reales o no se puede buscar sin descifrar: lotes y códigos (en desarrollo), auditoría, el identificador del permiso y las notas internas (cifrados). Un DNI se busca completo: parte de un DNI no encuentra nada. Solo administradoras; el texto buscado no va en la dirección de la página ni en los registros (puede ser un DNI). Los filtros de cada sección no cambiaron.
+
+### Modales
+
+La causa del desborde: el ancho se calculaba con `100vw` (incluye la barra de desplazamiento), Safari les da a los campos de fecha un ancho propio que no respeta la columna, y el cuerpo tenía un alto fijo (60 %) que en un celular hacía desplazar el modal entero. Además, al estar centrado, cada campo que aparecía (por ejemplo «Motivo para el socio») lo hacía saltar. Ahora:
+- el modal se ajusta al ancho y al alto visibles (también con el teclado del celular abierto), arriba y centrado, y crece hacia abajo;
+- encabezado y botones fijos, el contenido con su propio desplazamiento; los botones en una fila;
+- la página de atrás no se desplaza y no se corre al abrir o cerrar;
+- los campos de fecha quedan dentro de su columna y con la misma altura que los demás en el iPhone.
+
+**Comprobado** (local, datos ficticios): Chrome en escritorio y a 390 px; WebKit (el motor de Safari) en escritorio y emulando un iPhone 13. Sin desplazamiento horizontal, fechas dentro de la columna, el fondo no se desplaza ni se corre, no salta al elegir «Observada», los botones siempre visibles. Escape cierra; con teclado el foco entra en el modal, no sale con Tab y vuelve al botón que lo abrió. **Falta**: un iPhone real (el teclado y el selector de fecha nativos no se pueden emular).
+
 ## Planilla compartida (AD-001 a AD-014)
 
 | ID | Tema | Responsable | Declarado | Comprobado (3/11) | Próximo paso |
@@ -28,8 +98,8 @@ Actualizado: 3/11/2026, 21 h. Etapa 1 **abierta**. Bloques del cierre: **A** por
 | AD-002 | Preguntas frecuentes | Lucía | Pendiente | La sección pública existe sin respuestas. El portal suma «Ayuda» (ver más abajo). | **Dependencia**: textos de Lucía. |
 | AD-003 | Correo de contacto y WhatsApp | Lucía | En proceso | **WhatsApp cargado el 3/11** («por ahora»): +54 9 3425 32-7400, en `CONTACT`. Con él aparecen «Solicitar actualización por WhatsApp», las consultas en Ayuda y Cuota, «¿Dudas? Escribinos por WhatsApp» en `/qr` y la sección pública «Contacto». | **Dependencia**: correo de contacto. |
 | AD-004 | Texto de «Quiénes somos» | Lucía | Pendiente | La sección existe. | **Dependencia**: texto de Lucía. |
-| AD-005 | Revisión de los 9 pasos del alta formal | Ambas | Pendiente | 9 pasos, de A a I. | Revisarlos juntas. |
-| AD-006 | REPROCANN activo al aceptar el alta | Decisión | Pendiente | El alta no exige REPROCANN y no hay dispensa. | Decidir si es condición del alta o de la dispensa. |
+| AD-005 | Revisión de los 9 pasos del alta formal | Ambas | Pendiente | 9 pasos, de A a I. **4/11 (local)**: el paso D pasa de «Acreditación de identidad» a «Credencial REPROCANN», sin archivos. | Revisar el resto juntas. |
+| AD-006 | REPROCANN activo al aceptar el alta | Decisión | **Definido el 4/11** | El alta no exige REPROCANN. La dispensa pide tres condiciones: alta activa, credencial verificada y vigente, y vinculación verificada («Habilitado a dispensa», implementado en local). | Publicar. |
 | AD-007 | Edición y alta de productos | — | Resuelto | Publicado. Local: foto del producto. | — |
 | AD-008 | Información y columnas del padrón | — | Resuelto | Publicado. La columna REPROCANN usa el mismo estado que ve el socio. | Contrastar con la planilla (sin acceso). |
 | AD-009 | Control semestral de historias clínicas | Director Médico | Pendiente | El sistema no guarda datos clínicos. | Definir el seguimiento fuera del sistema o un recordatorio sin datos clínicos. |
@@ -163,10 +233,10 @@ Actualizado: 3/11/2026, 21 h. Etapa 1 **abierta**. Bloques del cierre: **A** por
 
 ## Ayuda y contacto
 
-- **Ayuda del portal**, por situación:
-  - «Todavía no tengo REPROCANN»: el sitio oficial https://reprocann.msal.gob.ar/home (comprobado el 3/11) y la consulta por WhatsApp.
+- **Ayuda del portal**, por situación (orden del 4/11, en local: primero el código de vinculación, como indicó Luci):
+  - «Primer paso para iniciar tu trámite REPROCANN» (si lo vas a iniciar con la asociación): el video, los tres pasos, el sitio oficial https://reprocann.msal.gob.ar/home (comprobado el 3/11), «Cargar código de vinculación» y la consulta por WhatsApp.
   - «Ya tengo mi credencial: quiero cargarla»: la carga en `/qr/reprocann`.
-  - «¿Dónde encuentro mi código de vinculación?»: tres pasos y un **video propio de la asociación** (30 segundos, sin sonido, con el texto en pantalla y las pantallas ilustradas; termina con el logo de Amarí Dul y el WhatsApp). Se reproduce en la misma página (`/videos/codigo-de-vinculacion.mp4`, 0,8 MB). Reemplaza al video de un profesional externo que se había enlazado en Drive.
+  - El video del código de vinculación: tres pasos y un **video propio de la asociación** (30 segundos, sin sonido, con el texto en pantalla y las pantallas ilustradas; termina con el logo de Amarí Dul y el WhatsApp). Se reproduce en la misma página (`/videos/codigo-de-vinculacion.mp4`, 0,8 MB). Reemplaza al video de un profesional externo que se había enlazado en Drive.
   - Cuota, actualizar datos, compras y «Escribirle a la asociación» por WhatsApp.
 - **Inicio público (`/qr`)**, reordenado:
   1. «Sumate a Amarí Dul»: tres entradas directas (quiero asociarme; ya soy socio/a y no tengo cuenta; ya tengo mi cuenta).
@@ -203,6 +273,7 @@ Oculta para socios (ver A). Cuando se retome:
 | `0016` | Forma de pago de cada socio (mensual, trimestral o semestral), con quién la eligió y cuándo. | **Publicada el 3/11** (punto de restauración 20:50:49). |
 | `0017` | Ficha técnica del producto (cosecha, laboratorio, análisis, THC/CBD, perfil) y certificado PDF. | **Publicada el 3/11.** |
 | `0018` | Código de vinculación del socio (cifrado), quién lo envió y cuándo. | **Publicada el 3/11** (punto de restauración 22:16:21). |
+| `0019` | Retiro de credenciales duplicadas: cuándo, quién, el motivo y el documento que se conserva. Solo agrega un tipo y columnas, sin tocar datos. | Se aplica el 5/11, antes del deploy. |
 
 **Compatibilidad**: las tres solo agregan tablas, columnas y tipos, sin borrar ni transformar datos. La versión publicada sigue funcionando con ellas aplicadas.
 
@@ -272,3 +343,9 @@ Oculta para socios (ver A). Cuando se retome:
 7. **Recordatorio de cuota** (Padrón → Recordatorio de cuota): configurar, ver la vista previa y comprobar que no se puede activar.
 8. **Categorías**: en la ficha de un socio, «Membresía» → «Editar».
 9. **Demostraciones locales**: `/qr/trazabilidad/demo` y el botón de WhatsApp en vista previa.
+10. **Ajustes del 4/11** (reiniciar `npm run dev` para que aplique la migración `0019`):
+    - **Buscador**: en el admin, tecla `/` o «Buscar»; probar un apellido sin acento, un DNI ficticio completo (99003006) y «flores».
+    - **Duplicado listo para probar**: la ficha de Persona 06 tiene dos credenciales activas (la verificada que cargó la asociación y una que volvió a mandar el socio). Retirar la repetida con «Retirar duplicado» y ver cómo vuelve «Habilitado a dispensa».
+    - **Revisión desde la bandeja**: Credenciales REPROCANN → una fila abre «Revisar documento».
+    - **Socio**: Mi espacio con sus cuatro solapas (Trámites con las tres condiciones); Ayuda con el video primero; `/admision/solicitud?paso=D`.
+    - **Miniaturas**: Persona 06 tiene una credencial de prueba en PDF (rotulada «sin validez») y otra en dos fotos: se ven en su ficha, en los modales y en su REPROCANN.
