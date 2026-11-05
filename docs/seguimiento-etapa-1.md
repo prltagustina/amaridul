@@ -136,7 +136,7 @@ La causa del desborde: el ancho se calculaba con `100vw` (incluye la barra de de
 - Lo ven los socios con membresía activa, tengan o no credencial. Ver productos no habilita una dispensa (lo dice la página).
 - Crear y dejar activo → aparece. Editar → se ve al recargar. Desactivar → desaparece; su ficha y su foto responden 404 por enlace directo. Se lee en cada visita: no hay caché que deje datos viejos.
 - Carga, error (con «Probar de nuevo») y vacío resueltos.
-- Sin precios, stock, compra, lotes, entregas, certificados ni notas internas. Se mantiene el aviso: «Próximamente vas a poder comprar productos desde tu cuenta. Te avisaremos cuando esté disponible».
+- Sin precios, stock, compra, lotes, entregas, certificados ni notas internas. El aviso «Próximamente vas a poder comprar productos desde tu cuenta» se quitó de la ficha el 5/11: no explicaba cómo conseguir los productos. Falta definir con la asociación cómo se piden y se retiran hoy.
 
 **Fotos de productos** (nuevo circuito, separado del almacenamiento privado de credenciales):
 - En «Productos» de administración, la columna «Foto» abre el diálogo: elegir, ver, cambiar o quitar.
