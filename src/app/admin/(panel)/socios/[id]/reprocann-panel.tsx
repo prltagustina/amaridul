@@ -70,8 +70,16 @@ const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires" }).format(new Date());
 const reviewTone: Record<ReviewStatus, Tone> = { pendiente: "warning", observada: "error", verificada: "success" };
 
-type Review = { id: string; reviewStatus: ReviewStatus; verifiedOn: string; expiresOn: string; memberMessage: string; notes: string };
-const reviewOf = (d: ReprocannDocumentView): Review => ({ id: d.id, reviewStatus: d.reviewStatus, verifiedOn: d.verifiedOn ?? "", expiresOn: d.expiresOn ?? "", memberMessage: d.memberMessage ?? "", notes: d.notes ?? "" });
+/** A review decides the result, or that the document is someone else's (`notTheirs`: it is withdrawn, after `opened`). */
+type Review = { id: string; reviewStatus: ReviewStatus; verifiedOn: string; expiresOn: string; memberMessage: string; notes: string; notTheirs: boolean; opened: boolean };
+const reviewOf = (d: ReprocannDocumentView, notTheirs = false): Review => ({ id: d.id, reviewStatus: d.reviewStatus, verifiedOn: d.verifiedOn ?? "", expiresOn: d.expiresOn ?? "", memberMessage: d.memberMessage ?? "", notes: d.notes ?? "", notTheirs, opened: false });
+/** What each result means, under its name: the review's choices, and withdrawing someone else's document. */
+const DECISIONS: { value: ReviewStatus | "otro_socio"; hint: string }[] = [
+  { value: "pendiente", hint: "Todavía sin decidir." },
+  { value: "observada", hint: "Está mal, no se lee o le falta algo: el socio ve el motivo y la vuelve a enviar." },
+  { value: "verificada", hint: "Es del socio, se lee bien y tiene su vencimiento." },
+  { value: "otro_socio", hint: "Es de otra persona: se retira de esta cuenta, sin borrarse." },
+];
 type ReviewErrors = Partial<Record<"verifiedOn" | "expiresOn" | "memberMessage", string>>;
 
 /** The pages of a document as thumbnails (a photo, or a PDF's first page); each opens the whole file in a new tab. */
@@ -130,18 +138,14 @@ export default function ReprocannPanel({ memberId, member, openReview, view, opt
   const [reviewErrors, setReviewErrors] = useState<ReviewErrors>({});
   const [withdrawing, setWithdrawing] = useState<{ id: string; kept: string; compared: boolean } | null>(null);
   const [withdrawError, setWithdrawError] = useState("");
-  // Withdrawing a document that is someone else's: the admin confirms they opened it.
-  const [notMine, setNotMine] = useState<{ id: string; opened: boolean } | null>(null);
-  const [notMineError, setNotMineError] = useState("");
 
   const activeCredentials = view.documents.filter((d) => d.active && d.credential);
   const reviewed = reviewing ? view.documents.find((d) => d.id === reviewing.id) : undefined;
   const withdrawn = withdrawing ? view.documents.find((d) => d.id === withdrawing.id) : undefined;
-  const notMineDoc = notMine ? view.documents.find((d) => d.id === notMine.id) : undefined;
   const keepOptions = withdrawing ? activeCredentials.filter((d) => d.id !== withdrawing.id) : [];
 
-  const startReview = (d: ReprocannDocumentView) => {
-    setReviewing(reviewOf(d));
+  const startReview = (d: ReprocannDocumentView, notTheirs = false) => {
+    setReviewing(reviewOf(d, notTheirs));
     setReviewError("");
     setReviewErrors({});
   };
@@ -166,6 +170,10 @@ export default function ReprocannPanel({ memberId, member, openReview, view, opt
 
   const saveReview = () => {
     if (!reviewing || !reviewed) return;
+    if (reviewing.notTheirs) {
+      run(() => withdrawNotThisMemberAction(memberId, reviewing.id), "Documento retirado. La credencial vigente ya se recalculó para el socio.", setReviewError, () => setReviewing(null));
+      return;
+    }
     const errors: ReviewErrors = {};
     if (reviewing.reviewStatus === "verificada" && !reviewing.verifiedOn) errors.verifiedOn = "Indicá la fecha de verificación.";
     if (reviewing.verifiedOn && reviewing.verifiedOn > today()) errors.verifiedOn = "La fecha de verificación no puede ser posterior a hoy.";
@@ -345,15 +353,7 @@ export default function ReprocannPanel({ memberId, member, openReview, view, opt
                         <Archive aria-hidden className="size-4" strokeWidth={1.5} /> Retirar duplicado
                       </Button>
                     )}
-                    <Button
-                      variant="ghost"
-                      shape="admin"
-                      className="min-h-9"
-                      onClick={() => {
-                        setNotMine({ id: d.id, opened: false });
-                        setNotMineError("");
-                      }}
-                    >
+                    <Button variant="ghost" shape="admin" className="min-h-9" onClick={() => startReview(d, true)}>
                       <UserX aria-hidden className="size-4" strokeWidth={1.5} /> No es de este socio
                     </Button>
                   </div>
@@ -415,9 +415,14 @@ export default function ReprocannPanel({ memberId, member, openReview, view, opt
         open={reviewing !== null}
         onClose={() => setReviewing(null)}
         title="Revisar documento"
-        description="Queda registrado quién revisó y cuándo. Verificar la credencial es una de las tres condiciones para la dispensa, no la habilitación."
-        confirmLabel={pending ? "Guardando…" : "Guardar revisión"}
-        confirmDisabled={pending}
+        description={
+          reviewing?.notTheirs
+            ? "Sale de la documentación de este socio, que ya no la abre; lo que esté en la cuenta de la otra persona no cambia. No se borra: queda en el historial con sus archivos y quién la retiró."
+            : "Queda registrado quién revisó y cuándo. Verificar la credencial es una de las tres condiciones para la dispensa, no la habilitación."
+        }
+        confirmLabel={reviewing?.notTheirs ? (pending ? "Retirando…" : "Retirar de esta cuenta") : pending ? "Guardando…" : "Guardar revisión"}
+        confirmVariant={reviewing?.notTheirs ? "danger" : undefined}
+        confirmDisabled={pending || (!!reviewing?.notTheirs && !reviewing.opened)}
         onConfirm={saveReview}
         wide
       >
@@ -431,18 +436,52 @@ export default function ReprocannPanel({ memberId, member, openReview, view, opt
               </p>
               <DocumentSummary d={reviewed} options={options} />
             </div>
+            <fieldset className="space-y-2">
+              <legend className="text-label text-foreground">Resultado</legend>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {DECISIONS.map((o) => {
+                  const checked = o.value === "otro_socio" ? reviewing.notTheirs : !reviewing.notTheirs && reviewing.reviewStatus === o.value;
+                  return (
+                    <label
+                      key={o.value}
+                      className={`flex cursor-pointer items-start gap-3 !rounded-control border px-3 py-2.5 ${checked ? (o.value === "otro_socio" ? "border-error-fg bg-error-bg" : "border-forest bg-forest-soft") : "border-border"}`}
+                    >
+                      <input
+                        type="radio"
+                        name="review-decision"
+                        value={o.value}
+                        checked={checked}
+                        onChange={() => {
+                          setReviewing((r) =>
+                            r && (o.value === "otro_socio" ? { ...r, notTheirs: true } : { ...r, notTheirs: false, reviewStatus: o.value, verifiedOn: o.value === "verificada" && !r.verifiedOn ? today() : r.verifiedOn }),
+                          );
+                          setReviewErrors({});
+                          setReviewError("");
+                        }}
+                        className="mt-1 size-4 shrink-0 accent-[var(--forest)]"
+                      />
+                      <span className="min-w-0">
+                        <span className="block font-medium text-foreground">{o.value === "otro_socio" ? "No es de este socio" : label(options.review, o.value)}</span>
+                        <span className="block text-small text-text-muted">{o.hint}</span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+            {reviewing.notTheirs ? (
+              <>
+                {reviewed.ifWithdrawn && (
+                  <Alert tone={reviewed.ifWithdrawn.loses ? "warning" : "info"} title="Después del retiro">
+                    {reviewed.ifWithdrawn.inForce ? `Queda vigente: ${reviewed.ifWithdrawn.inForce}. El estado de la credencial pasa a «${reviewed.ifWithdrawn.statusLabel}».` : "El socio queda sin credencial vigente."}
+                    {reviewed.ifWithdrawn.loses && " Deja de cumplirse la condición de la credencial para la dispensa."}
+                  </Alert>
+                )}
+                <Checkbox id="review-not-theirs" label="Abrí el archivo: es de otra persona." checked={reviewing.opened} onChange={(e) => setReviewing((r) => r && { ...r, opened: e.target.checked })} />
+              </>
+            ) : (
+              <>
             <div className="grid gap-5 sm:grid-cols-2">
-              <Select
-                id="review-status"
-                label="Resultado"
-                options={options.review}
-                value={reviewing.reviewStatus}
-                onChange={(e) => {
-                  const reviewStatus = e.target.value as ReviewStatus;
-                  setReviewing((r) => r && { ...r, reviewStatus, verifiedOn: reviewStatus === "verificada" && !r.verifiedOn ? today() : r.verifiedOn });
-                  setReviewErrors({});
-                }}
-              />
               <TextField
                 id="review-date"
                 type="date"
@@ -486,6 +525,8 @@ export default function ReprocannPanel({ memberId, member, openReview, view, opt
               maxLength={500}
               rows={2}
             />
+              </>
+            )}
           </>
         )}
       </Dialog>
@@ -535,39 +576,6 @@ export default function ReprocannPanel({ memberId, member, openReview, view, opt
         )}
       </Dialog>
 
-      <Dialog
-        open={notMine !== null}
-        onClose={() => setNotMine(null)}
-        title="Retirar: no es de este socio"
-        description="Para un documento de otra persona cargado en esta cuenta. Sale de la documentación de este socio, que ya no lo abre; lo que esté en la cuenta de la otra persona no cambia. No se borra: queda en el historial con sus archivos y quién lo retiró."
-        confirmLabel={pending ? "Retirando…" : "Retirar"}
-        confirmVariant="danger"
-        confirmDisabled={pending || !notMine?.opened}
-        onConfirm={() => notMine && run(() => withdrawNotThisMemberAction(memberId, notMine.id), "Documento retirado. La credencial vigente ya se recalculó para el socio.", setNotMineError, () => setNotMine(null))}
-        wide
-      >
-        {notMineError && <Alert tone="error" live>{notMineError}</Alert>}
-        {notMine && notMineDoc && (
-          <>
-            <div className="space-y-2">
-              <h3 className="text-label text-foreground">Vas a retirar</h3>
-              <DocumentSummary d={notMineDoc} options={options} />
-            </div>
-            {notMineDoc.ifWithdrawn && (
-              <Alert tone={notMineDoc.ifWithdrawn.loses ? "warning" : "info"} title="Después del retiro">
-                {notMineDoc.ifWithdrawn.inForce ? `Queda vigente: ${notMineDoc.ifWithdrawn.inForce}. El estado de la credencial pasa a «${notMineDoc.ifWithdrawn.statusLabel}».` : "El socio queda sin credencial vigente."}
-                {notMineDoc.ifWithdrawn.loses && " Deja de cumplirse la condición de la credencial para la dispensa."}
-              </Alert>
-            )}
-            <Checkbox
-              id="withdraw-not-mine"
-              label="Abrí el archivo: es de otra persona."
-              checked={notMine.opened}
-              onChange={(e) => setNotMine((w) => w && { ...w, opened: e.target.checked })}
-            />
-          </>
-        )}
-      </Dialog>
     </section>
   );
 }
