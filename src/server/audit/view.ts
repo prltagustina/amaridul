@@ -56,6 +56,7 @@ const ACTIONS: Record<string, { label: string; area: AuditArea }> = {
   "reprocann.document_viewed": { label: "Archivo REPROCANN abierto", area: "REPROCANN" },
   "reprocann.document_previewed": { label: "Vista previa de un archivo REPROCANN", area: "REPROCANN" },
   "reprocann.document_withdrawn": { label: "Documento REPROCANN retirado por duplicado", area: "REPROCANN" },
+  "reprocann.document_withdrawn_other_member": { label: "Documento REPROCANN retirado: no era de este socio", area: "REPROCANN" },
   "reprocann.document_files_added": { label: "Documentación REPROCANN cargada por la asociación", area: "REPROCANN" },
   "reprocann.link_code_sent": { label: "Código de vinculación recibido", area: "REPROCANN" },
   "reprocann.link_code_removed": { label: "Código de vinculación quitado", area: "REPROCANN" },

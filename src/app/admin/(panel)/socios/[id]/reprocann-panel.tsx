@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Archive, FilePlus2, FileUp, Pencil } from "lucide-react";
+import { Archive, FilePlus2, FileUp, Pencil, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/choice";
 import { Alert, Card, StatusBadge, type Tone } from "@/components/ui/display";
@@ -10,7 +10,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Select, TextField, Textarea } from "@/components/ui/field";
 import { CopyValue } from "@/components/ui/copy-value";
 import { DocumentThumbnails } from "@/components/reprocann/document-thumbnails";
-import { addDocumentAction, reviewDocumentAction, saveCaseAction, saveLinkCodeAction, withdrawDuplicateAction, type ReprocannResult } from "./reprocann-actions";
+import { addDocumentAction, reviewDocumentAction, saveCaseAction, saveLinkCodeAction, withdrawDuplicateAction, withdrawNotThisMemberAction, type ReprocannResult } from "./reprocann-actions";
 import { UploadDialog } from "./upload-dialog";
 
 type Option = { value: string; label: string };
@@ -44,9 +44,9 @@ export type ReprocannDocumentView = {
   /** Name of who recorded it (the member or an admin). */
   recordedBy: string | null;
   replaced: boolean;
-  /** Withdrawn as a duplicate: by whom, when, and the document kept instead. */
-  withdrawn: { at: string; by: string; kept: string } | null;
-  /** Offered while there is more than one active credential: what withdrawing this one would leave in force. */
+  /** Withdrawn: by whom, when, why, and for a duplicate the document kept instead. */
+  withdrawn: { at: string; by: string; reason: "duplicado" | "otro_socio"; kept: string | null } | null;
+  /** For an active credential: what withdrawing it would leave in force. */
   ifWithdrawn: { inForce: string | null; statusLabel: string; statusTone: "success" | "warning" | "error" | "neutral"; loses: boolean } | null;
   /** One per page, in order. */
   files: { href: string; page: number; label: string; uploaded: string; image: boolean }[];
@@ -130,10 +130,14 @@ export default function ReprocannPanel({ memberId, member, openReview, view, opt
   const [reviewErrors, setReviewErrors] = useState<ReviewErrors>({});
   const [withdrawing, setWithdrawing] = useState<{ id: string; kept: string; compared: boolean } | null>(null);
   const [withdrawError, setWithdrawError] = useState("");
+  // Withdrawing a document that is someone else's: the admin confirms they opened it.
+  const [notMine, setNotMine] = useState<{ id: string; opened: boolean } | null>(null);
+  const [notMineError, setNotMineError] = useState("");
 
   const activeCredentials = view.documents.filter((d) => d.active && d.credential);
   const reviewed = reviewing ? view.documents.find((d) => d.id === reviewing.id) : undefined;
   const withdrawn = withdrawing ? view.documents.find((d) => d.id === withdrawing.id) : undefined;
+  const notMineDoc = notMine ? view.documents.find((d) => d.id === notMine.id) : undefined;
   const keepOptions = withdrawing ? activeCredentials.filter((d) => d.id !== withdrawing.id) : [];
 
   const startReview = (d: ReprocannDocumentView) => {
@@ -305,7 +309,7 @@ export default function ReprocannPanel({ memberId, member, openReview, view, opt
                   <div className="flex flex-wrap items-center gap-2">
                     {d.inForce && <StatusBadge tone="brand">Vigente</StatusBadge>}
                     {d.withdrawn ? (
-                      <StatusBadge tone="neutral">Retirado · duplicado</StatusBadge>
+                      <StatusBadge tone="neutral">{d.withdrawn.reason === "otro_socio" ? "Retirado · no es de este socio" : "Retirado · duplicado"}</StatusBadge>
                     ) : d.replaced ? (
                       <StatusBadge tone="neutral">Reemplazado por un archivo nuevo</StatusBadge>
                     ) : (
@@ -323,7 +327,9 @@ export default function ReprocannPanel({ memberId, member, openReview, view, opt
                 </p>
                 {d.withdrawn && (
                   <p className="text-small text-text-muted [overflow-wrap:anywhere]">
-                    Retirado por duplicado por {d.withdrawn.by} el {d.withdrawn.at}. Se conservó: {d.withdrawn.kept}.
+                    {d.withdrawn.reason === "otro_socio"
+                      ? `Retirado por ${d.withdrawn.by} el ${d.withdrawn.at}: no era de este socio.`
+                      : `Retirado por duplicado por ${d.withdrawn.by} el ${d.withdrawn.at}. Se conservó: ${d.withdrawn.kept ?? "otro documento"}.`}
                   </p>
                 )}
                 {d.memberMessage && d.active && <p className="!rounded-control bg-warning-bg px-3 py-2 text-small text-warning-fg">Motivo para el socio: {d.memberMessage}</p>}
@@ -334,11 +340,22 @@ export default function ReprocannPanel({ memberId, member, openReview, view, opt
                     <Button variant="ghost" shape="admin" className="min-h-9" onClick={() => startReview(d)}>
                       Revisar
                     </Button>
-                    {d.ifWithdrawn && (
+                    {d.ifWithdrawn && activeCredentials.length > 1 && (
                       <Button variant="ghost" shape="admin" className="min-h-9" onClick={() => startWithdrawal(d)}>
                         <Archive aria-hidden className="size-4" strokeWidth={1.5} /> Retirar duplicado
                       </Button>
                     )}
+                    <Button
+                      variant="ghost"
+                      shape="admin"
+                      className="min-h-9"
+                      onClick={() => {
+                        setNotMine({ id: d.id, opened: false });
+                        setNotMineError("");
+                      }}
+                    >
+                      <UserX aria-hidden className="size-4" strokeWidth={1.5} /> No es de este socio
+                    </Button>
                   </div>
                 )}
               </li>
@@ -513,6 +530,40 @@ export default function ReprocannPanel({ memberId, member, openReview, view, opt
               label="Abrí y comparé los archivos: este es el repetido."
               checked={withdrawing.compared}
               onChange={(e) => setWithdrawing((w) => w && { ...w, compared: e.target.checked })}
+            />
+          </>
+        )}
+      </Dialog>
+
+      <Dialog
+        open={notMine !== null}
+        onClose={() => setNotMine(null)}
+        title="Retirar: no es de este socio"
+        description="Para un documento de otra persona cargado en esta cuenta. Sale de la documentación de este socio, que ya no lo abre; lo que esté en la cuenta de la otra persona no cambia. No se borra: queda en el historial con sus archivos y quién lo retiró."
+        confirmLabel={pending ? "Retirando…" : "Retirar"}
+        confirmVariant="danger"
+        confirmDisabled={pending || !notMine?.opened}
+        onConfirm={() => notMine && run(() => withdrawNotThisMemberAction(memberId, notMine.id), "Documento retirado. La credencial vigente ya se recalculó para el socio.", setNotMineError, () => setNotMine(null))}
+        wide
+      >
+        {notMineError && <Alert tone="error" live>{notMineError}</Alert>}
+        {notMine && notMineDoc && (
+          <>
+            <div className="space-y-2">
+              <h3 className="text-label text-foreground">Vas a retirar</h3>
+              <DocumentSummary d={notMineDoc} options={options} />
+            </div>
+            {notMineDoc.ifWithdrawn && (
+              <Alert tone={notMineDoc.ifWithdrawn.loses ? "warning" : "info"} title="Después del retiro">
+                {notMineDoc.ifWithdrawn.inForce ? `Queda vigente: ${notMineDoc.ifWithdrawn.inForce}. El estado de la credencial pasa a «${notMineDoc.ifWithdrawn.statusLabel}».` : "El socio queda sin credencial vigente."}
+                {notMineDoc.ifWithdrawn.loses && " Deja de cumplirse la condición de la credencial para la dispensa."}
+              </Alert>
+            )}
+            <Checkbox
+              id="withdraw-not-mine"
+              label="Abrí el archivo: es de otra persona."
+              checked={notMine.opened}
+              onChange={(e) => setNotMine((w) => w && { ...w, opened: e.target.checked })}
             />
           </>
         )}

@@ -9,7 +9,7 @@ import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { auditLogs, members, reprocannDocumentFiles, reprocannDocuments } from "@/server/db/schema";
-import { caseInput, getReprocann, ReprocannError, reviewDocument, reviewInput, saveCase, withdrawDuplicate } from "@/server/reprocann";
+import { caseInput, getReprocann, ReprocannError, reviewDocument, reviewInput, saveCase, withdrawDuplicate, withdrawNotThisMember } from "@/server/reprocann";
 import { addAdminDocument, adminUploadInput, documentsToReview, memberFolder, memberUploadInput, openDocumentFile, previewImport, registerMemberUpload, sha256Hex } from "@/server/reprocann-files";
 import { memberReprocann } from "@/server/member-portal";
 import { getMemberProfile, listRegister } from "@/server/member-profile";
@@ -83,7 +83,7 @@ describe("retirar una credencial duplicada", () => {
     expect(portal.status.key).toBe("verified");
     expect(portal.credential!.id).toBe(kept);
     const shown = portal.documents.find((d) => d.id === repeated)!;
-    expect(shown).toMatchObject({ withdrawn: true, files: [] });
+    expect(shown).toMatchObject({ withdrawn: "duplicado", files: [] });
     expect((await listRegister(ctx.db)).find((m) => m.id === a.memberId)!.credential.key).toBe("verified");
     expect((await getMemberProfile(ctx.db, ctx.rings, a.memberId))!.credentialStatus.key).toBe("verified");
     // It leaves the review queue; it cannot be reviewed any more.
@@ -162,6 +162,60 @@ describe("retirar una credencial duplicada", () => {
     const bytes = pdf();
     const preview = await previewImport(ctx.db, ctx.rings, [{ dni: a.dni, page: 1, sha256: sha256Hex(bytes), size: bytes.byteLength, type: "application/pdf" }]);
     expect(preview[0].status).toBe("existente");
+  });
+});
+
+describe("retirar un documento que no es del socio", () => {
+  it("withdraws it even when it is the only one, keeps nothing instead, and leaves the other person's account alone", async () => {
+    const a = await memberWithAccount();
+    const other = await memberWithAccount();
+    // The other person's credential, in their own account, and a copy sent to the wrong account.
+    const theirs = await verifiedByAssociation(other);
+    const wrong = await sentByMember(a);
+    expect((await statusOf(a.memberId)).key).toBe("pending");
+
+    const r = await withdrawNotThisMember(ctx.db, adminId, wrong, new Date("2026-11-05T13:00:00Z"));
+    expect(r.currentAfter).toBeNull();
+
+    // Nothing deleted: the row and its file stay, marked with who, when and why, and nothing kept.
+    const [row] = await ctx.db.select().from(reprocannDocuments).where(eq(reprocannDocuments.id, wrong));
+    expect(row).toMatchObject({ withdrawnBy: adminId, withdrawalReason: "otro_socio", keptDocumentId: null });
+    const files = await ctx.db.select().from(reprocannDocumentFiles).where(eq(reprocannDocumentFiles.documentId, wrong));
+    expect(files).toHaveLength(1);
+    expect(await storage.get(files[0].fileKey)).toBeTruthy();
+
+    // This member is left without a credential and reads it as not theirs, without its files or expiry.
+    const portal = (await memberReprocann(ctx.db, ctx.rings.field, a.memberId))!;
+    expect(portal.status.key).toBe("none");
+    expect(portal.documents.find((d) => d.id === wrong)).toMatchObject({ withdrawn: "otro_socio", files: [], expiresOn: null });
+    expect(await openDocumentFile(ctx.db, storage, files[0].id, { role: "member", userId: a.userId, memberId: a.memberId })).toBeNull();
+    expect(await openDocumentFile(ctx.db, storage, files[0].id, { role: "admin", userId: adminId, memberId: a.memberId })).toBeTruthy();
+    expect((await documentsToReview(ctx.db)).map((d) => d.id)).not.toContain(wrong);
+
+    // The other person's credential is untouched.
+    expect((await statusOf(other.memberId)).key).toBe("verified");
+    const [kept] = await ctx.db.select().from(reprocannDocuments).where(eq(reprocannDocuments.id, theirs));
+    expect(kept.withdrawnAt).toBeNull();
+
+    // The log says what was withdrawn and how the status changed.
+    const [log] = await ctx.db.select().from(auditLogs).where(eq(auditLogs.action, "reprocann.document_withdrawn_other_member"));
+    expect(log.metadata).toMatchObject({ document: wrong, reason: "otro_socio", current_before: wrong, current_after: null, status_before: "pending", status_after: "none" });
+
+    // Once, and no review afterwards.
+    await expect(withdrawNotThisMember(ctx.db, adminId, wrong)).rejects.toThrow(/ya se retiró/);
+    await expect(reviewDocument(ctx.db, ctx.rings.field, adminId, wrong, reviewInput.parse({ reviewStatus: "verificada", verifiedOn: "2026-11-05", expiresOn: "2027-09-30" }))).rejects.toThrow(/se retiró/);
+  });
+
+  it("the database keeps the rule: a duplicate names the document kept, the other reason none", async () => {
+    const a = await memberWithAccount();
+    const one = await verifiedByAssociation(a);
+    const two = await sentByMember(a);
+    const at = new Date("2026-11-05T14:00:00Z");
+    await expect(ctx.db.update(reprocannDocuments).set({ withdrawnAt: at, withdrawnBy: adminId, withdrawalReason: "otro_socio", keptDocumentId: one }).where(eq(reprocannDocuments.id, two))).rejects.toThrow();
+    await expect(ctx.db.update(reprocannDocuments).set({ withdrawnAt: at, withdrawnBy: adminId, withdrawalReason: "duplicado", keptDocumentId: null }).where(eq(reprocannDocuments.id, two))).rejects.toThrow();
+    await expect(ctx.db.update(reprocannDocuments).set({ withdrawnAt: at, withdrawnBy: adminId, withdrawalReason: null, keptDocumentId: null }).where(eq(reprocannDocuments.id, two))).rejects.toThrow();
+    const [row] = await ctx.db.select().from(reprocannDocuments).where(eq(reprocannDocuments.id, two));
+    expect(row.withdrawnAt).toBeNull();
   });
 });
 

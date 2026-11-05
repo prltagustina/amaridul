@@ -21,11 +21,11 @@ export type PortalDocument = {
   sentOn: string;
   /** Sent by the member from their account; otherwise the association loaded or recorded it. */
   fromMember: boolean;
-  /** One per page, in order. Empty for a withdrawn duplicate: it is no longer part of their documentation. */
+  /** One per page, in order. Empty for a withdrawn document: it is no longer part of their documentation. */
   files: { id: string; page: number; pdf: boolean }[];
   replaced: boolean;
-  /** Withdrawn by the association because it was repeated. */
-  withdrawn: boolean;
+  /** Withdrawn by the association, and why: repeated, or not theirs (someone else's, sent to their account). */
+  withdrawn: "duplicado" | "otro_socio" | null;
   /** Why it was observed, written for the member. Only while it is observed. */
   memberMessage: string | null;
 };
@@ -62,6 +62,7 @@ export async function memberReprocann(db: Database, field: Keyring, memberId: st
       createdAt: reprocannDocuments.createdAt,
       replacedBy: reprocannDocuments.replacedBy,
       withdrawnAt: reprocannDocuments.withdrawnAt,
+      withdrawalReason: reprocannDocuments.withdrawalReason,
       message: reprocannDocuments.memberMessageEncrypted,
       uploaderRole: user.role,
     })
@@ -83,12 +84,13 @@ export async function memberReprocann(db: Database, field: Keyring, memberId: st
     kindLabel: documentKindLabel(d.kind),
     review: d.reviewStatus,
     reviewLabel: labelIn(REVIEW_STATUS, d.reviewStatus),
-    expiresOn: d.expiresOn,
+    // Someone else's credential: not even its expiry is shown to this member.
+    expiresOn: d.withdrawalReason === "otro_socio" ? null : d.expiresOn,
     sentOn: todayInArgentina(d.createdAt),
     fromMember: d.uploaderRole === "MEMBER",
     files: d.withdrawnAt ? [] : files.filter((f) => f.documentId === d.id).map((f) => ({ id: f.id, page: f.page, pdf: f.contentType === "application/pdf" })),
     replaced: !!d.replacedBy,
-    withdrawn: !!d.withdrawnAt,
+    withdrawn: d.withdrawnAt ? (d.withdrawalReason === "otro_socio" ? "otro_socio" : "duplicado") : null,
     memberMessage: d.reviewStatus === "observada" ? decryptMemberMessage(field, d.id, d.message) : null,
   }));
   const current = currentCredential(rows.filter(isActiveDocument));

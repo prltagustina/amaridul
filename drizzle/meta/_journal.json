@@ -141,6 +141,13 @@
       "when": 1793813982398,
       "tag": "0019_retiro_duplicados",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793908914179,
+      "tag": "0020_retiro_otro_socio",
+      "breakpoints": true
     }
   ]
 }

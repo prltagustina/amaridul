@@ -28,7 +28,7 @@ function FileLinks({ files, size = "md" }: { files: PortalDocument["files"]; siz
   return <DocumentThumbnails size={size} pages={files.map((f) => ({ href: `/qr/reprocann/archivo/${f.id}`, page: f.page, pdf: f.pdf }))} />;
 }
 
-/** A previous document: replaced, older, recorded by the association, or withdrawn as a repeat. */
+/** A previous document: replaced, older, recorded by the association, or withdrawn (repeated, or not theirs). */
 function HistoryItem({ d }: { d: PortalDocument }) {
   return (
     <li className="grid gap-3 py-4 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
@@ -38,7 +38,7 @@ function HistoryItem({ d }: { d: PortalDocument }) {
           {d.fromMember ? `La enviaste el ${day(d.sentOn)}` : `La cargó la asociación el ${day(d.sentOn)}`}
           {d.expiresOn ? ` · vence ${day(d.expiresOn)}` : ""}
         </p>
-        {d.withdrawn && <p className="text-sm text-text-muted">La asociación la retiró porque estaba repetida.</p>}
+        {d.withdrawn && <p className="text-sm text-text-muted">{d.withdrawn === "otro_socio" ? "La asociación la retiró porque no era tuya." : "La asociación la retiró porque estaba repetida."}</p>}
         {d.files.length > 0 && <FileLinks files={d.files} size="sm" />}
       </div>
       {d.withdrawn ? <StatusBadge tone="neutral">Retirada</StatusBadge> : d.replaced ? <StatusBadge tone="neutral">Reemplazada</StatusBadge> : <StatusBadge tone={REVIEW_TONE[d.review]}>{d.reviewLabel}</StatusBadge>}

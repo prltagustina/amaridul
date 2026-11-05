@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db";
 import { getKeyrings } from "@/server/crypto";
-import { addDocument, caseInput, documentInput, ReprocannError, reviewDocument, reviewInput, saveCase, withdrawDuplicate } from "@/server/reprocann";
+import { addDocument, caseInput, documentInput, ReprocannError, reviewDocument, reviewInput, saveCase, withdrawDuplicate, withdrawNotThisMember } from "@/server/reprocann";
 import { addAdminDocument, adminUploadInput, type AdminUploadResult } from "@/server/reprocann-files";
 import { LinkCodeError, linkCodeInput, setLinkCode } from "@/server/reprocann-link";
 import { documentStorage, uploadMode } from "@/server/storage";
@@ -65,6 +65,21 @@ export async function withdrawDuplicateAction(memberId: string, documentId: stri
   } catch (e) {
     if (e instanceof ReprocannError) return { ok: false, error: e.message };
     console.error("REPROCANN duplicate withdrawal failed:", e instanceof Error ? e.message : e);
+    return { ok: false, error: "No pudimos retirar el documento. Recargá la página y probá de nuevo." };
+  }
+  revalidatePath(`/admin/socios/${memberId}`);
+  revalidatePath("/admin/reprocann");
+  return { ok: true };
+}
+
+/** Withdraws a document that is not this member's (someone else's, sent to the wrong account); nothing is deleted. */
+export async function withdrawNotThisMemberAction(memberId: string, documentId: string): Promise<ReprocannResult> {
+  const { user } = await requireAdmin();
+  try {
+    await withdrawNotThisMember(await getDb(), user.id, String(documentId));
+  } catch (e) {
+    if (e instanceof ReprocannError) return { ok: false, error: e.message };
+    console.error("REPROCANN withdrawal (not this member) failed:", e instanceof Error ? e.message : e);
     return { ok: false, error: "No pudimos retirar el documento. Recargá la página y probá de nuevo." };
   }
   revalidatePath(`/admin/socios/${memberId}`);

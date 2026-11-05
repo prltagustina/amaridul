@@ -279,7 +279,7 @@ export async function reviewDocument(db: Database, field: Keyring, actorUserId: 
     if (!d) throw new ReprocannError("El documento no existe.");
     // A review is of the file the admin saw: a document replaced meanwhile is not the current one.
     if (d.replacedBy) throw new ReprocannError("El socio reemplazó este documento por uno nuevo. Recargá la página y revisá la versión actual.");
-    if (d.withdrawnAt) throw new ReprocannError("Este documento se retiró por duplicado: ya no forma parte de la documentación activa.");
+    if (d.withdrawnAt) throw new ReprocannError("Este documento se retiró: ya no forma parte de la documentación activa.");
     // A credential is verified with the expiry read on it: without it, its validity cannot be followed.
     const expiresOn = input.expiresOn === undefined ? d.expiresOn : input.expiresOn;
     if (input.reviewStatus === "verificada" && (CREDENTIAL_KINDS as readonly string[]).includes(d.kind) && !expiresOn) throw new ReprocannError("Indicá el vencimiento que figura en la credencial para verificarla.");
@@ -321,6 +321,18 @@ export async function reviewDocument(db: Database, field: Keyring, actorUserId: 
   });
 }
 
+/** What a withdrawal reads of each document of the case. */
+const WITHDRAWAL_COLUMNS = {
+  id: reprocannDocuments.id,
+  caseId: reprocannDocuments.caseId,
+  kind: reprocannDocuments.kind,
+  replacedBy: reprocannDocuments.replacedBy,
+  withdrawnAt: reprocannDocuments.withdrawnAt,
+  reviewStatus: reprocannDocuments.reviewStatus,
+  expiresOn: reprocannDocuments.expiresOn,
+  createdAt: reprocannDocuments.createdAt,
+};
+
 /**
  * Withdraws a duplicate from the active documentation and keeps the other one. Both must be active
  * credentials (or certificates) of the same member, so the member is never left without the one
@@ -333,16 +345,7 @@ export async function withdrawDuplicate(db: Database, actorUserId: string, docum
   if (documentId === keptDocumentId) throw new ReprocannError("Elegí cuál de los otros documentos se conserva.");
   return db.transaction(async (tx) => {
     const t = tx as unknown as Database;
-    const columns = {
-      id: reprocannDocuments.id,
-      caseId: reprocannDocuments.caseId,
-      kind: reprocannDocuments.kind,
-      replacedBy: reprocannDocuments.replacedBy,
-      withdrawnAt: reprocannDocuments.withdrawnAt,
-      reviewStatus: reprocannDocuments.reviewStatus,
-      expiresOn: reprocannDocuments.expiresOn,
-      createdAt: reprocannDocuments.createdAt,
-    };
+    const columns = WITHDRAWAL_COLUMNS;
     const [d] = await t.select(columns).from(reprocannDocuments).where(eq(reprocannDocuments.id, documentId)).for("update");
     if (!d) throw new ReprocannError("El documento no existe.");
     // The whole case, locked: the credential in force is computed over all of it.
@@ -368,6 +371,47 @@ export async function withdrawDuplicate(db: Database, actorUserId: string, docum
         document: d.id,
         kept: kept.id,
         reason: "duplicado",
+        reviewStatus: d.reviewStatus,
+        current_before: before?.id ?? null,
+        current_after: after?.id ?? null,
+        status_before: credentialStatus(before, today).key,
+        status_after: credentialStatus(after, today).key,
+      },
+    });
+    return { caseId: d.caseId, currentAfter: after?.id ?? null };
+  });
+}
+
+/**
+ * Withdraws a document that is not the member's (someone else's, sent to the wrong account) from
+ * the active documentation, even when it is the only one: nothing is kept instead, and whatever is
+ * in the other person's account is not touched. Nothing is deleted either: it keeps its files and
+ * its review, marked with who withdrew it, when and why, and the member no longer opens it. The
+ * log records which credential counted before and which one counts after, with their statuses.
+ */
+export async function withdrawNotThisMember(db: Database, actorUserId: string, documentId: string, now = new Date()) {
+  if (!z.uuid().safeParse(documentId).success) throw new ReprocannError("El documento no existe.");
+  return db.transaction(async (tx) => {
+    const t = tx as unknown as Database;
+    const [d] = await t.select(WITHDRAWAL_COLUMNS).from(reprocannDocuments).where(eq(reprocannDocuments.id, documentId)).for("update");
+    if (!d) throw new ReprocannError("El documento no existe.");
+    // The whole case, locked: the credential in force is computed over all of it.
+    const docs = await t.select(WITHDRAWAL_COLUMNS).from(reprocannDocuments).where(eq(reprocannDocuments.caseId, d.caseId)).for("update");
+    if (!isActiveDocument(d)) throw new ReprocannError(d.withdrawnAt ? "Este documento ya se retiró." : "Este documento ya fue reemplazado: no forma parte de la documentación activa.");
+
+    const active = docs.filter(isActiveDocument);
+    const before = currentCredential(active);
+    const after = currentCredential(active.filter((x) => x.id !== d.id));
+    await t.update(reprocannDocuments).set({ withdrawnAt: now, withdrawnBy: actorUserId, withdrawalReason: "otro_socio", keptDocumentId: null, updatedAt: now }).where(eq(reprocannDocuments.id, d.id));
+    const today = todayInArgentina(now);
+    await audit(t, {
+      actorUserId,
+      action: "reprocann.document_withdrawn_other_member",
+      entityType: "reprocann_case",
+      entityId: d.caseId,
+      metadata: {
+        document: d.id,
+        reason: "otro_socio",
         reviewStatus: d.reviewStatus,
         current_before: before?.id ?? null,
         current_after: after?.id ?? null,

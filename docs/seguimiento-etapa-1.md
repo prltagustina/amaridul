@@ -65,6 +65,8 @@ Si falta alguna, dice cuál y qué sigue. Si una deja de cumplirse (vence la cre
 
 No se puede retirar el único documento activo ni conservar uno que no esté activo. Si hace falta, el que se conserva se revisa después como cualquier otro.
 
+**Si el documento no es de este socio** (la credencial de otra persona, cargada en esta cuenta): en ese documento, **No es de este socio**. Se puede aunque sea el único activo; no se elige otro para conservar y lo que esté en la cuenta de la otra persona no cambia. «Después del retiro» dice cómo queda la credencial de este socio; hay que marcar «Abrí el archivo: es de otra persona». Sale de la documentación activa y de la bandeja de revisión, el socio la ve «Retirada» («no era tuya»), sin archivos ni vencimiento, y queda en el historial con sus archivos y quién la retiró.
+
 ### Buscador del admin
 
 Una sola búsqueda, agrupada por tipo, con 6 resultados por grupo y «Ver más» (de a 20). Sin acentos y en cualquier orden («perez juan» encuentra «Juan Pérez»). Abre directo la ficha o la pantalla de cada resultado.
@@ -273,7 +275,8 @@ Oculta para socios (ver A). Cuando se retome:
 | `0016` | Forma de pago de cada socio (mensual, trimestral o semestral), con quién la eligió y cuándo. | **Publicada el 3/11** (punto de restauración 20:50:49). |
 | `0017` | Ficha técnica del producto (cosecha, laboratorio, análisis, THC/CBD, perfil) y certificado PDF. | **Publicada el 3/11.** |
 | `0018` | Código de vinculación del socio (cifrado), quién lo envió y cuándo. | **Publicada el 3/11** (punto de restauración 22:16:21). |
-| `0019` | Retiro de credenciales duplicadas: cuándo, quién, el motivo y el documento que se conserva. Solo agrega un tipo y columnas, sin tocar datos. | Se aplica el 5/11, antes del deploy. |
+| `0019` | Retiro de credenciales duplicadas: cuándo, quién, el motivo y el documento que se conserva. Solo agrega un tipo y columnas, sin tocar datos. | Aplicada el 5/11 a las 16:38 (punto de restauración), antes del deploy. |
+| `0020` | Retiro de un documento que no es del socio: motivo nuevo `otro_socio`, sin documento conservado. Agrega un valor al tipo y ajusta la regla del retiro, sin tocar datos. | Local; se aplica antes de publicar. |
 
 **Compatibilidad**: las tres solo agregan tablas, columnas y tipos, sin borrar ni transformar datos. La versión publicada sigue funcionando con ellas aplicadas.
 

@@ -16,7 +16,7 @@ export const reprocannDocumentKind = pgEnum("reprocann_document_kind", ["credenc
 export const reprocannReviewStatus = pgEnum("reprocann_review_status", ["pendiente", "observada", "verificada"]);
 export const reprocannInfoSource = pgEnum("reprocann_info_source", ["en_poder_de_la_asociacion", "aportado_por_socio", "informado_por_equipo_medico", "verificacion_administrativa"]);
 // Why a document left the active documentation without being replaced by the member.
-export const reprocannWithdrawalReason = pgEnum("reprocann_withdrawal_reason", ["duplicado"]);
+export const reprocannWithdrawalReason = pgEnum("reprocann_withdrawal_reason", ["duplicado", "otro_socio"]);
 
 /** One REPROCANN process per member. */
 export const reprocannCases = pgTable("reprocann_cases", {
@@ -48,9 +48,11 @@ export const reprocannCases = pgTable("reprocann_cases", {
  * identifier, the internal notes and the message for the member are encrypted, bound to the row.
  * Its files (one per page) live in `reprocann_document_files`; `fileKey` is a legacy column that
  * was never used and stays null. A member replacing a document keeps the previous one, marked
- * with the one that replaced it (retention is not defined yet). An admin can withdraw a duplicate:
- * it stays here and keeps its files, marked with who withdrew it, when, why and which document
- * was kept instead. Active documentation = neither replaced nor withdrawn.
+ * with the one that replaced it (retention is not defined yet). An admin can withdraw a duplicate
+ * (keeping the other one) or a document that is not the member's (someone else's, sent to the
+ * wrong account): it stays here and keeps its files, marked with who withdrew it, when and why,
+ * and for a duplicate which document was kept instead. Active documentation = neither replaced
+ * nor withdrawn.
  */
 export const reprocannDocuments = pgTable(
   "reprocann_documents",
@@ -76,7 +78,7 @@ export const reprocannDocuments = pgTable(
     withdrawnAt: timestamp("withdrawn_at", tz),
     withdrawnBy: uuid("withdrawn_by").references(() => user.id, { onDelete: "restrict" }),
     withdrawalReason: reprocannWithdrawalReason("withdrawal_reason"),
-    /** The document the admin kept instead of this one. */
+    /** The document the admin kept instead of this one (only for a duplicate). */
     keptDocumentId: uuid("kept_document_id").references((): AnyPgColumn => reprocannDocuments.id, { onDelete: "restrict" }),
     createdBy: uuid("created_by").references(() => user.id, { onDelete: "restrict" }),
     createdAt: timestamp("created_at", tz).notNull().defaultNow(),
@@ -84,10 +86,11 @@ export const reprocannDocuments = pgTable(
   },
   (t) => [
     index("reprocann_documents_case_idx").on(t.caseId),
-    // A withdrawal is recorded whole, or not at all.
+    // A withdrawal is recorded whole, or not at all: a duplicate names the document kept, any
+    // other reason none.
     check(
       "reprocann_documents_withdrawal_check",
-      sql`(${t.withdrawnAt} is null and ${t.withdrawnBy} is null and ${t.withdrawalReason} is null and ${t.keptDocumentId} is null) or (${t.withdrawnAt} is not null and ${t.withdrawnBy} is not null and ${t.withdrawalReason} is not null and ${t.keptDocumentId} is not null and ${t.keptDocumentId} <> ${t.id})`,
+      sql`(${t.withdrawnAt} is null and ${t.withdrawnBy} is null and ${t.withdrawalReason} is null and ${t.keptDocumentId} is null) or (${t.withdrawnAt} is not null and ${t.withdrawnBy} is not null and ${t.withdrawalReason} is not null and ((${t.withdrawalReason} = 'duplicado' and ${t.keptDocumentId} is not null and ${t.keptDocumentId} <> ${t.id}) or (${t.withdrawalReason} <> 'duplicado' and ${t.keptDocumentId} is null)))`,
     ),
   ],
 );

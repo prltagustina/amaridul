@@ -48,6 +48,8 @@ function describe(action: string, m: Record<string, string | number | boolean | 
   }
   if (action === "reprocann.document_withdrawn")
     return `Documento retirado por duplicado (${docLabel(m?.document)}); se conserva ${docLabel(m?.kept)}. Credencial vigente: ${CREDENTIAL_STATUS_WORDS[String(m?.status_before)] ?? "—"} → ${CREDENTIAL_STATUS_WORDS[String(m?.status_after)] ?? "—"}.`;
+  if (action === "reprocann.document_withdrawn_other_member")
+    return `Documento retirado porque no era de este socio (${docLabel(m?.document)}). Credencial vigente: ${CREDENTIAL_STATUS_WORDS[String(m?.status_before)] ?? "—"} → ${CREDENTIAL_STATUS_WORDS[String(m?.status_after)] ?? "—"}.`;
   if (action === "reprocann.case_updated")
     return Object.entries(DIMENSIONS)
       .filter(([k]) => m && `${k}_after` in m)
@@ -89,10 +91,12 @@ export default async function SocioPage({ params, searchParams }: { params: Prom
       credential: (CREDENTIAL_KINDS as readonly string[]).includes(d.kind),
       inForce: d.id === inForce?.id,
       reviewed: d.reviewedAt ? { at: stamp.format(d.reviewedAt), by: d.reviewedByName ?? "administración" } : null,
-      withdrawn: d.withdrawnAt ? { at: stamp.format(d.withdrawnAt), by: d.withdrawnByName ?? "administración", kept: docLabel(d.keptDocumentId) } : null,
-      // If this one were withdrawn as a duplicate, which credential would be in force and how it would read.
+      withdrawn: d.withdrawnAt
+        ? { at: stamp.format(d.withdrawnAt), by: d.withdrawnByName ?? "administración", reason: d.withdrawalReason === "otro_socio" ? "otro_socio" : "duplicado", kept: d.keptDocumentId ? docLabel(d.keptDocumentId) : null }
+        : null,
+      // For an active credential: if it were withdrawn, which credential would be in force and how it would read.
       ifWithdrawn:
-        activeCredentials.length > 1 && activeCredentials.some((c) => c.id === d.id)
+        activeCredentials.some((c) => c.id === d.id)
           ? (() => {
               const after = currentCredential(activeCredentials.filter((c) => c.id !== d.id));
               const status = credentialStatus(after);
