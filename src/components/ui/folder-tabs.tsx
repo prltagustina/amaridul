@@ -24,7 +24,6 @@ const LAYOUT = {
 
 /**
  * Folder tabs (solapas): one panel visible at a time, drawn as a single sheet with its tabs.
- * `footer` closes the sheet under every tab (the same for all of them: help, for instance).
  * WAI-ARIA tabs pattern with arrow-key navigation; a link to «…#id» opens that tab.
  */
 export function FolderSwitcher({
@@ -32,7 +31,6 @@ export function FolderSwitcher({
   label,
   initial,
   flat,
-  footer,
   className,
 }: {
   tabs: FolderTab[];
@@ -40,7 +38,6 @@ export function FolderSwitcher({
   initial?: string;
   /** Inside another container: a little less padding. */
   flat?: boolean;
-  footer?: ReactNode;
   className?: string;
 }) {
   const [active, setActive] = useState(initial ?? tabs[0].id);
@@ -121,12 +118,11 @@ export function FolderSwitcher({
           aria-labelledby={`${base}-${t.id}-tab`}
           hidden={t.id !== current.id}
           tabIndex={0}
-          className={cn("border border-mist-line bg-white p-5 outline-none focus-visible:outline-2 focus-visible:outline-forest sm:p-7", LAYOUT.panel, flat && "sm:p-6", footer ? "!rounded-b-none" : null)}
+          className={cn("border border-mist-line bg-white p-5 outline-none focus-visible:outline-2 focus-visible:outline-forest sm:p-7", LAYOUT.panel, flat && "sm:p-6")}
         >
           {t.content}
         </div>
       ))}
-      {footer && <div className="overflow-hidden !rounded-b-card border border-t-0 border-mist-line">{footer}</div>}
     </div>
   );
 }

@@ -52,26 +52,28 @@ function PanelActions({ children }: { children: React.ReactNode }) {
  * One of the three conditions as a card. Pending, in Dambar's lavender grey (trámites are its
  * world): the icon on a pink chip and the name in its indigo, then what comes next and its action.
  * Met, it reads as done: the green of success, a tick in place of the icon and the name in green,
- * so what is missing stands out on its own. The state closes every card at its foot, aligned across
- * the three, always in words too (never colour alone).
+ * so what is missing stands out on its own. The state is always in words too (never colour alone):
+ * on a phone right under the name, beside the icon, with the text and the action across the card
+ * below; in the row of three, at every card's foot, aligned across them.
  */
 function ConditionCard({ c, icon, tone, children }: { c: DispensingEligibility["conditions"][number]; icon: React.ReactNode; tone: Tone; children?: React.ReactNode }) {
+  // On a tinted card a badge of the same tint would vanish: white under it then.
+  const state = (
+    <StatusBadge tone={tone} compact className={c.met || tone === "info" || tone === "neutral" ? "!bg-white/80" : undefined}>
+      {c.state}
+    </StatusBadge>
+  );
   return (
-    <li className={cn("flex min-w-0 gap-3.5 !rounded-card p-4 sm:p-5 md:flex-col md:gap-3", c.met ? "bg-hoja-100" : "bg-lila-100")}>
+    <li className={cn("grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3.5 gap-y-3 !rounded-card p-4 sm:p-5 md:flex md:flex-col md:items-stretch md:gap-3", c.met ? "bg-hoja-100" : "bg-lila-100")}>
       <span aria-hidden className={cn("flex size-10 shrink-0 items-center justify-center !rounded-full [&_svg]:size-5", c.met ? "bg-hoja-600 text-white" : "bg-rosa-100 text-lila-800")}>
         {c.met ? <Check strokeWidth={2.5} /> : icon}
       </span>
-      {/* Beside the icon on a phone, under it in the row of three; the action stays at the foot. */}
-      <div className="flex min-w-0 flex-1 flex-col gap-3">
+      <div className="min-w-0 space-y-1.5 md:space-y-0">
         <h3 className={cn("font-title text-[1.0625rem] leading-snug", c.met ? "text-forest" : "text-lila-800")}>{c.label}</h3>
-        {children}
-        <div className="mt-auto pt-1">
-          {/* On a tinted card a badge of the same tint would vanish: white under it then. */}
-          <StatusBadge tone={tone} compact className={c.met || tone === "info" || tone === "neutral" ? "!bg-white/80" : undefined}>
-            {c.state}
-          </StatusBadge>
-        </div>
+        <div className="md:hidden">{state}</div>
       </div>
+      {children && <div className="col-span-2 flex min-w-0 flex-col gap-3">{children}</div>}
+      <div className="mt-auto hidden pt-1 md:block">{state}</div>
     </li>
   );
 }
@@ -218,15 +220,24 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
       <ol aria-label="Las tres condiciones" className="grid gap-3 md:grid-cols-3">
         <ConditionCard c={condition("membership")} icon={<UserRound strokeWidth={1.75} />} tone="success" />
         <ConditionCard c={condition("linkage")} icon={<Link2 strokeWidth={1.75} />} tone={LINKAGE_TEXT[linkage].member.tone}>
-          {linkage !== "verified" && <p className="text-sm leading-relaxed text-text-muted">{LINKAGE_TEXT[linkage].member.help}</p>}
+          {linkage !== "verified" && (
+            <p className="text-sm leading-relaxed text-text-muted">
+              {LINKAGE_TEXT[linkage].member.help}
+              {linkage === "missing" && (
+                <>
+                  {" "}
+                  <Link href="/qr/ayuda#codigo-de-vinculacion" className="font-medium !text-lila-800 !underline underline-offset-4">
+                    ¿Dónde lo encuentro?
+                  </Link>
+                </>
+              )}
+            </p>
+          )}
           {linkage === "missing" && (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <div>
               <LinkButton href="/qr/reprocann#vinculacion" size="sm">
                 Agregar código
               </LinkButton>
-              <Link href="/qr/ayuda#codigo-de-vinculacion" className="inline-flex min-h-10 items-center text-sm font-medium !text-lila-800 !underline underline-offset-4">
-                ¿Dónde lo encuentro?
-              </Link>
             </div>
           )}
           {linkage === "received" && (
@@ -275,12 +286,11 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
             Ver las fichas
           </LinkButton>
         )}
-        <p className="text-sm text-text-muted">Comprar desde tu cuenta va a estar disponible más adelante.</p>
       </PanelActions>
     </div>
   );
 
-  // Help closes the sheet under every tab: always in reach, in the violet of orientation.
+  // Help, apart under the sheet: always in reach, in the violet of orientation.
   const help = (
     <HelpStrip
       icon={<CircleHelp strokeWidth={1.5} />}
@@ -309,8 +319,8 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
           )}
 
           {state === "default" && (
+            <div className="max-w-[52rem] space-y-6">
             <FolderSwitcher
-              className="max-w-[52rem]"
               label="Tu espacio de socio"
               tabs={[
                 { id: "membresia", label: "Membresía", tone: "green", icon: <UserRound strokeWidth={1.75} />, content: membershipPanel },
@@ -318,8 +328,9 @@ export default async function MiEspacioPage({ searchParams }: { searchParams: Pr
                 { id: "cuota", label: "Cuota", tone: "green", icon: <Wallet strokeWidth={1.75} />, hint: credential.plan ? undefined : "falta elegir la forma de pago", content: feePanel },
                 { id: "productos", label: "Productos", tone: "green", icon: <Package strokeWidth={1.75} />, content: productsPanel },
               ]}
-              footer={help}
             />
+            {help}
+            </div>
           )}
         </div>
         <DevStateBar path="/qr/mi-espacio" states={STATES} current={state} label="Mi espacio" />

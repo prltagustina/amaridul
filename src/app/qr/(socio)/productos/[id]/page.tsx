@@ -40,10 +40,13 @@ export default async function ProductoPage({ params }: { params: Promise<{ id: s
       </PageBand>
       <div className="page-gutter pt-8 pb-12 sm:pt-10">
         <div className={next ? "portal-column grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-10" : "portal-column max-w-[44.5rem]"}>
-          <ProductSheet product={product} photoSrc={photoSrc(product)} footer={<ProductNotices />} />
+          <div className="min-w-0 space-y-6">
+            <ProductSheet product={product} photoSrc={photoSrc(product)} />
+            <ProductNotices />
+          </div>
           {next && (
             <aside aria-label="Más productos" className="lg:sticky lg:top-6">
-              <div className="max-w-xs !rounded-card border border-mist-line bg-white p-4 lg:max-w-none">
+              <div className="!rounded-card border border-mist-line bg-white p-4">
                 <ProductPreview product={next} eyebrow="Siguiente producto" />
               </div>
             </aside>

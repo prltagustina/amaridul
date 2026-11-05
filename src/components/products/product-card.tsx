@@ -76,8 +76,8 @@ export function ProductStepper({ position, total, prev, next }: { position: numb
 }
 
 /**
- * What every product sheet closes with: seeing a product does not enable dispensing, with the way
- * to the member's three conditions.
+ * Under every product sheet, apart from it: seeing a product does not enable dispensing, with the
+ * way to the member's three conditions.
  */
 export function ProductNotices() {
   return (

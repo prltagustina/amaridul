@@ -140,7 +140,6 @@ export function Panel({
   id,
   level = 2,
   tone,
-  footer,
   className,
   bodyClassName,
   children,
@@ -151,8 +150,6 @@ export function Panel({
   description?: ReactNode;
   id?: string;
   level?: 2 | 3;
-  /** The panel's last line, across its width (help, for instance). */
-  footer?: ReactNode;
   /** The section's colour: the panel's top edge and the eyebrow (green, magenta or lilac). */
   tone?: InfoTone;
   className?: string;
@@ -161,7 +158,7 @@ export function Panel({
 }) {
   const Heading = level === 2 ? "h2" : "h3";
   return (
-    <section id={id} aria-labelledby={title && id ? `${id}-title` : undefined} className={cn("relative scroll-mt-6 !rounded-card border border-mist-line bg-white", tone && TOP_EDGE[tone], footer ? "overflow-hidden" : null, className)}>
+    <section id={id} aria-labelledby={title && id ? `${id}-title` : undefined} className={cn("relative scroll-mt-6 !rounded-card border border-mist-line bg-white", tone && TOP_EDGE[tone], className)}>
       {(title || actions) && (
         <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-5 pt-5 sm:px-6 sm:pt-6">
           <div className="min-w-0 space-y-1">
@@ -183,7 +180,6 @@ export function Panel({
         </header>
       )}
       <div className={cn("px-5 pt-4 pb-5 sm:px-6 sm:pb-6", !(title || actions) && "pt-5 sm:pt-6", bodyClassName)}>{children}</div>
-      {footer && <div className="border-t border-mist-line">{footer}</div>}
     </section>
   );
 }

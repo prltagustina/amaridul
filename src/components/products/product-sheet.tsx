@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import Image from "next/image";
 import { Droplet, FileBadge, FlaskConical, Info, Sprout } from "lucide-react";
 import { PhotoPlaceholder } from "@/components/brand/placeholders";
@@ -16,9 +15,9 @@ const UNIT = { porcentaje: "%", mg_ml: "mg/ml", mg_g: "mg/g" } as const;
 /**
  * A product's sheet for members: origin, composition and analysis, as tabs of one sheet (the
  * page's title already names the product). Only what the association loaded is shown; a missing
- * part says it is not published yet. `footer` closes the sheet under every tab.
+ * part says it is not published yet.
  */
-export function ProductSheet({ product, photoSrc, footer }: { product: CatalogItem; photoSrc: string | null; footer?: ReactNode }) {
+export function ProductSheet({ product, photoSrc }: { product: CatalogItem; photoSrc: string | null }) {
   const s = product.sheet;
   const origin: [string, string | null][] = [
     ["Variedad", product.variety],
@@ -39,7 +38,6 @@ export function ProductSheet({ product, photoSrc, footer }: { product: CatalogIt
     <div className="@container min-w-0">
       <FolderSwitcher
           label={`Ficha de ${product.name}`}
-          footer={footer}
           tabs={[
             {
               id: "origen",

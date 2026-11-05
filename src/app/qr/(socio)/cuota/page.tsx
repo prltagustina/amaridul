@@ -40,20 +40,6 @@ export default async function CuotaPage() {
               title="Tu cuota social"
               actions={plan ? undefined : <StatusBadge tone="warning">Sin elegir</StatusBadge>}
               bodyClassName="space-y-7"
-              footer={
-                <HelpStrip
-                  icon={<CircleHelp strokeWidth={1.5} />}
-                  title="¿Dudas con tu cuota?"
-                  className="sm:px-6"
-                  action={
-                    whatsapp && (
-                      <AnchorButton href={whatsapp} target="_blank" rel="noopener noreferrer" size="sm">
-                        <WhatsAppIcon /> Escribinos<span className="sr-only"> por WhatsApp</span>
-                      </AnchorButton>
-                    )
-                  }
-                />
-              }
             >
               <FeeOverview planId={chosen ?? null} />
               <div className="flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-mist-line pt-5">
@@ -68,6 +54,18 @@ export default async function CuotaPage() {
               </div>
               {!FEE_PAYMENT.link && localDemo() && <DevTag className="dev-only">Vista local · falta el link de pago de la asociación</DevTag>}
             </Panel>
+            <HelpStrip
+              icon={<CircleHelp strokeWidth={1.5} />}
+              title="¿Dudas con tu cuota?"
+              className="sm:px-6"
+              action={
+                whatsapp && (
+                  <AnchorButton href={whatsapp} target="_blank" rel="noopener noreferrer" size="sm">
+                    <WhatsAppIcon /> Escribinos<span className="sr-only"> por WhatsApp</span>
+                  </AnchorButton>
+                )
+              }
+            />
           </div>
         </div>
       </div>

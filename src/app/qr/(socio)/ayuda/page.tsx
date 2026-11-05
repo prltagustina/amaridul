@@ -155,7 +155,7 @@ export default async function AyudaPage() {
             </Panel>
 
             {CONTACT.whatsapp && (
-              <section aria-label="Contacto" className="overflow-hidden !rounded-card border border-mist-line">
+              <section aria-label="Contacto">
                 <HelpStrip
                   icon={<MessageCircle strokeWidth={1.5} />}
                   title="¿Otra consulta?"

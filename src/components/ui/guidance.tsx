@@ -64,12 +64,12 @@ export function StepGuide({ steps, label, tone = "violet", className }: { steps:
 }
 
 /**
- * Help that closes a sheet or a panel, as its last line: a question, a sentence and one action, in
- * the violet of orientation. It belongs to what it helps with, instead of a box beside it.
+ * Help (or a notice) under a sheet or a panel, apart from it: a question, a sentence and one action,
+ * in the violet of orientation. A block of its own, so the sheet keeps its shape on a phone.
  */
 export function HelpStrip({ icon, title, children, action, className }: { icon?: ReactNode; title: ReactNode; children?: ReactNode; action?: ReactNode; className?: string }) {
   return (
-    <div className={cn("flex flex-wrap items-center gap-x-5 gap-y-3 bg-lila-50 px-5 py-4", className)}>
+    <div className={cn("flex flex-wrap items-center gap-x-5 gap-y-3 !rounded-card border border-mist-line bg-lila-50 px-5 py-4", className)}>
       {icon && (
         <span aria-hidden className="flex size-10 shrink-0 items-center justify-center !rounded-full bg-lila-100 text-lila-700 [&_svg]:size-5">
           {icon}
